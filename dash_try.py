@@ -6,7 +6,6 @@ import dash_html_components as html
 import pandas as pd
 import krangle as k
 
-df = pd.read_csv('https://raw.githubusercontent.com/plotly/datasets/master/gapminder2007.csv')
 m = k.Manager()
 df = m.get_instrument('EUR/USD')
 
