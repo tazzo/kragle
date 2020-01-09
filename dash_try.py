@@ -7,7 +7,7 @@ import pandas as pd
 import krangle as k
 
 m = k.Manager()
-df = m.get_instrument('EUR/USD')
+df = m.get_instrument('GBP_USD','D1')
 
 app = dash.Dash(__name__)
 
