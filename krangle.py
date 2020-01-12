@@ -104,9 +104,16 @@ class Manager:
         loop=True
         res = []
         tmpdate = start
+        day = {}
         while loop:
             res.append({'date':tmpdate})
             tmpdate = tmpdate +  dt.timedelta(minutes=1)
+            day[tmpdate.weekday()] = True
+            
+            if (tmpdate.weekday() == 4) :
+               if (tmpdate.hour == 22) & (tmpdate.minute == 59):
+                    tmpdate = dt.datetime(tmpdate.year, tmpdate.month, tmpdate.day + 2, 20,59)
+                    print(tmpdate)
             if tmpdate > end : loop = False
         return pd.DataFrame(res)
 

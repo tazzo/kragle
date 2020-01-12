@@ -7,8 +7,8 @@ import pandas as pd
 import krangle as k
 import datetime as dt
 
-start = dt.datetime(2018,1,5,18,0)
-end = dt.datetime(2018,1,8)
+start = dt.datetime(2018,1,1,18,0)
+end = dt.datetime(2018,1,10)
 
 m = k.Manager()
 df = m.get_instrument('EUR/USD','m1', start, end)
@@ -16,9 +16,7 @@ df = m.get_instrument('EUR/USD','m1', start, end)
 df = df.loc[:, ['date', 'bidopen', 'tickqty']]
 df2 = m.m1(start, end)
 df = df2.merge (df, left_on='date', right_on='date', how='left')
-print('--------------------------------')
-print(df.info())
-print('--------------------------------')
+
 
 app = dash.Dash(__name__)
 
