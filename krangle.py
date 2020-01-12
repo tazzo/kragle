@@ -63,12 +63,15 @@ class Manager:
             print ('Fetching ' + instrument + ' period ' + p)
             self.fetch_candles(instrument, start, end, period=p)
 
-    def get_instrument(self, instrument , period = 'm1'):
+    def get_instrument(self, instrument , period = 'm1', start = None, end = None):
 
         db = self.db.raw[instrument][period]
- 
-        data = list(db.find({}).limit(10000)) # data is in json format
-        # converting json to pandas dataframe
+        
+        if (start is None) | (end is None):
+            data = list(db.find({}).limit(100000)) # data is in json format
+        else:
+            data = list(db.find({'date': {'$gte': start, '$lt': end}}).limit(100000))
+        
         df =  pd.DataFrame(data)
         return df
 
@@ -96,6 +99,16 @@ class Manager:
             for tmp in l: 
                 tmp['date'] = dt.datetime.fromtimestamp(tmp['date']/ 1e3)
         self.db.raw[instrument][period].insert_many(df_json_list )
+
+    def m1(self, start, end):
+        loop=True
+        res = []
+        tmpdate = start
+        while loop:
+            res.append({'date':tmpdate})
+            tmpdate = tmpdate +  dt.timedelta(minutes=1)
+            if tmpdate > end : loop = False
+        return pd.DataFrame(res)
 
 if __name__ == '__main__':
     print('init')
