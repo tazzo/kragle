@@ -112,8 +112,8 @@ class Manager:
             
             if (tmpdate.weekday() == 4) :
                if (tmpdate.hour == 22) & (tmpdate.minute == 59):
-                    tmpdate = dt.datetime(tmpdate.year, tmpdate.month, tmpdate.day + 2, 20,59)
-                    print(tmpdate)
+                    tmpdate = tmpdate + dt.timedelta(days=2)
+                    tmpdate.replace(hour=20)
             if tmpdate > end : loop = False
         return pd.DataFrame(res)
 
