@@ -12,6 +12,9 @@ sqlalchemy = "*"
 pymongo = "*"
 openpyxl = "*"
 dash = "*"
+dash-daq = "*"
+python-socketio = "*"
+dash-bootstrap-components = "*"
 
 [requires]
 python_version = "3.7"
