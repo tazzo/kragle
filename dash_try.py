@@ -7,8 +7,8 @@ import pandas as pd
 import krangle as k
 import datetime as dt
 import dash_daq as daq
+import plotly.express as px
 
-import dash_bootstrap_components as dbc
 
 
 start = dt.datetime(2018,1,2,18,0)
@@ -29,8 +29,8 @@ def init_df(m, start, end):
 df = init_df(m, start, end)
 
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SANDSTONE])
-app.config["suppress_callback_exceptions"] = True
+app = dash.Dash(__name__)
+#app.config["suppress_callback_exceptions"] = True
 
 
 
@@ -59,169 +59,121 @@ def build_explore_table():
                 dash_table.DataTable(
                     id='datatable-interactivity',
                     columns=[
-                        {"name": i, "id": i, "deletable": True, "selectable": True} for i in df.columns
+                        {"name": i, "id": i} for i in df.columns
                     ],
                     data = pd.DataFrame([{}]).to_dict('records'),
                     style_cell={'textAlign': 'left', 'padding': '5px'},
-                    editable=True,
-                    filter_action="native",
-                    sort_action="native",
                     sort_mode="multi",
-                    column_selectable="single",
-                    row_selectable="multi",
-                    row_deletable=True,
                     selected_columns=[],
                     selected_rows=[],
                     page_action="native",
                     page_current= 0,
                     page_size= 20,
                 ),
-            ])
+            ]),
+            html.Br(),
         ])
 
-def build_banner():
-    return dbc.NavbarSimple(
-        children=[
-            dbc.NavItem(dbc.NavLink("Page 1", href="#")),
-            dbc.DropdownMenu(
-                children=[
-                    dbc.DropdownMenuItem("More pages", header=True),
-                    dbc.DropdownMenuItem("Page 2", href="#"),
-                    dbc.DropdownMenuItem("Page 3", href="#"),
-                ],
-                nav=True,
-                in_navbar=True,
-                label="More",
-            ),
-        ],
-        brand="Krangle",
-        brand_href="#",
-        color="primary",
-        dark=True,
-    )
 
-def build_tabs():
-    return html.Div(
-        id="tabs",
-        className="tabs",
+
+
+def render_content():
+    return html.Div(children=[render_top(),render_main_content()])
+
+def render_top():
+    return  html.Nav(
+        className = "navbar",
+        role = "navigation",
         children=[
-            dcc.Tabs(
-                id="app-tabs",
-                value="tab1",
-                className="custom-tabs",
+            html.Div(
+                className = "navbar-brand",
                 children=[
-                    dcc.Tab(
-                        id="Specs-tab",
-                        label="Specification Settings",
-                        value="tab1",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
+                    html.A(
+                        className = "navbar-item",
+                        href = '/',
+                        children = html.Img(src=app.get_asset_url('logo-200.png'), height='200'),
                     ),
-                    dcc.Tab(
-                        id="Control-chart-tab",
-                        label="Control Charts Dashboard",
-                        value="tab2",
-                        className="custom-tab",
-                        selected_className="custom-tab--selected",
-                    ),
+                    html.A(
+                        className = "burger navbar-brger",
+                        children = [
+                            html.Span( ),
+                            html.Span(),
+                            html.Span( ),   
+                        ]
+                    )
                 ],
             )
         ],
+        **{"aria-label":"main-navigation"},
     )
 
-def build_quick_stats_panel():
-    return html.Div(
-        id="quick-stats",
-        className="row",
+
+def render_main_content():
+    return  html.Section(
+        className = "section",
         children=[
             html.Div(
-                id="card-1",
+                className = "columns",
                 children=[
-                    html.P("Operator ID"),
-                    daq.LEDDisplay(
-                        id="operator-led",
-                        value="1705645",
-                        color="#92e0d3",
-                        backgroundColor="#1e2130",
-                        size=50,
+                    html.Div(className = "column",
+                        children = html.Div(
+                            className = "box",
+                            children=[
+                                html.P("Settings", className="title is-1 is-spaced"),
+                                html.Br(),
+                                html.P("Variabili globali", className="subtitle is-7"),
+                                dcc.Input(
+                                    placeholder='Enter a value...',
+                                    type='text',
+                                    value='',
+                                    className ="is-info"
+                                ),
+                                html.P("""Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."""),
+
+                                html.P("""Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.""")],
+                        ),
+                    ),
+                    html.Div(
+                        className = "column",
+                        children = html.Div(
+                            className = "box ",
+                            children=build_explore_table(),
+                            
+                        ),
+                    ),
+                     html.Div(
+                        className = "column ",
+                        children = html.Div(
+                            className = "box ",
+                            children=html.Div(id="bidopen-chart"),
+                        ),
                     ),
                 ],
-            ),
-            html.Div(
-                id="card-2",
-                children=[
-                    html.P("Time to completion"),
-                    daq.Gauge(
-                        id="progress-gauge",
-                        max=1000,
-                        min=0,
-                        showCurrentValue=True,  # default size 200 pixel
-                    ),
-                ],
-            ),
-            html.Div(
-                id="utility-card",
-                children=[daq.StopButton(id="stop-button", size=160, n_clicks=0)],
-            ),
-        ],
+            )
+        ]
     )
 
-
-@app.callback(
-    [Output("app-content", "children")],
-    [Input("app-tabs", "value")],
-)
-def render_tab_content(tab_switch):
-    if tab_switch == "tab1":
-        return [html.Div(
-            id="status-container",
-            children=[
-                build_quick_stats_panel(),
-                html.Div(
-                    id="graphs-container",
-                    children=[build_explore_table()],
-                ),
-            ],
-        )
-        ]
-    return [html.Div(
-            id="status-container",
-            children= html.H1("Ciao")
-        )]
     
 
-app.layout = html.Div(
-    id="big-app-container",
-    children=[
-        build_banner(),
-        html.Div(
-            id="app-container",
-            children=[
-                build_tabs(),
-                # Main app
-                html.Div(id="app-content"),
-            ],
-        ),
-    ],
-)
+app.layout =render_content()
 
 
 @app.callback(
-    [Output('datatable-interactivity', 'style_data_conditional')
-    , Output('datatable-interactivity', 'data')],
-    [Input('datatable-interactivity', 'selected_columns')
-    ,Input('input-date-from', 'value')
+    [ Output('datatable-interactivity', 'data'),
+    Output('bidopen-chart', 'children'),],
+    [Input('input-date-from', 'value')
     ,Input('input-date-to', 'value')]
 )
-def update(selected_columns, start_date, end_date):
+def update( start_date, end_date):
  
     df =pd.DataFrame({})
     if (not start_date == '')&(not end_date == ''):
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
         df = init_df(m, start, end)
-    
-    return [{'if': { 'column_id': i }, 'background_color': '#D2F3FF'} for i in selected_columns], df.to_dict('records') 
+    ########################
+    fig = px.line(df, x="date", y="bidopen")
+    return [ df.to_dict('records'), dcc.Graph(figure=fig) ]
 
 
 
