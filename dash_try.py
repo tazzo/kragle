@@ -21,8 +21,8 @@ def init_df(m, start, end):
 
     df = m.get_instrument('EUR/USD','m1', start, end)
 
-    df = df.loc[:, ['date', 'bidopen', 'tickqty']]
-    df2 = m.m1(start, end)
+    df = df.loc[:, ['date', 'bidopen', 'askopen', 'tickqty']]
+    #df2 = m.m1(start, end)
     #return df2.merge (df, left_on='date', right_on='date', how='left')
     return df
 
@@ -40,9 +40,9 @@ def build_explore_table():
                 html.P('From'),
                 dcc.Input(
                     id='input-date-from',
-                    placeholder='2019-04-29 12:00',
+                    placeholder='2019-05-01 12:00',
                     type='text',
-                    value='2019-04-29 12:00'
+                    value='2019-05-01 12:00'
                 )  
             ]), 
             html.Div([
@@ -74,6 +74,35 @@ def build_explore_table():
             html.Br(),
         ])
 
+def build_askbid_chart():
+    return html.Div([
+            html.Div([
+                html.P('From'),
+                dcc.Input(
+                    id='askbid-input-date-from',
+                    placeholder='2019-05-01 12:00',
+                    type='text',
+                    value='2019-05-01 12:00'
+                )  
+            ]), 
+            html.Div([
+                html.P('To'),
+                dcc.Input(
+                    id='askbid-input-date-to',
+                    placeholder='2019-05-01 16:00',
+                    type='text',
+                    value='2019-05-01 16:00'
+                )  
+            ]), 
+
+            html.Div([
+                dcc.Graph(
+                    id='askbid-chart'
+                )
+            ]),
+            html.Br(),
+        ])
+
 
 
 
@@ -91,10 +120,14 @@ def render_top():
                     html.A(
                         className = "navbar-item",
                         href = '/',
-                        children = html.Img(src=app.get_asset_url('logo-200.png'), height='200'),
+                        children = [
+                            html.P("Kragle ", className = "title is-2 has-text-link"),
+                            html.Br(),
+                            html.P("AI Trading", className = "subtitle is-7 has-text-white-ter"),
+                        ]
                     ),
                     html.A(
-                        className = "burger navbar-brger",
+                        className = "burger navbar-burger",
                         children = [
                             html.Span( ),
                             html.Span(),
@@ -115,7 +148,7 @@ def render_main_content():
             html.Div(
                 className = "columns",
                 children=[
-                    html.Div(className = "column",
+                    html.Div(className = "column is-one-quarter",
                         children = html.Div(
                             className = "box",
                             children=[
@@ -145,7 +178,7 @@ def render_main_content():
                         className = "column ",
                         children = html.Div(
                             className = "box ",
-                            children=html.Div(id="bidopen-chart"),
+                            children=build_askbid_chart(),
                         ),
                     ),
                 ],
@@ -159,12 +192,25 @@ app.layout =render_content()
 
 
 @app.callback(
-    [ Output('datatable-interactivity', 'data'),
-    Output('bidopen-chart', 'children'),],
+    [ Output('datatable-interactivity', 'data')],
     [Input('input-date-from', 'value')
     ,Input('input-date-to', 'value')]
 )
-def update( start_date, end_date):
+def update_table( start_date, end_date):
+ 
+    df =pd.DataFrame({})
+    if (not start_date == '')&(not end_date == ''):
+        start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
+        end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
+        df = init_df(m, start, end)
+    return [ df.to_dict('records') ]
+
+@app.callback(
+    [ Output('askbid-chart', 'figure'),],
+    [Input('askbid-input-date-from', 'value')
+    ,Input('askbid-input-date-to', 'value')]
+)
+def update_askbid_chart( start_date, end_date):
  
     df =pd.DataFrame({})
     if (not start_date == '')&(not end_date == ''):
@@ -172,8 +218,8 @@ def update( start_date, end_date):
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
         df = init_df(m, start, end)
     ########################
-    fig = px.line(df, x="date", y="bidopen")
-    return [ df.to_dict('records'), dcc.Graph(figure=fig) ]
+    fig = px.line(df, x="date", y=["bidopen","askopen"])
+    return [ fig ]
 
 
 
