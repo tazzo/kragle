@@ -4,17 +4,17 @@ import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
-import krangle as k
+import kragle 
 import datetime as dt
 import dash_daq as daq
 import plotly.express as px
-
-
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 start = dt.datetime(2018,1,2,18,0)
 end = dt.datetime(2018,1,2,19,0)
 
-m = k.Manager()
+m = kragle.Manager()
 
 
 def init_df(m, start, end):
@@ -100,7 +100,7 @@ def build_askbid_chart():
                     id='askbid-chart'
                 )
             ]),
-            html.Br(),
+
         ])
 
 
@@ -206,7 +206,7 @@ def update_table( start_date, end_date):
     return [ df.to_dict('records') ]
 
 @app.callback(
-    [ Output('askbid-chart', 'figure'),],
+    [ Output('askbid-chart', 'figure')],
     [Input('askbid-input-date-from', 'value')
     ,Input('askbid-input-date-to', 'value')]
 )
@@ -218,8 +218,27 @@ def update_askbid_chart( start_date, end_date):
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
         df = init_df(m, start, end)
     ########################
-    fig = px.line(df, x="date", y=["bidopen","askopen"])
-    return [ fig ]
+    
+    
+    df['fork'] =df['askopen']-df['bidopen']
+
+    fig1 = make_subplots(specs=[[{"secondary_y": True}]])
+    # Add traces
+    fig1.add_trace(
+        go.Scatter(x=df["date"], y=df["bidopen"], name="bidopen"),
+        secondary_y=False,
+    )
+    fig1.add_trace(
+        go.Scatter(x=df["date"], y=df["askopen"], name="askopen"),
+        secondary_y=False,
+    )
+    fig1.add_trace(
+        go.Scatter(x=df["date"], y=df["tickqty"], name="tickqty"),
+        secondary_y=True,
+    )
+
+
+    return [ fig1 ]
 
 
 

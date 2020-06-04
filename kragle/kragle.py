@@ -63,14 +63,14 @@ class Manager:
             print ('Fetching ' + instrument + ' period ' + p)
             self.fetch_candles(instrument, start, end, period=p)
 
-    def get_instrument(self, instrument , period = 'm1', start = None, end = None):
+    def get_instrument(self, instrument , period = 'm1', start = None, end = None, limit = 100000):
 
         db = self.db.raw[instrument][period]
         
         if (start is None) | (end is None):
             data = list(db.find({}).limit(100000)) # data is in json format
         else:
-            data = list(db.find({'date': {'$gte': start, '$lt': end}}).limit(100000))
+            data = list(db.find({'date': {'$gte': start, '$lt': end}}).limit(limit))
         
         df =  pd.DataFrame(data)
         return df
@@ -104,11 +104,9 @@ class Manager:
         loop=True
         res = []
         tmpdate = start
-        day = {}
         while loop:
             res.append({'date':tmpdate})
             tmpdate = tmpdate +  dt.timedelta(minutes=1)
-            day[tmpdate.weekday()] = True
             
             if (tmpdate.weekday() == 4) :
                if (tmpdate.hour == 22) & (tmpdate.minute == 59):
