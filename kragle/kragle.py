@@ -47,7 +47,7 @@ class Manager:
                 l=list(df_json_list)
                 for tmp in l: 
                     tmp['date'] = dt.datetime.fromtimestamp(tmp['date']/ 1e3)
-                self.db.raw[instrument][period].insert_many(df_json_list )
+                self.db[instrument][period].insert_many(df_json_list )
            
 
             if tmpend == end:
@@ -65,7 +65,7 @@ class Manager:
 
     def get_instrument(self, instrument , period = 'm1', start = None, end = None, limit = 100000):
 
-        db = self.db.raw[instrument][period]
+        db = self.db[instrument][period]
         
         if (start is None) | (end is None):
             data = list(db.find({}).limit(100000)) # data is in json format
@@ -86,7 +86,7 @@ class Manager:
             start = df.loc[r,'bidopen']
             future = (tmp.mean()-start)/start
             
-            self.db.raw[instrument][period].update(
+            self.db[instrument][period].update(
                 { '_id': df.loc[r,'_id']}
                 , { '$set': { "future": future } }
                 , upsert=False )
@@ -98,7 +98,7 @@ class Manager:
             l=list(df_json_list)
             for tmp in l: 
                 tmp['date'] = dt.datetime.fromtimestamp(tmp['date']/ 1e3)
-        self.db.raw[instrument][period].insert_many(df_json_list )
+        self.db[instrument][period].insert_many(df_json_list )
 
     def m1(self, start, end):
         loop=True
