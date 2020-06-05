@@ -20,6 +20,10 @@ class KragleDB:
 
         self.client = MongoClient('localhost', 27017)
         self.db = self.client[dbname]
+        self.dbname = dbname
+
+    def close(self):
+        self.client.close()
 
 
     def get_instrument(self, instrument , period = 'm1', start = None, end = None, limit = 100000):
@@ -37,4 +41,13 @@ class KragleDB:
 
     def fetch_dataframe(self, df, instrument, period):
         self.db[instrument][period].insert_many(df.to_dict("records"))
+
+
+    def dataframe_to_json(self, df, path):
+        df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
+
+    
+
+
+
 
