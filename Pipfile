@@ -16,6 +16,7 @@ dash = "*"
 dash-daq = "*"
 python-socketio = "*"
 dash-bootstrap-components = "*"
+jupyter = "*"
 
 [requires]
 python_version = "3.7"

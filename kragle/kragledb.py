@@ -22,6 +22,7 @@ class KragleDB:
         self.db = self.client[dbname]
         self.dbname = dbname
 
+
     def close(self):
         self.client.close()
 
@@ -45,6 +46,11 @@ class KragleDB:
 
     def dataframe_to_json(self, df, path):
         df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
+
+
+    def dataframe_read_json(self,  path):
+        return pd.read_json(path, orient='records')
+       
 
     
 

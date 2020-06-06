@@ -9,10 +9,10 @@ def __test_db_setup():
     kdb.client.drop_database(kdb.dbname)
     periods = ['m1', 'm5', 'm30', 'H2', 'H8']
     for period in periods:
-        df = pd.read_json(r'kragle\\test_data\\'+ period + '_test.json', orient='records')
+        df = kdb.dataframe_read_json(r'kragle\\test_data\\'+ period + '_test.json')
         kdb.fetch_dataframe(df, 'EUR/USD', period)
     return kdb
-    
+     
 
 
 def __test_db_teardown(kdb):
