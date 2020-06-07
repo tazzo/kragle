@@ -28,11 +28,26 @@ def kdb():
     __test_db_teardown(kdb)
 
 
-def test_file1_method1(kdb):
+def test_create_dataset(kdb):
+    start = dt.datetime(2018, 10, 22, 15,0)
+    end = dt.datetime(2018, 10, 23, 15,0)
+    dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
+    #test len dataset
+    assert len(dataset) ==2
+    #test keys in dataset
+    assert 'x' in dataset[0]
+    assert 'y' in dataset[0]
+    #test 0 element
+    assert 'm1' in dataset[0]['x']
+    assert 'm5' in dataset[0]['x']
+    assert len(dataset[0]['x']['m1'])==4
+    assert len(dataset[0]['x']['m5'])==4
+    #test 1 element
+    # assert 'm1' in dataset[1]['x']
+    # assert 'm5' in dataset[1]['x']
+    # assert len(dataset[1]['x']['m1'])==4
+    # assert len(dataset[1]['x']['m5'])==4
 
-    x=5
-    y=6
-    assert x+1 == y,"test_file1_method1 1"
 	
 
 def test_file1_method2(kdb):

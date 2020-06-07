@@ -22,7 +22,6 @@ class KragleDB:
         self.db = self.client[dbname]
         self.dbname = dbname
 
-
     def close(self):
         self.client.close()
 
@@ -50,6 +49,11 @@ class KragleDB:
 
     def dataframe_read_json(self,  path):
         return pd.read_json(path, orient='records')
+
+    
+    def create_dataset(self, n, instrument, periods, histlen, start, end):
+        ret = [{'x':{'m1':[1,2,3,4], 'm5':[11,22,44,55]}, 'y':1.11350},{'x':{}, 'y':1.11350}]
+        return ret
        
 
     
