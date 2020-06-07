@@ -2,6 +2,7 @@ import datetime as dt
 import json
 import pandas as pd
 from pymongo import MongoClient
+import random
 
 instruments = [  'USD/SEK', 
                 'USD/NOK','USD/MXN', 'USD/ZAR', 'USD/HKD', 'USD/TRY', 
@@ -55,6 +56,13 @@ class KragleDB:
         ret = [{'x':{'m1':[1,2,3,4], 'm5':[11,22,44,55]}, 'y':1.11350},{'x':{}, 'y':1.11350}]
         return ret
        
+    
+    def random_date(self, start, end):
+        """Generate a random datetime between `start` and `end`"""
+        return start + dt.timedelta(
+            # Get a random amount of seconds between `start` and `end`
+            minutes=random.randint(0, int((end - start).total_seconds()/60)),
+        )
 
     
 

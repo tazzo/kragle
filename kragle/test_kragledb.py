@@ -21,10 +21,10 @@ def __test_db_teardown(kdb):
 
 @pytest.fixture(scope="module")
 def kdb():
-    print('>> Setup <<')
+    print('>> Setup kdb << ', end='')
     kdb = __test_db_setup()
     yield kdb
-    print(">> Teardown <<")
+    print(">> Teardown kdb << ", end='')
     __test_db_teardown(kdb)
 
 
@@ -48,22 +48,4 @@ def test_create_dataset(kdb):
     # assert len(dataset[1]['x']['m1'])==4
     # assert len(dataset[1]['x']['m5'])==4
 
-	
 
-def test_file1_method2(kdb):
-	x=1
-	y=9
-	assert x+8 == y,"test_file1_method2 1"
-
-def test_uppercase():
-    assert "loud noises".upper() == "LOUD NOISES"
-
-def test_reversed():
-    assert list(reversed([1, 2, 3, 4])) == [4, 3, 2, 1]
-
-def test_some_primes():
-    assert 13 in {
-        num
-        for num in range(1, 50)
-        if num != 1 and not any([num % div == 0 for div in range(2, num)])
-    }
