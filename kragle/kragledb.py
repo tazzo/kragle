@@ -2,7 +2,8 @@ import datetime as dt
 import json
 import pandas as pd
 from pymongo import MongoClient
-import random
+import kragle.utils as kutils 
+import random as rnd
 
 instruments = [  'USD/SEK', 
                 'USD/NOK','USD/MXN', 'USD/ZAR', 'USD/HKD', 'USD/TRY', 
@@ -53,17 +54,29 @@ class KragleDB:
 
     
     def create_dataset(self, n, instrument, periods, histlen, start, end):
-        ret = [{'x':{'m1':[1,2,3,4], 'm5':[11,22,44,55]}, 'y':1.11350},{'x':{}, 'y':1.11350}]
+        if start >= end: 
+            raise ValueError('Date error, start date must be before end date.')
+        ret = []
+        for i in range(n):
+            val = {'x':{}, 'y':rnd.random()}
+            m1date = kutils.random_date(start, end) 
+            for period in periods:
+                l = self.get_history(instrument, period, histlen, m1date)
+                if len(l) < histlen : 
+                    raise ValueError('Not enough data to fulfill the request in period ' + period)
+                val['x'][period] = l   
+            ret.append(val)
         return ret
        
     
-    def random_date(self, start, end):
-        """Generate a random datetime between `start` and `end`"""
-        return start + dt.timedelta(
-            # Get a random amount of seconds between `start` and `end`
-            minutes=random.randint(0, int((end - start).total_seconds()/60)),
+    def get_history(self,  instrument, period, histlen, date):
+        return list(self.db[instrument][period]
+            .find({'date': { '$lt': date}})
+            .sort([('date', -1)])
+            .limit(histlen)
         )
-
+        
+  
     
 
 

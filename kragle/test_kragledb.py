@@ -27,10 +27,25 @@ def kdb():
     print(">> Teardown kdb << ", end='')
     __test_db_teardown(kdb)
 
+def test_create_dataset_raise_date_order(kdb):
+    '''test start date after end date'''
+    start = dt.datetime(2018, 11, 28, 22,50)
+    end = dt.datetime(2018, 11, 27, 22,50)
+    with pytest.raises(ValueError, match=r".*before.*"):
+        dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
+
+def test_create_dataset_raise_few_data(kdb):
+    '''test start date after end date'''
+    start = dt.datetime(2018, 10, 25, 22,50)
+    end = dt.datetime(2018, 10, 27, 22,50)
+    with pytest.raises(ValueError, match=r".*fulfill.*"):
+        dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
+    
+   
 
 def test_create_dataset(kdb):
-    start = dt.datetime(2018, 10, 22, 15,0)
-    end = dt.datetime(2018, 10, 23, 15,0)
+    start = dt.datetime(2018, 11, 27, 15,50)
+    end = dt.datetime(2018, 11, 27, 22,50)
     dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
     #test len dataset
     assert len(dataset) ==2
@@ -43,9 +58,9 @@ def test_create_dataset(kdb):
     assert len(dataset[0]['x']['m1'])==4
     assert len(dataset[0]['x']['m5'])==4
     #test 1 element
-    # assert 'm1' in dataset[1]['x']
-    # assert 'm5' in dataset[1]['x']
-    # assert len(dataset[1]['x']['m1'])==4
-    # assert len(dataset[1]['x']['m5'])==4
+    assert 'm1' in dataset[1]['x']
+    assert 'm5' in dataset[1]['x']
+    assert len(dataset[1]['x']['m1'])==4
+    assert len(dataset[1]['x']['m5'])==4
 
 
