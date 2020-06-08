@@ -77,21 +77,7 @@ class KragleDB:
         )
         
     def aggregate_dataframe(self, df):
-        high = df[['bidhigh','askhigh']].max()
-        low = df[['bidlow','asklow']].min()
-        sum = df[['tickqty']].sum()
-        res = {'date': df.iloc[0]['date'],  
-            'bidopen': df.iloc[0]['bidopen'],  
-            'bidclose': df.iloc[-1]['bidclose'],  
-            'bidhigh': high['bidhigh'],   
-            'bidlow': low['bidlow'],
-            'askopen': df.iloc[0]['askopen'],  
-            'askclose': df.iloc[-1]['askclose'],  
-            'askhigh': high['askhigh'],   
-            'asklow': low['asklow'],  
-            'tickqty': sum['tickqty'],
-        }
-        return res
+        return kutils.aggregate_dataframe(df)
 
   
     
