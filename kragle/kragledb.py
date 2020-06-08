@@ -59,16 +59,37 @@ class KragleDB:
         ret = []
         for i in range(n):
             m1date = kutils.random_date(start, end) 
-            val = {'date': m1date, 'x':{}, 'y':rnd.random()}
-            for period in periods:
-                l = self.get_history(instrument, period, histlen, m1date)
-                if len(l) < histlen : 
-                    raise ValueError('Not enough data to fulfill the request in period ' + period)
-                val['x'][period] = l   
-            ret.append(val)
+            ret.append(self.create_value(n, instrument, periods, histlen, m1date ))
         return ret
        
+    def create_value(self, n, instrument, periods, histlen, m1date):
+        val = {'date': m1date, 'x':{}, 'y':rnd.random()}
+        before = None
+        for period in periods:
+            l = self.get_history(instrument, period, histlen, m1date)
+            if before != None:
+                l = self.correct_last(l,before)
+            before = l
+            if len(l) < histlen : 
+                raise ValueError('Not enough data to fulfill the request in period ' + period)
+            val['x'][period] = l   
+        return val
     
+    def correct_last(self, l, before):
+        df = pd.DataFrame(before)
+        df = df.loc[df.date >= l[0]['date'],:]
+        agg = self.aggregate_dataframe(df)
+        l[0]['bidopen']=agg['bidopen']
+        l[0]['bidclose']=agg['bidclose']
+        l[0]['bidhigh']=agg['bidhigh']
+        l[0]['bidlow']=agg['bidlow']
+        l[0]['askopen']=agg['askopen']
+        l[0]['askclose']=agg['askclose']
+        l[0]['askhigh']=agg['askhigh']
+        l[0]['asklow']=agg['asklow']
+        l[0]['tickqty']=agg['tickqty']
+        return l
+
     def get_history(self,  instrument, period, histlen, date):
         return list(self.db[instrument][period]
             .find({'date': { '$lte': date}})

@@ -15,13 +15,13 @@ def aggregate_dataframe( df):
     high = df[['bidhigh','askhigh']].max()
     low = df[['bidlow','asklow']].min()
     sum = df[['tickqty']].sum()
-    res = {'date': df.iloc[0]['date'],  
-        'bidopen': df.iloc[0]['bidopen'],  
-        'bidclose': df.iloc[-1]['bidclose'],  
+    res = {'date': df.iloc[-1]['date'],  
+        'bidopen': df.iloc[-1]['bidopen'],  
+        'bidclose': df.iloc[0]['bidclose'],  
         'bidhigh': high['bidhigh'],   
         'bidlow': low['bidlow'],
-        'askopen': df.iloc[0]['askopen'],  
-        'askclose': df.iloc[-1]['askclose'],  
+        'askopen': df.iloc[-1]['askopen'],  
+        'askclose': df.iloc[0]['askclose'],  
         'askhigh': high['askhigh'],   
         'asklow': low['asklow'],  
         'tickqty': sum['tickqty'],
