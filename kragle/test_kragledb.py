@@ -9,7 +9,7 @@ def __test_db_setup():
     kdb.client.drop_database(kdb.dbname)
     periods = ['m1', 'm5', 'm30', 'H2', 'H8']
     for period in periods:
-        df = kdb.dataframe_read_json(r'kragle\\test_data\\'+ period + '_test.json')
+        df = kdb.dataframe_read_json(r'kragle/test_data/'+ period + '_test.json')
         kdb.fetch_dataframe(df, 'EUR/USD', period)
     return kdb
      
@@ -26,6 +26,9 @@ def kdb():
     yield kdb
     print(">> Teardown kdb << ", end='')
     __test_db_teardown(kdb)
+
+
+
 
 def test_create_dataset_raise_date_order(kdb):
     '''test start date after end date'''
@@ -65,12 +68,12 @@ def test_create_dataset(kdb):
     assert len(dataset[1]['x']['m5'])==4
 
 
-def test_foo(kdb):
-    start = dt.datetime(2018, 11, 27, 15,50)
-    end = dt.datetime(2018, 11, 27, 22,50)
-    dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
-    print(' ')
-    print(pd.DataFrame(dataset[0]['x']['m1']).info())
-    print(' ')
-    print(pd.DataFrame(dataset[0]['x']['m1']).head())
-    assert True
+# def test_foo(kdb):
+#     start = dt.datetime(2018, 11, 27, 15,50)
+#     end = dt.datetime(2018, 11, 27, 22,50)
+#     dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
+#     print(' ')
+#     print(pd.DataFrame(dataset[0]['x']['m1']).info())
+#     print(' ')
+#     print(pd.DataFrame(dataset[0]['x']['m1']).head())
+#     assert True
