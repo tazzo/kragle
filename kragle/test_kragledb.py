@@ -50,6 +50,7 @@ def test_create_dataset(kdb):
     #test len dataset
     assert len(dataset) ==2
     #test keys in dataset
+    assert 'date' in dataset[0]
     assert 'x' in dataset[0]
     assert 'y' in dataset[0]
     #test 0 element
@@ -64,3 +65,12 @@ def test_create_dataset(kdb):
     assert len(dataset[1]['x']['m5'])==4
 
 
+def test_foo(kdb):
+    start = dt.datetime(2018, 11, 27, 15,50)
+    end = dt.datetime(2018, 11, 27, 22,50)
+    dataset = kdb.create_dataset(2, 'EUR/USD', ['m1','m5'], 4, start, end )
+    print(' ')
+    print(pd.DataFrame(dataset[0]['x']['m1']).info())
+    print(' ')
+    print(pd.DataFrame(dataset[0]['x']['m1']).head())
+    assert True

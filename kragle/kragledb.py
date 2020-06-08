@@ -58,8 +58,8 @@ class KragleDB:
             raise ValueError('Date error, start date must be before end date.')
         ret = []
         for i in range(n):
-            val = {'x':{}, 'y':rnd.random()}
             m1date = kutils.random_date(start, end) 
+            val = {'date': m1date, 'x':{}, 'y':rnd.random()}
             for period in periods:
                 l = self.get_history(instrument, period, histlen, m1date)
                 if len(l) < histlen : 
@@ -71,7 +71,7 @@ class KragleDB:
     
     def get_history(self,  instrument, period, histlen, date):
         return list(self.db[instrument][period]
-            .find({'date': { '$lt': date}})
+            .find({'date': { '$lte': date}})
             .sort([('date', -1)])
             .limit(histlen)
         )
