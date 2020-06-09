@@ -7,7 +7,7 @@ import pandas as pd
 def __test_db_setup():
     kdb = KragleDB('kragle_test')
     kdb.client.drop_database(kdb.dbname)
-    periods = ['m1', 'm5', 'm30', 'H2', 'H8']
+    periods = ['m1', 'm5', 'm15','m30', 'H1', 'H2', 'H8']
     for period in periods:
         df = kdb.dataframe_read_json(r'kragle/test_data/'+ period + '_test.json')
         kdb.fetch_dataframe(df, 'EUR/USD', period)
