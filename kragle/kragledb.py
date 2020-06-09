@@ -67,11 +67,11 @@ class KragleDB:
         before = None
         for period in periods:
             l = self.get_history(instrument, period, histlen, m1date)
+            if len(l) < histlen : 
+                raise ValueError('Not enough data to fulfill the request in period ' + period)
             if before != None:
                 l = self.correct_last(l,before)
             before = l
-            if len(l) < histlen : 
-                raise ValueError('Not enough data to fulfill the request in period ' + period)
             val['x'][period] = l   
         return val
     

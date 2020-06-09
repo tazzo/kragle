@@ -28,21 +28,3 @@ def aggregate_dataframe( df):
     }
     return res
 
-def datetime_period(date, period = 'm5'):
-    if period == 'm5':
-        newmin = math.floor(date.minute /5) *5
-        newdate = date.replace(minute = newmin, second = 0, microsecond = 0)
-        return newdate
-    if period == 'm15':
-        newmin = math.floor(date.minute /15) *15
-        newdate = date.replace(minute = newmin, second = 0, microsecond = 0)
-        return newdate
-    if period == 'm30':
-        newmin = math.floor(date.minute /30) *30
-        newdate = date.replace(minute = newmin, second = 0, microsecond = 0)
-        return newdate
-    if period == 'H1':
-        newdate = date.replace(minute = 0, second = 0, microsecond = 0)
-        return newdate
-    else:
-        raise ValueError('Period {} not defined.'.format(period) )
