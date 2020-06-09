@@ -100,6 +100,26 @@ class KragleDB:
     def aggregate_dataframe(self, df):
         return kutils.aggregate_dataframe(df)
 
+    def insert_future(self, instrument , period, start, end, d=12, r=2 ):
+        df = self.get_instrument( instrument , period, start , end )
+        self._insert_future(df, instrument , period, d=d, r=r)
+
+    def _insert_future(self, df, instrument , period, d=12, r=2 ):
+        gap=d-r
+        win=r*2+1
+        for r in range(df.shape[0]-d-r):
+            
+            tmp = df.loc[[(i+r+gap)  for i in range(win)],'bidopen']
+            start = df.loc[r,'bidopen']
+            future = round((tmp.mean()-start), 4)
+            
+            self.db[instrument][period].update(
+                { '_id': df.loc[r,'_id']}
+                , { '$set': { "future": future } }
+                , upsert=False )
+
+
+
   
     
 

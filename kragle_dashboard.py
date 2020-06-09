@@ -11,15 +11,17 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-start = dt.datetime(2018,1,2,18,0)
-end = dt.datetime(2018,1,2,19,0)
+start = dt.datetime(2018,11,27,13,0)
+end = dt.datetime(2018,11,27,23,0)
+
+
 
 m = kragle.Manager()
 
 
-def init_df(m, start, end):
+def init_df(m, start, end, period='m1'):
 
-    df = m.get_instrument('EUR/USD','m1', start, end)
+    df = m.get_instrument('EUR/USD',period, start, end)
 
     df = df.loc[:, ['date', 'bidopen', 'askopen', 'tickqty']]
     #df2 = m.m1(start, end)
@@ -42,20 +44,31 @@ def build_explore_table():
                 html.P('From'),
                 dcc.Input(
                     id='input-date-from',
-                    placeholder='2019-05-01 12:00',
+                    placeholder='2018-11-27 13:00',
                     type='text',
-                    value='2019-05-01 12:00'
+                    value='2018-11-27 13:00'
                 )  
             ]), 
             html.Div([
                 html.P('To'),
                 dcc.Input(
                     id='input-date-to',
-                    placeholder='2019-05-02 12:00',
+                    placeholder='2018-11-27 23:00',
                     type='text',
-                    value='2019-05-02 12:00'
+                    value='2018-11-27 23:00'
                 )  
             ]), 
+            dcc.Dropdown(
+                id='table-period',
+                options=[
+                    {'label': 'm1', 'value': 'm1'},
+                    {'label': 'm5', 'value': 'm5'},
+                    {'label': 'm15', 'value': 'm15'},
+                    {'label': 'm30', 'value': 'm30'},
+                    {'label': 'H1', 'value': 'H1'},
+                ],
+                value='m1'
+            ) ,
 
             html.Div([
                 dash_table.DataTable(
@@ -196,15 +209,17 @@ app.layout =render_content()
 @app.callback(
     [ Output('datatable-interactivity', 'data')],
     [Input('input-date-from', 'value')
-    ,Input('input-date-to', 'value')]
+    ,Input('input-date-to', 'value')
+    ,Input('table-period', 'value')
+    ]
 )
-def update_table( start_date, end_date):
+def update_table( start_date, end_date, period):
  
     df =pd.DataFrame({})
     if (not start_date == '')&(not end_date == ''):
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = init_df(m, start, end)
+        df = init_df(m, start, end, period=period)
     return [ df.to_dict('records') ]
 
 @app.callback(
