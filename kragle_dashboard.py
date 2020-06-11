@@ -96,6 +96,7 @@ def build_askbid_chart():
                 html.P('From'),
                 dcc.Input(
                     id='askbid-input-date-from',
+                    className='border',
                     placeholder='2019-05-01 12:00',
                     type='text',
                     value='2019-05-01 12:00'
@@ -105,6 +106,7 @@ def build_askbid_chart():
                 html.P('To'),
                 dcc.Input(
                     id='askbid-input-date-to',
+                    className='border',
                     placeholder='2019-05-01 16:00',
                     type='text',
                     value='2019-05-01 16:00'
@@ -135,21 +137,6 @@ def build_chaos_chart():
     return html.Div([
             html.Div([
                 dcc.Graph(
-                    figure = chaosChartFigure('x')
-                )
-            ]),
-            html.Div([
-                dcc.Graph(
-                    figure = chaosChartFigure('y')
-                )
-            ]),
-            html.Div([
-                dcc.Graph(
-                    figure = chaosChartFigure('z')
-                )
-            ]),
-            html.Div([
-                dcc.Graph(
                     figure = chaosChartFigure('xyz')
                 )
             ]),
@@ -161,7 +148,7 @@ def build_chaos_chart():
 
 
 def chaosChartFigure(axis):
-    df = pd.DataFrame(kragle.utils.attractor(2000, 0.02))
+    df = pd.DataFrame(kragle.utils.attractor(15000, 0.02))
     return px.line(df, x="i", y=axis, title='Attractor ' + axis)
 
 

@@ -38,7 +38,12 @@ def attractor(n=100, dt=0.01):
     dy=0
     dz=0
     res = {'i':[], 'x':[], 'y':[], 'z':[], 'xyz':[]}
-    
+    j=0
+    k=0
+    pj = 4
+    dj = 2
+    pk = 20
+    dk = 4
     for i in range(n):
 
         dx =  x - y*z
@@ -52,6 +57,8 @@ def attractor(n=100, dt=0.01):
         res['x'].append((x))
         res['y'].append((y))
         res['z'].append((z))
-        res['xyz'].append((x+y+z))
+        res['xyz'].append((x + dj  * res['x'][j]) + dk * res['x'][k])
+        if i % pj == 0: j =  j + 1
+        if i % pk == 0: k =  k + 1
     return res
 
