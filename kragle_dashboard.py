@@ -67,7 +67,8 @@ def build_explore_table():
                     {'label': 'm30', 'value': 'm30'},
                     {'label': 'H1', 'value': 'H1'},
                 ],
-                value='m1'
+                value='m1',
+                clearable=False
             ) ,
 
             html.Div([
@@ -109,7 +110,19 @@ def build_askbid_chart():
                     value='2019-05-01 16:00'
                 )  
             ]), 
-
+            dcc.RadioItems(
+                id='askbid-table-period',
+                options=[
+                    {'label': 'm1 ', 'value': 'm1'},
+                    {'label': 'm5 ', 'value': 'm5'},
+                    {'label': 'm15 ', 'value': 'm15'},
+                    {'label': 'm30 ', 'value': 'm30'},
+                    {'label': 'H1 ', 'value': 'H1'},
+                ],
+                value='m1',
+                labelStyle={'display': 'inline-block'},
+                inputClassName = "mx-2"
+            ),
             html.Div([
                 dcc.Graph(
                     id='askbid-chart'
@@ -118,6 +131,38 @@ def build_askbid_chart():
 
         ])
 
+def build_chaos_chart():
+    return html.Div([
+            html.Div([
+                dcc.Graph(
+                    figure = chaosChartFigure('x')
+                )
+            ]),
+            html.Div([
+                dcc.Graph(
+                    figure = chaosChartFigure('y')
+                )
+            ]),
+            html.Div([
+                dcc.Graph(
+                    figure = chaosChartFigure('z')
+                )
+            ]),
+            html.Div([
+                dcc.Graph(
+                    figure = chaosChartFigure('xyz')
+                )
+            ]),
+
+        ])
+
+
+
+
+
+def chaosChartFigure(axis):
+    df = pd.DataFrame(kragle.utils.attractor(2000, 0.02))
+    return px.line(df, x="i", y=axis, title='Attractor ' + axis)
 
 
 
@@ -126,84 +171,66 @@ def render_content():
 
 def render_top():
     return  html.Nav(
-        className = "navbar",
-        role = "navigation",
-        children=[
+       children=[
             html.Div(
-                className = "navbar-brand",
+                className = "bg-gray-900 text-gray-200 px-4 ",
                 children=[
-                    html.A(
-                        className = "navbar-item",
-                        href = '/',
-                        children = [
-                            html.P("Kragle ", className = "title is-2 has-text-link"),
-                            html.Br(),
-                            html.P("AI Trading", className = "subtitle is-7 has-text-white-ter"),
-                        ]
-                    ),
-                    html.A(
-                        className = "burger navbar-burger",
-                        children = [
-                            html.Span( ),
-                            html.Span(),
-                            html.Span( ),   
-                        ]
-                    )
+                    html.P( "Kragle", className="text-5xl text-bold inline-block"),
+                    html.P( "AI - Trading", className="ml-4 text- text-xs inline-block"),
                 ],
             )
         ],
         **{"aria-label":"main-navigation"},
     )
 
+def boxOut(): return "w-full lg:w-1/2 p-4"
+def boxIn(): return "bg-white p-4 rounded-lg shadow-xl border"
 
 def render_main_content():
-    return  html.Section(
-        className = "section",
+    return  html.Div(
+        className = "bg-white font-sans leading-normal tracking-normal mt-12",
         children=[
             html.Div(
-                className = "columns",
+                className = "flex flex-wrap p-4",
                 children=[
-                    html.Div(className = "column is-one-quarter",
+                    html.Div(className = boxOut(),
                         children = html.Div(
-                            className = "box",
+                            className = boxIn(),
                             children=[
-                                html.P("Settings", className="title is-1 is-spaced"),
+                                html.P("Settings", className="text-2xl font-extrabold"),
                                 html.Br(),
-                                html.P("Variabili globali", className="subtitle is-7"),
+                                html.P("Variabili globali", className="text-lg"),
                                 dcc.Input(
                                     placeholder='Enter a value...',
                                     type='text',
                                     value='',
-                                    className ="is-info"
+                                    className ="border"
                                 ),
-                                html.P("""Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."""),
-
-                                html.P("""Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula eu tempor congue, eros est euismod turpis, id tincidunt sapien risus a quam. Maecenas fermentum consequat mi. Donec fermentum. Pellentesque malesuada nulla a mi. Duis sapien sem, aliquet nec, commodo eget, consequat quis, neque. Aliquam faucibus, elit ut dictum aliquet, felis nisl adipiscing sapien, sed malesuada diam lacus eget erat. Cras mollis scelerisque nunc. Nullam arcu. Aliquam consequat. Curabitur augue lorem, dapibus quis, laoreet et, pretium ac, nisi. Aenean magna nisl, mollis quis, molestie eu, feugiat in, orci. In hac habitasse platea dictumst.""")],
+                                build_chaos_chart()
+                            ],
                         ),
                     ),
                     html.Div(
-                        className = "column",
+                        className = boxOut(),
                         children = html.Div(
-                            className = "box ",
-                            children=build_explore_table(),
-                            
-                        ),
-                    ),
-                     html.Div(
-                        className = "column ",
-                        children = html.Div(
-                            className = "box ",
+                            className = boxIn(),
                             children=build_askbid_chart(),
                         ),
                     ),
+                    html.Div(
+                        className =boxOut(),
+                        children = html.Div(
+                            className = boxIn(),
+                            children=build_explore_table(),
+                        ),
+                    ),
                 ],
-            )
+            ),
         ]
     )
 
     
 
-app.layout =render_content()
 
 
 @app.callback(
@@ -222,21 +249,20 @@ def update_table( start_date, end_date, period):
         df = init_df(m, start, end, period=period)
     return [ df.to_dict('records') ]
 
+
 @app.callback(
     [ Output('askbid-chart', 'figure')],
     [Input('askbid-input-date-from', 'value')
-    ,Input('askbid-input-date-to', 'value')]
+    ,Input('askbid-input-date-to', 'value')
+    ,Input('askbid-table-period', 'value')]
 )
-def update_askbid_chart( start_date, end_date):
- 
+def update_askbid_chart( start_date, end_date, period):
     df =pd.DataFrame({})
     if (not start_date == '')&(not end_date == ''):
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = init_df(m, start, end)
-    ########################
-    
-    
+        df = init_df(m, start, end, period)
+    ######################## 
     df['fork'] =df['askopen']-df['bidopen']
 
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -253,12 +279,11 @@ def update_askbid_chart( start_date, end_date):
         go.Scatter(x=df["date"], y=df["tickqty"], name="tickqty"),
         secondary_y=True,
     )
-
-
     return [ fig1 ]
 
 
 
+app.layout =render_content()
 
 if __name__ == '__main__':
     app.run_server(debug=True)

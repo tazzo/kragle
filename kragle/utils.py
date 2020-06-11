@@ -28,3 +28,30 @@ def aggregate_dataframe( df):
     }
     return res
 
+
+
+def attractor(n=100, dt=0.01):
+    x=0.4
+    y=-0.1
+    z=0.1
+    dx=0
+    dy=0
+    dz=0
+    res = {'i':[], 'x':[], 'y':[], 'z':[], 'xyz':[]}
+    
+    for i in range(n):
+
+        dx =  x - y*z
+        dy = x - y + x*z
+        dz = -3*z + x*y
+
+        x= x + dx * dt
+        y= y + dy * dt
+        z= z + dz * dt
+        res['i'].append((i))
+        res['x'].append((x))
+        res['y'].append((y))
+        res['z'].append((z))
+        res['xyz'].append((x+y+z))
+    return res
+
