@@ -106,7 +106,7 @@ def build_askbid_chart():
                 html.P('To'),
                 dcc.Input(
                     id='askbid-input-date-to',
-                    className='border',
+                    className='border', 
                     placeholder='2019-05-01 16:00',
                     type='text',
                     value='2019-05-01 16:00'
@@ -138,18 +138,23 @@ def build_chaos_chart():
             html.Div([
                 dcc.Graph(
                     figure = chaosChartFigure('xyz')
-                )
+                ),
+                dcc.Graph(
+                    figure = fourierChartFigure()
+                ),
             ]),
 
         ])
 
 
 
-
+def fourierChartFigure():
+    df = pd.DataFrame(kragle.utils.fourier_01(2000, 0.01))
+    return px.line(df, x="x", y='y', title='Fourier')
 
 def chaosChartFigure(axis):
-    df = pd.DataFrame(kragle.utils.attractor(15000, 0.02))
-    return px.line(df, x="i", y=axis, title='Attractor ' + axis)
+    df = pd.DataFrame(kragle.utils.attractor(50000, 0.01))
+    return px.line(df, x="i", y=axis, title='Attractor ' )
 
 
 
