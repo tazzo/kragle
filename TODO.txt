@@ -1,7 +1,4 @@
 
-- test per insert_future
-- controllo duplicati nel DB
-- separare le funzioni sintetiche 
 - finire kragle_sintetic 
     - creare funzione m1->m5->m15->m30->H1
 - migliorare dashboard
