@@ -77,6 +77,7 @@ class KragleDB:
         """
         return pd.read_json(path, orient='records')
 
+    #TODO: create a test
     def create_dataset(self, n, instrument, periods, histlen, start, end):
         if start >= end:
             raise ValueError('Date error, start date must be before end date.')
