@@ -42,14 +42,40 @@ class KragleDB:
 
 
     def fetch_dataframe(self, df, instrument, period):
-        self.db[instrument][period].insert_many(df.to_dict("records"))
+        """
+        Fetch the dataframe in the DB using 'date' to replace existing elements o creating a new one
+
+        Args:
+            df (pandas.DataFrame): the dataframe to fetch
+            instrument (String): the forex instrument ('EUR/USD', 'EUR/JPY' ... )
+            period (String): the instrument period ('m1', 'm5', 'm15' ... )
+        """
+        for record in df.to_dict("records"):
+            self.db[instrument][period].replace_one({'date':record['date']}, record, upsert = True)
 
 
     def dataframe_to_json(self, df, path):
+        """
+        Write the dataframe to a file (specified with path) in 'records' format
+        while eliminating '_id' column derived from mongoDB
+
+        Args:
+            df (DataFrame): A Pandas DataFrame to write
+            path ([type]): Path to file
+        """
         df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
 
 
     def dataframe_read_json(self,  path):
+        """
+        Pandas read_json with orient='records'
+
+        Args:
+            path (String): path to file
+
+        Returns:
+            [DataFrame]: pandas dataframe
+        """
         return pd.read_json(path, orient='records')
 
     
@@ -90,7 +116,19 @@ class KragleDB:
         l[0]['tickqty']=agg['tickqty']
         return l
 
+    #TODO: make a test for this function
     def get_history(self,  instrument, period, histlen, date):
+        """[summary]
+
+        Args:
+            instrument ([type]): [description]
+            period ([type]): [description]
+            histlen ([type]): [description]
+            date ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
         return list(self.db[instrument][period]
             .find({'date': { '$lte': date}})
             .sort([('date', -1)])
@@ -100,20 +138,32 @@ class KragleDB:
     def aggregate_dataframe(self, df):
         return kutils.aggregate_dataframe(df)
 
-    def insert_future(self, instrument , period, start, end, d=12, r=2 ):
+
+    #TODO: make a test for this function
+    def insert_future(self, instrument , period, start, end, field = 'bidopen', d=12, r=2 ):
+        """[summary]
+
+        Args:
+            instrument ([type]): [description]
+            period ([type]): [description]
+            start ([type]): [description]
+            end ([type]): [description]
+            d (int, optional): [description]. Defaults to 12.
+            r (int, optional): [description]. Defaults to 2.
+        """
         df = self.get_instrument( instrument , period, start , end )
         self._insert_future(df, instrument , period, d=d, r=r)
 
-    def _insert_future(self, df, instrument , period, d=12, r=2 ):
+    def _insert_future(self, df, instrument , period, field = 'bidopen', d=12, r=2 ):
         gap=d-r
         win=r*2+1
         for r in range(df.shape[0]-d-r):
             
-            tmp = df.loc[[(i+r+gap)  for i in range(win)],'bidopen']
-            start = df.loc[r,'bidopen']
+            tmp = df.loc[[(i+r+gap)  for i in range(win)],field]
+            start = df.loc[r,field]
             future = round((tmp.mean()-start), 4)
             
-            self.db[instrument][period].update(
+            self.db[instrument][period].update_one(
                 { '_id': df.loc[r,'_id']}
                 , { '$set': { "future": future } }
                 , upsert=False )

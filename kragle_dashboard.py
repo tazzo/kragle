@@ -1,5 +1,5 @@
 import dash
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash_table
 import dash_core_components as dcc
 import dash_html_components as html
@@ -133,14 +133,34 @@ def build_askbid_chart():
 
         ])
 
-def build_chaos_chart():
+def build_sintetic_chart():
     return html.Div([
             html.Div([
+                html.Div([
+                    html.P('Number of values'),
+                    dcc.Input(
+                        id='input-fourier-number',
+                        className='border',
+                        placeholder='1000',
+                        type='text',
+                        value='1000'
+                    )  
+                ]), 
+                html.Div([
+                    html.P('Delta'),
+                    dcc.Input(
+                        id='input-fourier-delta',
+                        className='border',
+                        placeholder='0.01',
+                        type='text',
+                        value='0.01'
+                    )  
+                ]), 
                 dcc.Graph(
-                    figure = chaosChartFigure('xyz')
+                    id = 'fourier-chart',
                 ),
                 dcc.Graph(
-                    figure = fourierChartFigure()
+                    figure = chaosChartFigure('xyz')
                 ),
             ]),
 
@@ -148,12 +168,10 @@ def build_chaos_chart():
 
 
 
-def fourierChartFigure():
-    df = pd.DataFrame(kragle.utils.fourier_01(2000, 0.01))
-    return px.line(df, x="x", y='y', title='Fourier')
+
 
 def chaosChartFigure(axis):
-    df = pd.DataFrame(kragle.utils.attractor(50000, 0.01))
+    df = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
     return px.line(df, x="i", y=axis, title='Attractor ' )
 
 
@@ -189,16 +207,7 @@ def render_main_content():
                         children = html.Div(
                             className = boxIn(),
                             children=[
-                                html.P("Settings", className="text-2xl font-extrabold"),
-                                html.Br(),
-                                html.P("Variabili globali", className="text-lg"),
-                                dcc.Input(
-                                    placeholder='Enter a value...',
-                                    type='text',
-                                    value='',
-                                    className ="border"
-                                ),
-                                build_chaos_chart()
+                                build_sintetic_chart()
                             ],
                         ),
                     ),
@@ -222,8 +231,20 @@ def render_main_content():
     )
 
     
-
-
+@app.callback(
+    [ Output('fourier-chart', 'figure')],
+    [Input('input-fourier-number', 'value')
+    ,Input('input-fourier-delta', 'value')
+    ]
+)
+def fourierChartFigure(number, delta):
+    number = int(float(number))
+    delta = float(delta)
+    df = pd.DataFrame(kragle.sintetic.fourier_01(number, delta))
+    # kdb = kragle.KragleDB('kragle_sintetic')
+    # kdb.client.drop_database('kragle_sintetic')
+    # kdb.fetch_dataframe( df, 'fourier_01', 'm1')
+    return [px.line(df, x="n", y='bidopen', title='Fourier')]
 
 @app.callback(
     [ Output('datatable-interactivity', 'data')],
