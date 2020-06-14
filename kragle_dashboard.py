@@ -17,7 +17,7 @@ end = dt.datetime(2018,11,27,23,0)
 
 
 m = kragle.Manager()
-
+df_fourier = None
 
 def init_df(m, start, end, period='m1'):
 
@@ -156,6 +156,11 @@ def build_sintetic_chart():
                         value='0.01'
                     )  
                 ]), 
+                html.Button('Save values', 
+                    id='button-fourier-save', 
+                    className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+                ),
+                html.P('...',id = 'button-fourier-save-label'),
                 dcc.Graph(
                     id = 'fourier-chart',
                 ),
@@ -232,19 +237,33 @@ def render_main_content():
 
     
 @app.callback(
+    [ Output('button-fourier-save-label', 'children')],
+    [Input('button-fourier-save', 'n_clicks')
+    ],
+    [State('input-fourier-number', 'value')
+    ,State('input-fourier-delta', 'value')
+    ]
+)
+def buttonFourierSaveLabel(n_clicks, number, delta):
+    number = int(float(number))
+    delta = float(delta)
+    kdb = kragle.KragleDB('kragle_sintetic')
+    kdb.client.drop_database('kragle_sintetic')
+    kdb.fetch_dataframe( df_fourier, 'fourier_01', 'm1')
+    return [n_clicks]
+
+@app.callback(
     [ Output('fourier-chart', 'figure')],
     [Input('input-fourier-number', 'value')
     ,Input('input-fourier-delta', 'value')
     ]
 )
 def fourierChartFigure(number, delta):
+    global df_fourier
     number = int(float(number))
     delta = float(delta)
-    df = pd.DataFrame(kragle.sintetic.fourier_01(number, delta))
-    # kdb = kragle.KragleDB('kragle_sintetic')
-    # kdb.client.drop_database('kragle_sintetic')
-    # kdb.fetch_dataframe( df, 'fourier_01', 'm1')
-    return [px.line(df, x="n", y='bidopen', title='Fourier')]
+    df_fourier = pd.DataFrame(kragle.sintetic.fourier_01(number, delta))
+    return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
 @app.callback(
     [ Output('datatable-interactivity', 'data')],
