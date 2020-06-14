@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from kragle import KragleDB
-
+import kragle.utils as kutils
 
 def __test_db_setup(db, periods, filename):
     kdb = KragleDB(db)
@@ -96,7 +96,7 @@ def test_aggregate_dataframe(kdb):
            'askhigh': 75, 'asklow': 65, 'tickqty': 85, }
     ]
 
-    agg = kdb.aggregate_dataframe(pd.DataFrame(val))
+    agg = kutils.aggregate_dataframe(pd.DataFrame(val))
 
     assert agg['date'] == date3
     assert agg['bidopen'] == 5

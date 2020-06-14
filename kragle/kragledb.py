@@ -103,7 +103,7 @@ class KragleDB:
     def correct_last(self, l, before):
         df = pd.DataFrame(before)
         df = df.loc[df.date >= l[0]['date'], :]
-        agg = self.aggregate_dataframe(df)
+        agg = kutils.aggregate_dataframe(df)
         l[0]['bidopen'] = agg['bidopen']
         l[0]['bidclose'] = agg['bidclose']
         l[0]['bidhigh'] = agg['bidhigh']
@@ -116,7 +116,6 @@ class KragleDB:
 
         return l
 
-    # TODO: make a test for this function
     def get_history(self, instrument, period, histlen, date):
         """[summary]
 
@@ -134,10 +133,6 @@ class KragleDB:
                     .sort([('date', -1)])
                     .limit(histlen)
                     )
-
-    def aggregate_dataframe(self, df):
-        return kutils.aggregate_dataframe(df)
-
 
     def insert_future(self, instrument, period, start, end, field='bidopen', d=12, r=2):
         """[summary]
