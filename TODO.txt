@@ -1,6 +1,4 @@
 
-- finire kragle_sintetic 
-    - creare funzione m1->m5->m15->m30->H1
 - migliorare dashboard
 - DB per data test già preparati 
     - normalizzati

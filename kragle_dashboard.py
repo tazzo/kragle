@@ -17,7 +17,6 @@ end = dt.datetime(2018, 11, 27, 23, 0)
 
 m = kragle.Manager()
 df_fourier = None
-df = None
 
 
 def init_df(m, start_date, end_date, period='m1'):
@@ -25,6 +24,8 @@ def init_df(m, start_date, end_date, period='m1'):
     df = df.loc[:, ['date', 'bidopen', 'askopen', 'tickqty']]
     return df
 
+
+df = init_df(m, start, end, period='m1')
 
 app = dash.Dash(__name__, meta_tags=[
     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
@@ -239,17 +240,42 @@ def render_main_content():
 @app.callback(
     [Output('button-fourier-save-label', 'children')],
     [Input('button-fourier-save', 'n_clicks')
-     ],
-    [State('input-fourier-number', 'value')
-        , State('input-fourier-delta', 'value')
      ]
 )
-def buttonFourierSaveLabel(n_clicks, number, delta):
-    number = int(float(number))
-    delta = float(delta)
-    kdb = kragle.KragleDB('kragle_sintetic')
-    kdb.client.drop_database('kragle_sintetic')
-    kdb.fetch_dataframe(df_fourier, 'fourier_01', 'm1')
+def buttonFourierSaveLabel(n_clicks):
+    if (df_fourier is not None) & (n_clicks is not None):
+        kdb = kragle.KragleDB('kragle_sintetic')
+        kdb.client.drop_database('kragle_sintetic')
+        instrument = 'fourier_01'
+        kdb.fetch_dataframe(df_fourier, instrument, 'm1')
+
+        droplist = []
+        for i in range(df_fourier.shape[0]):
+            if i % 5 != 0:
+                droplist.append(i)
+        dfm5 = df_fourier.drop(droplist).reset_index(drop=True)
+        kdb.fetch_dataframe(dfm5, instrument, 'm5')
+
+        droplist = []
+        for i in range(dfm5.shape[0]):
+            if i % 3 != 0:
+                droplist.append(i)
+        dfm15 = dfm5.drop(droplist).reset_index(drop=True)
+        kdb.fetch_dataframe(dfm15, instrument, 'm15')
+
+        droplist = []
+        for i in range(dfm15.shape[0]):
+            if i % 2 != 0:
+                droplist.append(i)
+        dfm30 = dfm15.drop(droplist).reset_index(drop=True)
+        kdb.fetch_dataframe(dfm30, instrument, 'm30')
+
+        droplist = []
+        for i in range(dfm30.shape[0]):
+            if i % 2 != 0:
+                droplist.append(i)
+        dfH1 = dfm30.drop(droplist).reset_index(drop=True)
+        kdb.fetch_dataframe(dfH1, instrument, 'H1')
     return [n_clicks]
 
 
