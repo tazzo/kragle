@@ -6,6 +6,7 @@ import pytest
 from kragle import KragleDB
 import kragle.utils as kutils
 
+
 def __test_db_setup(db, periods, filename):
     kdb = KragleDB(db)
     kdb.client.drop_database(kdb.dbname)
@@ -42,7 +43,6 @@ def kdb_future():
     yield kdb
     print(">> Teardown kdb future << ", end='')
     __test_db_teardown(kdb)
-
 
 
 def test_create_dataset_raise_date_order(kdb):
@@ -157,6 +157,19 @@ def test_insert_future(kdb_future):
     end_date = dt.datetime(2018, 11, 23, 23, 10)
     kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=12, r=2)
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
-    assert val['future'] == 12
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date+dt.timedelta(minutes=5))
-    assert val['future'] == 12
+    assert val['future'] == (13 + 14 + 15 + 16 + 17) / 5
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
+    assert val['future'] == (14 + 15 + 16 + 17 + 0) / 5 - val['bidopen']
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=10))
+    assert val['future'] == (15 + 16 + 17 + 0 + 0) / 5 - val['bidopen']
+    ##########
+    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=10, r=1)
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
+    assert val['future'] == ( 9 + 13 + 14 ) / 3 - val['bidopen']
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
+    assert val['future'] == (13 + 14 + 15 ) / 3 - val['bidopen']
+    ##########
+    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=3, r=1)
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
+    assert val['future'] == ( 9 + 4 + 2 ) / 3 - val['bidopen']
+

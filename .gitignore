@@ -3,3 +3,7 @@ log_file.log
 dump
 __pycache__
 .vscode
+.idea
+.pytest_cache
+node_modules
+/package-lock.json

@@ -1,0 +1,25 @@
+{
+  "name": "kragle",
+  "version": "0.0.1",
+  "description": "\"# kragle\"",
+  "main": "",
+  "scripts": {
+    "test": "pipenv run pytest -s -v",
+    "dashboard": "pipenv run python kragle_dashboard.py",
+    "build": "tailwindcss build style.css -o assets/style.css"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tazzo/kragle.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tazzo/kragle/issues"
+  },
+  "homepage": "https://github.com/tazzo/kragle#readme",
+  "dependencies": {
+    "tailwindcss": "^1.4.6"
+  }
+}

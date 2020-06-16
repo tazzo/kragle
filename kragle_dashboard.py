@@ -94,7 +94,6 @@ def build_askbid_chart():
             html.P('From'),
             dcc.Input(
                 id='askbid-input-date-from',
-                className='border',
                 placeholder='2019-05-01 12:00',
                 type='text',
                 value='2019-05-01 12:00'
@@ -104,7 +103,6 @@ def build_askbid_chart():
             html.P('To'),
             dcc.Input(
                 id='askbid-input-date-to',
-                className='border',
                 placeholder='2019-05-01 16:00',
                 type='text',
                 value='2019-05-01 16:00'
@@ -139,7 +137,6 @@ def build_sintetic_chart():
                 html.P('Number of values'),
                 dcc.Input(
                     id='input-fourier-number',
-                    className='border',
                     placeholder='1000',
                     type='text',
                     value='1000'
@@ -149,7 +146,6 @@ def build_sintetic_chart():
                 html.P('Delta'),
                 dcc.Input(
                     id='input-fourier-delta',
-                    className='border',
                     placeholder='0.01',
                     type='text',
                     value='0.01'
@@ -158,7 +154,12 @@ def build_sintetic_chart():
             html.Button(
                 'Save values',
                 id='button-fourier-save',
-                className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+                className='btn btn-blue'
+            ),
+            dcc.Loading(
+                id="loading-1",
+                type="default",
+                children=html.Div(id="loading-output-1")
             ),
             html.P('...', id='button-fourier-save-label'),
             dcc.Graph(
@@ -196,38 +197,32 @@ def render_top():
     )
 
 
-def boxOut(): return "w-full lg:w-1/2 p-4"
-
-
-def boxIn(): return "bg-white p-4 rounded-lg shadow-xl border"
-
-
 def render_main_content():
     return html.Div(
-        className="bg-white font-sans leading-normal tracking-normal mt-12",
+        className="bg-white font-sans leading-normal tracking-normal mt-12 w-full",
         children=[
             html.Div(
-                className="flex flex-wrap p-4",
+                className="box-container",
                 children=[
-                    html.Div(className=boxOut(),
+                    html.Div(className='box-wrapper',
                              children=html.Div(
-                                 className=boxIn(),
+                                 className='box',
                                  children=[
                                      build_sintetic_chart()
                                  ],
                              ),
                              ),
                     html.Div(
-                        className=boxOut(),
+                        className='box-wrapper',
                         children=html.Div(
-                            className=boxIn(),
+                            className='box',
                             children=build_askbid_chart(),
                         ),
                     ),
                     html.Div(
-                        className=boxOut(),
+                        className='box-wrapper',
                         children=html.Div(
-                            className=boxIn(),
+                            className='box',
                             children=build_explore_table(),
                         ),
                     ),
@@ -237,13 +232,13 @@ def render_main_content():
     )
 
 
+
 @app.callback(
-    [Output('button-fourier-save-label', 'children')],
-    [Input('button-fourier-save', 'n_clicks')
-     ]
+    Output("loading-output-1", "children"),
+    [Input('button-fourier-save', 'n_clicks')]
 )
-def buttonFourierSaveLabel(n_clicks):
-    if (df_fourier is not None) & (n_clicks is not None):
+def buttonFourierSaveLabel(value):
+    if (df_fourier is not None) & (value is not None):
         kdb = kragle.KragleDB('kragle_sintetic')
         kdb.client.drop_database('kragle_sintetic')
         instrument = 'fourier_01'
@@ -276,7 +271,7 @@ def buttonFourierSaveLabel(n_clicks):
                 droplist.append(i)
         dfH1 = dfm30.drop(droplist).reset_index(drop=True)
         kdb.fetch_dataframe(dfH1, instrument, 'H1')
-    return [n_clicks]
+    return [value]
 
 
 @app.callback(
@@ -321,7 +316,7 @@ def update_askbid_chart(start_date, end_date, period):
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
         df = init_df(m, start, end, period)
-    ######################## 
+    ########################
     df['fork'] = df['askopen'] - df['bidopen']
 
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])

@@ -55,10 +55,10 @@ def attractor(n=100, dt=0.01):
         x = x + dx * dt
         y = y + dy * dt
         z = z + dz * dt
-        res['i'].append((i))
-        res['x'].append((x))
-        res['y'].append((y))
-        res['z'].append((z))
+        res['i'].append(i)
+        res['x'].append(x)
+        res['y'].append(y)
+        res['z'].append(z)
         res['xyz'].append((di * x + dj * res['x'][j]) + dk * res['x'][k])
         if i % pj == 0: j = j + 1
         if i % pk == 0: k = k + 1
