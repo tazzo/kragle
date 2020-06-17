@@ -16,9 +16,15 @@ done = ['EUR/USD', 'USD/JPY', 'ETH/USD', 'USD/CHF', 'GBP/USD', 'USD/CAD',
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
 
+def getDBNames():
+    client = MongoClient('localhost', 27017)
+    l = client.list_database_names()
+    client.close()
+    return l
+
 class KragleDB:
 
-    def __init__(self, dbname='kragle'):
+    def __init__(self, dbname='forex_raw'):
 
         self.client = MongoClient('localhost', 27017)
         self.db = self.client[dbname]
@@ -26,6 +32,28 @@ class KragleDB:
 
     def close(self):
         self.client.close()
+
+    def get_instruments(self):
+        return list(self.get_instruments_and_periods())
+
+    def get_periods(self, instrument):
+        return self.getInstrumentsAndPeriods()[instrument]
+
+    def get_instruments_and_periods(self):
+        names = self.db.collection_names()
+        return self._calc_instruments_and_periods(names)
+
+    def _calc_instruments_and_periods(self, names):
+        res = {}
+        for name in names:
+            try:
+                l = name.split('.')
+                val = res.get(l[0], [])
+                val.append(l[1])
+                res[l[0]] = val
+            except:
+                pass
+        return res
 
     def get_instrument(self, instrument, period='m1', start=None, end=None, limit=100000):
 
@@ -42,8 +70,8 @@ class KragleDB:
         db = self.db[instrument][period]
         return db.find_one({'date': date})
 
-    #TODO: add a test
-    def fetch_dataframe(self, df, instrument, period, check_duplicates = True):
+    # TODO: add a test
+    def fetch_dataframe(self, df, instrument, period, check_duplicates=True):
         """
         Fetch the dataframe in the DB using 'date' to replace existing elements o creating a new one
 
@@ -57,6 +85,7 @@ class KragleDB:
                 self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
         else:
             self.db[instrument][period].insert_many(df.to_dict("records"))
+
     def dataframe_to_json(self, df, path):
         """
         Write the dataframe to a file (specified with path) in 'records' format
@@ -80,7 +109,7 @@ class KragleDB:
         """
         return pd.read_json(path, orient='records')
 
-    #TODO: create a test
+    # TODO: create a test
     def create_dataset(self, n, instrument, periods, histlen, start, end):
         if start >= end:
             raise ValueError('Date error, start date must be before end date.')

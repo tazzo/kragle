@@ -46,7 +46,7 @@ def kdb_future():
 
 
 def test_create_dataset_raise_date_order(kdb):
-    '''test start date after end date'''
+    """test start date after end date"""
     start = dt.datetime(2018, 11, 28, 22, 50)
     end = dt.datetime(2018, 11, 27, 22, 50)
     with pytest.raises(ValueError, match=r".*before.*"):
@@ -165,11 +165,19 @@ def test_insert_future(kdb_future):
     ##########
     kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=10, r=1)
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
-    assert val['future'] == ( 9 + 13 + 14 ) / 3 - val['bidopen']
+    assert val['future'] == (9 + 13 + 14) / 3 - val['bidopen']
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
-    assert val['future'] == (13 + 14 + 15 ) / 3 - val['bidopen']
+    assert val['future'] == (13 + 14 + 15) / 3 - val['bidopen']
     ##########
     kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=3, r=1)
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
-    assert val['future'] == ( 9 + 4 + 2 ) / 3 - val['bidopen']
+    assert val['future'] == (9 + 4 + 2) / 3 - val['bidopen']
 
+
+def test_calc_instruments_and_periods(kdb):
+    l = ['A.1', 'A.2', 'A.3', 'B.1', 'B.2', 'C.1', 'C.2', 'C.3', 'C.4']
+    res = kdb._calc_instruments_and_periods(l)
+    assert res['A'] == ['1', '2', '3']
+    assert res['B'] == ['1', '2']
+    assert res['C'] == ['1', '2', '3', '4']
+    assert list(res) == ['A', 'B', 'C']

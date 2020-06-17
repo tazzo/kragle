@@ -15,17 +15,9 @@ import kragle
 start = dt.datetime(2018, 11, 27, 13, 0)
 end = dt.datetime(2018, 11, 27, 23, 0)
 
-m = kragle.Manager()
 df_fourier = None
 
-
-def init_df(m, start_date, end_date, period='m1'):
-    df = m.get_instrument('EUR/USD', period, start_date, end_date)
-    df = df.loc[:, ['date', 'bidopen', 'askopen', 'tickqty']]
-    return df
-
-
-df = init_df(m, start, end, period='m1')
+kdb = kragle.KragleDB('forex_raw')
 
 app = dash.Dash(__name__, meta_tags=[
     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
@@ -72,9 +64,9 @@ def build_explore_table():
             dash_table.DataTable(
                 id='datatable-interactivity',
                 columns=[
-                    {"name": i, "id": i} for i in df.columns
+                    {"name": i, "id": i} for i in ['date', 'bidopen', 'tickqty']
                 ],
-                data=pd.DataFrame([{}]).to_dict('records'),
+                data=[],
                 style_cell={'textAlign': 'left', 'padding': '5px'},
                 sort_mode="multi",
                 selected_columns=[],
@@ -90,7 +82,18 @@ def build_explore_table():
 
 def build_askbid_chart():
     return html.Div([
+        html.Button(
+            'Refresh DB names',
+            id='button-dbnames-refresh',
+            className='btn btn-blue'
+        ),
         html.Div([
+            dcc.Dropdown(
+                id='chart-dbnames-dropdown',
+            ),
+            dcc.Dropdown(
+                id='chart-instruments-dropdown',
+            ),
             html.P('From'),
             dcc.Input(
                 id='askbid-input-date-from',
@@ -174,8 +177,8 @@ def build_sintetic_chart():
 
 
 def chaosChartFigure(axis):
-    df = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
-    return px.line(df, x="i", y=axis, title='Attractor ')
+    dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
+    return px.line(dftmp, x="i", y=axis, title='Attractor ')
 
 
 def render_content():
@@ -232,13 +235,41 @@ def render_main_content():
     )
 
 
+@app.callback(
+    [Output("chart-instruments-dropdown", "options"),
+     Output("chart-instruments-dropdown", "value")],
+    [Input('chart-dbnames-dropdown', 'value')]
+)
+def chartInstrumentsRefresh(dbname):
+    global kdb
+    kdb.close()
+    kdb = kragle.KragleDB(dbname)
+    insrtuments = kdb.get_instruments()
+    options = []
+    for insrtument in insrtuments:
+        options.append({'label': insrtument, 'value': insrtument})
+    return [options, insrtuments[0]]
+
+
+@app.callback(
+    [Output("chart-dbnames-dropdown", "options"),
+     Output("chart-dbnames-dropdown", "value")],
+    [Input('button-dbnames-refresh', 'n_clicks')]
+)
+def buttonDBNamesRefresh(n_clicks):
+    names = kragle.getDBNames()
+    options = []
+    for name in names:
+        options.append({'label': name, 'value': name})
+    return [options, 'forex_raw']
+
 
 @app.callback(
     Output("loading-output-1", "children"),
     [Input('button-fourier-save', 'n_clicks')]
 )
-def buttonFourierSaveLabel(value):
-    if (df_fourier is not None) & (value is not None):
+def buttonFourierSaveLabel(n_clicks):
+    if (n_clicks is not None):
         kdb = kragle.KragleDB('kragle_sintetic')
         kdb.client.drop_database('kragle_sintetic')
         instrument = 'fourier_01'
@@ -271,7 +302,8 @@ def buttonFourierSaveLabel(value):
                 droplist.append(i)
         dfH1 = dfm30.drop(droplist).reset_index(drop=True)
         kdb.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
-    return [value]
+        kdb.close()
+    return [n_clicks]
 
 
 @app.callback(
@@ -300,7 +332,8 @@ def update_table(start_date, end_date, period):
     if (not start_date == '') & (not end_date == ''):
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = init_df(m, start, end, period=period)
+        df = kdb.get_instrument('EUR/USD', period, start, end)
+        df = df.loc[:, ['date', 'bidopen', 'tickqty']]
     return [df.to_dict('records')]
 
 
@@ -312,21 +345,18 @@ def update_table(start_date, end_date, period):
 )
 def update_askbid_chart(start_date, end_date, period):
     df = pd.DataFrame({})
+    k = kdb
     if (not start_date == '') & (not end_date == ''):
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = init_df(m, start, end, period)
+        df = kdb.get_instrument('EUR/USD', period, start, end)
+
     ########################
-    df['fork'] = df['askopen'] - df['bidopen']
 
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
     # Add traces
     fig1.add_trace(
         go.Scatter(x=df["date"], y=df["bidopen"], name="bidopen"),
-        secondary_y=False,
-    )
-    fig1.add_trace(
-        go.Scatter(x=df["date"], y=df["askopen"], name="askopen"),
         secondary_y=False,
     )
     fig1.add_trace(
