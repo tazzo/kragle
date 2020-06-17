@@ -1,5 +1,5 @@
 
-- Tailwind compilato
+- fetch_dataframe too slow if I check for duplicates
 - migliorare dashboard
 - DB per data test già preparati 
     - normalizzati

@@ -42,7 +42,8 @@ class KragleDB:
         db = self.db[instrument][period]
         return db.find_one({'date': date})
 
-    def fetch_dataframe(self, df, instrument, period):
+    #TODO: add a test
+    def fetch_dataframe(self, df, instrument, period, check_duplicates = True):
         """
         Fetch the dataframe in the DB using 'date' to replace existing elements o creating a new one
 
@@ -51,9 +52,11 @@ class KragleDB:
             instrument (String): the forex instrument ('EUR/USD', 'EUR/JPY' ... )
             period (String): the instrument period ('m1', 'm5', 'm15' ... )
         """
-        for record in df.to_dict("records"):
-            self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
-
+        if check_duplicates:
+            for record in df.to_dict("records"):
+                self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
+        else:
+            self.db[instrument][period].insert_many(df.to_dict("records"))
     def dataframe_to_json(self, df, path):
         """
         Write the dataframe to a file (specified with path) in 'records' format

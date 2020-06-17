@@ -242,35 +242,35 @@ def buttonFourierSaveLabel(value):
         kdb = kragle.KragleDB('kragle_sintetic')
         kdb.client.drop_database('kragle_sintetic')
         instrument = 'fourier_01'
-        kdb.fetch_dataframe(df_fourier, instrument, 'm1')
+        kdb.fetch_dataframe(df_fourier, instrument, 'm1', check_duplicates=False)
 
         droplist = []
         for i in range(df_fourier.shape[0]):
             if i % 5 != 0:
                 droplist.append(i)
         dfm5 = df_fourier.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfm5, instrument, 'm5')
+        kdb.fetch_dataframe(dfm5, instrument, 'm5', check_duplicates=False)
 
         droplist = []
         for i in range(dfm5.shape[0]):
             if i % 3 != 0:
                 droplist.append(i)
         dfm15 = dfm5.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfm15, instrument, 'm15')
+        kdb.fetch_dataframe(dfm15, instrument, 'm15', check_duplicates=False)
 
         droplist = []
         for i in range(dfm15.shape[0]):
             if i % 2 != 0:
                 droplist.append(i)
         dfm30 = dfm15.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfm30, instrument, 'm30')
+        kdb.fetch_dataframe(dfm30, instrument, 'm30', check_duplicates=False)
 
         droplist = []
         for i in range(dfm30.shape[0]):
             if i % 2 != 0:
                 droplist.append(i)
         dfH1 = dfm30.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfH1, instrument, 'H1')
+        kdb.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
     return [value]
 
 
