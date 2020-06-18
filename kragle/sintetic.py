@@ -2,28 +2,33 @@ import datetime as dt
 import math
 import random
 from functools import reduce
+import operator
 
 
-def fourier(x, L, an=[0], bn=[]):
-    l = map(
-        lambda a, b, n: a * math.cos(2 * math.pi * x * n / L) + b * math.sin(2 * math.pi * x * n / L),
+def fourier(x,  an=[1], bn=[0]):
+    fcos = lambda a, n: a * math.cos(2 * math.pi * x * n )
+    fsin = lambda b, n: b * math.sin(2 * math.pi * x * n )
+    la = map(
+        fcos,
         an,
-        bn,
         range(len(an))
     )
-    return reduce(lambda a, b: a + b, l)
+    lb = map(
+        fsin ,
+        bn,
+        range(len(bn))
+    )
+
+    return (reduce(operator.add, la)+reduce(operator.add, lb))
 
 
-def fourier_01(n=100, delta=0.01):
-    L = 8
-    an = [8.2500, -0.27083, 0.075141, -0.11397, 0, -0.052663, -0.13312, -0.14658, 0.0000012712, 0.081986, 0.053933]
-    bn = [0, -1.2059, -1.7507, 0.47452, 0.44563, 0.14638, -0.58356, 0.039463, 0.063662, -0.0059031, -0.35014]
+def fourier_01(n=100, delta=0.01, an = [1], bn = [0]):
     res = {'n': [], 'bidopen': [], 'date': [], 'tickqty': []}
     start = dt.datetime(2018, 11, 24, 23, 0)
     noise = random.random() - 0.5
     for i in range(n):
         res['n'].append(i)
-        res['bidopen'].append(fourier(i * delta, L, an, bn) + noise)
+        res['bidopen'].append(fourier(i * delta, an, bn) + noise)
         res['date'].append(start + dt.timedelta(minutes=i))
         res['tickqty'].append(round(random.random() * 100))
 

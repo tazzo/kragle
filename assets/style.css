@@ -17901,7 +17901,6 @@ input {
   --text-opacity: 1;
   color: #fff;
   color: rgba(255, 255, 255, var(--text-opacity));
-  font-weight: 700;
 }
 
 .btn-blue:hover{
@@ -17936,6 +17935,12 @@ input {
   border-radius: 0.5rem;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   border-width: 1px;
+}
+
+/* This is for Dash chart button bar */
+
+.modebar-btn{
+  display: inline-block;
 }
 
 @media (min-width: 640px) {
@@ -86981,4 +86986,3 @@ input {
     transition-delay: 1000ms;
   }
 }
-

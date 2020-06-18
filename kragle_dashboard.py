@@ -88,31 +88,38 @@ def build_askbid_chart():
             className='btn btn-blue'
         ),
         html.Div([
-            dcc.Dropdown(
-                id='chart-dbnames-dropdown',
-            ),
-            dcc.Dropdown(
-                id='chart-instruments-dropdown',
-            ),
-        ]),
+            html.Div([
+                dcc.Dropdown(
+                    id='chart-dbnames-dropdown',
+
+                ),
+            ], className='w-1/2'),
+            html.Div([
+                dcc.Dropdown(
+                    id='chart-instruments-dropdown',
+                ),
+            ], className='w-1/2'),
+        ], className='flex'),
         html.Div([
-            html.P('From'),
-            dcc.Input(
-                id='askbid-input-date-from',
-                placeholder='2019-05-01 12:00',
-                type='text',
-                value='2019-05-01 12:00'
-            )
-        ]),
-        html.Div([
-            html.P('To'),
-            dcc.Input(
-                id='askbid-input-date-to',
-                placeholder='2019-05-01 16:00',
-                type='text',
-                value='2019-05-01 16:00'
-            )
-        ]),
+            html.Div([
+                html.P('From'),
+                dcc.Input(
+                    id='askbid-input-date-from',
+                    placeholder='2019-05-01 12:00',
+                    type='text',
+                    value='2019-05-01 12:00'
+                )
+            ]),
+            html.Div([
+                html.P('To'),
+                dcc.Input(
+                    id='askbid-input-date-to',
+                    placeholder='2019-05-01 16:00',
+                    type='text',
+                    value='2019-05-01 16:00'
+                )
+            ]),
+        ], className='flex space-x-2'),
         dcc.RadioItems(
             id='askbid-table-period',
             options=[
@@ -133,28 +140,53 @@ def build_askbid_chart():
         ]),
 
     ],
-        className='space-y-4')
+        className='space-y-1')
 
 
 def build_sintetic_chart():
     return html.Div([
         html.Div([
+            html.P('Fourier sintetic data generator', className='text-2xl font-bold'),
             html.Div([
-                html.P('Number of values'),
+                html.Div([
+                    html.P('Number of values'),
+                    dcc.Input(
+                        id='input-fourier-number',
+                        placeholder='1000',
+                        type='text',
+                        value='1000'
+                    )
+                ]),
+                html.Div([
+                    html.P('Delta'),
+                    dcc.Input(
+                        id='input-fourier-delta',
+                        placeholder='0.003',
+                        type='text',
+                        value='0.003'
+                    )
+                ]),
+            ],
+            className='flex space-x-2',
+            ),
+            html.Div([
+                html.P('An'),
                 dcc.Input(
-                    id='input-fourier-number',
-                    placeholder='1000',
+                    id='input-fourier-an',
+                    className='w-full',
+                    placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
                     type='text',
-                    value='1000'
+                    value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
                 )
             ]),
             html.Div([
-                html.P('Delta'),
+                html.P('Bn'),
                 dcc.Input(
-                    id='input-fourier-delta',
-                    placeholder='0.01',
+                    id='input-fourier-bn',
+                    className='w-full',
+                    placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
                     type='text',
-                    value='0.01'
+                    value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
                 )
             ]),
             html.Button(
@@ -174,7 +206,7 @@ def build_sintetic_chart():
             dcc.Graph(
                 figure=chaosChartFigure('xyz')
             ),
-        ]),
+        ], className='space-y-1'),
 
     ])
 
@@ -313,13 +345,20 @@ def buttonFourierSaveLabel(n_clicks):
     [Output('fourier-chart', 'figure')],
     [Input('input-fourier-number', 'value')
         , Input('input-fourier-delta', 'value')
+        , Input('input-fourier-an', 'value')
+        , Input('input-fourier-bn', 'value')
      ]
 )
-def fourierChartFigure(number, delta):
+def fourierChartFigure(number, delta, an_str, bn_str):
     global df_fourier
+
+    an = list(map(float, an_str.split(',')))
+
+    bn = list(map(float, bn_str.split(',')))
+
     number = int(float(number))
     delta = float(delta)
-    df_fourier = pd.DataFrame(kragle.sintetic.fourier_01(number, delta))
+    df_fourier = pd.DataFrame(kragle.sintetic.fourier_01(number, delta, an, bn))
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
 
@@ -355,7 +394,7 @@ def update_askbid_chart(start_date, end_date, instrument, period):
         df = kdb.get_instrument(instrument, period, start, end)
     except:
         pass
-    if df.shape[0] == 0 :
+    if df.shape[0] == 0:
         df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})
     ########################
 
