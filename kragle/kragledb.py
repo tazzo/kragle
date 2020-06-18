@@ -73,6 +73,9 @@ class KragleDB:
         db = self.db[instrument][period]
         return db.find_one({'date': date})
 
+    def drop(self, instrument):
+        return self.db[instrument].drop()
+
     # TODO: add a test
     def fetch_dataframe(self, df, instrument, period, check_duplicates=True):
         """

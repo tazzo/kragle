@@ -91,12 +91,14 @@ def build_askbid_chart():
             html.Div([
                 dcc.Dropdown(
                     id='chart-dbnames-dropdown',
+                    clearable=False
 
                 ),
             ], className='w-1/2'),
             html.Div([
                 dcc.Dropdown(
                     id='chart-instruments-dropdown',
+                    clearable=False
                 ),
             ], className='w-1/2'),
         ], className='flex'),
@@ -149,28 +151,40 @@ def build_sintetic_chart():
             html.P('Fourier sintetic data generator', className='text-2xl font-bold'),
             html.Div([
                 html.Div([
-                    html.P('Number of values'),
+                    html.P('Number of values', className='font-bold'),
                     dcc.Input(
                         id='input-fourier-number',
+                        className='w-40',
                         placeholder='1000',
                         type='text',
                         value='1000'
                     )
                 ]),
                 html.Div([
-                    html.P('Delta'),
+                    html.P('Delta', className='font-bold'),
                     dcc.Input(
                         id='input-fourier-delta',
+                        className='w-24',
                         placeholder='0.003',
                         type='text',
                         value='0.003'
                     )
                 ]),
+                html.Div([
+                    html.P('Noise factor', className='font-bold'),
+                    dcc.Input(
+                        id='input-fourier-noise-factor',
+                        className='w-24',
+                        placeholder='0.5',
+                        type='text',
+                        value='0.5'
+                    )
+                ]),
             ],
-            className='flex space-x-2',
+                className='flex flex-wrap space-x-2',
             ),
             html.Div([
-                html.P('An'),
+                html.P('An', className='font-bold'),
                 dcc.Input(
                     id='input-fourier-an',
                     className='w-full',
@@ -180,7 +194,7 @@ def build_sintetic_chart():
                 )
             ]),
             html.Div([
-                html.P('Bn'),
+                html.P('Bn', className='font-bold'),
                 dcc.Input(
                     id='input-fourier-bn',
                     className='w-full',
@@ -189,10 +203,22 @@ def build_sintetic_chart():
                     value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
                 )
             ]),
-            html.Button(
-                'Save values',
-                id='button-fourier-save',
-                className='btn btn-blue'
+            html.Span('Instrument name', className='font-bold'),
+            html.Div([
+                dcc.Input(
+                    id='input-fourier-instrument-name',
+                    className='px-2',
+                    placeholder='fourier_01',
+                    type='text',
+                    value='fourier_01',
+                ),
+                html.Button(
+                    'Save values',
+                    id='button-fourier-save',
+                    className='btn btn-blue'
+                ),
+            ],
+                className='flex space-x-2',
             ),
             dcc.Loading(
                 id="loading-1",
@@ -301,43 +327,47 @@ def buttonDBNamesRefresh(n_clicks):
 
 @app.callback(
     Output("loading-output-1", "children"),
-    [Input('button-fourier-save', 'n_clicks')]
+    [Input('button-fourier-save', 'n_clicks')],
+    [State('input-fourier-instrument-name', 'value')]
 )
-def buttonFourierSaveLabel(n_clicks):
-    if (n_clicks is not None):
-        kdb = kragle.KragleDB('kragle_sintetic')
-        kdb.client.drop_database('kragle_sintetic')
-        instrument = 'fourier_01'
-        kdb.fetch_dataframe(df_fourier, instrument, 'm1', check_duplicates=False)
+def buttonFourierSaveLabel(n_clicks, instrument):
+    if n_clicks is not None:
+        kdb_tmp = kragle.KragleDB('kragle_sintetic')
+        # delete old collection
+        for period in kragle.periods:
+            kdb_tmp.drop('{}.{}'.format(instrument, period))
 
+        # m1
+        kdb_tmp.fetch_dataframe(df_fourier, instrument, 'm1', check_duplicates=False)
+        # m5
         droplist = []
         for i in range(df_fourier.shape[0]):
             if i % 5 != 0:
                 droplist.append(i)
         dfm5 = df_fourier.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfm5, instrument, 'm5', check_duplicates=False)
-
+        kdb_tmp.fetch_dataframe(dfm5, instrument, 'm5', check_duplicates=False)
+        # m15
         droplist = []
         for i in range(dfm5.shape[0]):
             if i % 3 != 0:
                 droplist.append(i)
         dfm15 = dfm5.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfm15, instrument, 'm15', check_duplicates=False)
-
+        kdb_tmp.fetch_dataframe(dfm15, instrument, 'm15', check_duplicates=False)
+        # m30
         droplist = []
         for i in range(dfm15.shape[0]):
             if i % 2 != 0:
                 droplist.append(i)
         dfm30 = dfm15.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfm30, instrument, 'm30', check_duplicates=False)
-
+        kdb_tmp.fetch_dataframe(dfm30, instrument, 'm30', check_duplicates=False)
+        # H1
         droplist = []
         for i in range(dfm30.shape[0]):
             if i % 2 != 0:
                 droplist.append(i)
         dfH1 = dfm30.drop(droplist).reset_index(drop=True)
-        kdb.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
-        kdb.close()
+        kdb_tmp.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
+        kdb_tmp.close()
     return [n_clicks]
 
 
@@ -347,18 +377,28 @@ def buttonFourierSaveLabel(n_clicks):
         , Input('input-fourier-delta', 'value')
         , Input('input-fourier-an', 'value')
         , Input('input-fourier-bn', 'value')
+        , Input('input-fourier-noise-factor', 'value')
      ]
 )
-def fourierChartFigure(number, delta, an_str, bn_str):
+def fourierChartFigure(number, delta, an_str, bn_str, noise_factor):
     global df_fourier
-
-    an = list(map(float, an_str.split(',')))
-
-    bn = list(map(float, bn_str.split(',')))
+    try:
+        an = list(map(float, an_str.split(',')))
+    except:
+        an = [1]
+    try:
+        bn = list(map(float, bn_str.split(',')))
+    except:
+        bn = [0]
 
     number = int(float(number))
     delta = float(delta)
-    df_fourier = pd.DataFrame(kragle.sintetic.fourier_01(number, delta, an, bn))
+    try:
+        noise_factor = float(noise_factor)
+    except:
+        noise_factor = 1
+    val = kragle.sintetic.fourier_01(n=number, delta=delta, an=an, bn=bn, noise_factor=noise_factor)
+    df_fourier = pd.DataFrame(val)
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
 
@@ -405,7 +445,7 @@ def update_askbid_chart(start_date, end_date, instrument, period):
         secondary_y=False,
     )
     fig1.add_trace(
-        go.Scatter(x=df["date"], y=df["tickqty"], name="tickqty"),
+        go.Scatter(x=df["date"], y=df["tickqty"], name="tickqty", opacity=0.3),
         secondary_y=True,
     )
     return [fig1]

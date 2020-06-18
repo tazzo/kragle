@@ -22,17 +22,17 @@ def fourier(x,  an=[1], bn=[0]):
     return (reduce(operator.add, la)+reduce(operator.add, lb))
 
 
-def fourier_01(n=100, delta=0.01, an = [1], bn = [0]):
+def fourier_01(n=100, delta=0.01, an = [1], bn = [0], noise_factor = 1):
     res = {'n': [], 'bidopen': [], 'date': [], 'tickqty': []}
     start = dt.datetime(2018, 11, 24, 23, 0)
-    noise = random.random() - 0.5
+    noise = (random.random() - 0.5) * noise_factor
     for i in range(n):
         res['n'].append(i)
         res['bidopen'].append(fourier(i * delta, an, bn) + noise)
         res['date'].append(start + dt.timedelta(minutes=i))
         res['tickqty'].append(round(random.random() * 100))
 
-        noise = noise * 0.9 + (random.random() - 0.5) * 0.3
+        noise = noise * 0.9 + (random.random() - 0.5) * noise_factor * 0.3
     return res
 
 
