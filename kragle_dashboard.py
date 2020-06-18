@@ -133,7 +133,7 @@ def build_askbid_chart():
         ]),
 
     ],
-    className='space-y-4')
+        className='space-y-4')
 
 
 def build_sintetic_chart():
@@ -344,16 +344,19 @@ def update_table(start_date, end_date, period):
     [Output('askbid-chart', 'figure')],
     [Input('askbid-input-date-from', 'value')
         , Input('askbid-input-date-to', 'value')
+        , Input('chart-instruments-dropdown', 'value')
         , Input('askbid-table-period', 'value')]
 )
-def update_askbid_chart(start_date, end_date, period):
-    df = pd.DataFrame({})
-    k = kdb
-    if (not start_date == '') & (not end_date == ''):
+def update_askbid_chart(start_date, end_date, instrument, period):
+    df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})
+    try:
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = kdb.get_instrument('EUR/USD', period, start, end)
-
+        df = kdb.get_instrument(instrument, period, start, end)
+    except:
+        pass
+    if df.shape[0] == 0 :
+        df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})
     ########################
 
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
