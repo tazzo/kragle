@@ -1,3 +1,4 @@
+- test per get_instrument
 - complete chart bib tick interactivity
 - fetch_dataframe too slow if I check for duplicates
 - migliorare dashboard

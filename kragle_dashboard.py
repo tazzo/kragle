@@ -94,6 +94,8 @@ def build_askbid_chart():
             dcc.Dropdown(
                 id='chart-instruments-dropdown',
             ),
+        ]),
+        html.Div([
             html.P('From'),
             dcc.Input(
                 id='askbid-input-date-from',
@@ -130,7 +132,8 @@ def build_askbid_chart():
             )
         ]),
 
-    ])
+    ],
+    className='space-y-4')
 
 
 def build_sintetic_chart():

@@ -181,3 +181,7 @@ def test_calc_instruments_and_periods(kdb):
     assert res['B'] == ['1', '2']
     assert res['C'] == ['1', '2', '3', '4']
     assert list(res) == ['A', 'B', 'C']
+
+def test_get_instrument_raise(kdb):
+    with pytest.raises(ValueError, match=r".*datetime.*"):
+        dataset = kdb.get_instrument( 'EUR/USD','m1', 'start', 'end')

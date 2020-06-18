@@ -1,5 +1,5 @@
 import random as rnd
-
+import datetime as dt
 import pandas as pd
 from pymongo import MongoClient
 
@@ -21,6 +21,7 @@ def getDBNames():
     l = client.list_database_names()
     client.close()
     return l
+
 
 class KragleDB:
 
@@ -59,8 +60,10 @@ class KragleDB:
 
         db = self.db[instrument][period]
 
-        if (start is None) | (end is None):
-            data = list(db.find({}).limit(100000))  # data is in json format
+        if type(start) is not dt.datetime:
+            raise ValueError('Start date must be a datetime.datetime not {} '.format(type(start)))
+        elif type(end) is not dt.datetime:
+            raise ValueError('End date must be a datetime.datetime not {} '.format(type(end)))
         else:
             data = list(db.find({'date': {'$gte': start, '$lte': end}}).limit(limit))
 
