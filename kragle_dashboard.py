@@ -145,19 +145,6 @@ def build_askbid_chart():
         className='space-y-1')
 
 
-def build_sintetic_chart():
-    return html.Div([
-        html.Div([
-            build_fourier(),
-            build_random(),
-            dcc.Graph(
-                figure=chaos_chart_figure('xyz')
-            ),
-        ], className='space-y-1'),
-
-    ])
-
-
 def build_random():
     return html.Div([
         html.P('Random sintetic data generator', className='text-2xl font-bold'),
@@ -277,15 +264,15 @@ def build_fourier():
                 id='button-fourier-save',
                 className='btn btn-blue'
             ),
+            html.P(id='button-fourier-save-label', className='w-24 font-mono font-bold text-gray-400'),
+            dcc.Loading(
+                id="loading-1",
+                type="default",
+                children=html.Div(id="loading-output-1")
+            ),
         ],
             className='flex space-x-2',
         ),
-        dcc.Loading(
-            id="loading-1",
-            type="default",
-            children=html.Div(id="loading-output-1")
-        ),
-        html.P('...', id='button-fourier-save-label'),
         dcc.Graph(
             id='fourier-chart',
         ),
@@ -323,14 +310,38 @@ def render_main_content():
             html.Div(
                 className="box-container",
                 children=[
-                    html.Div(className='box-wrapper',
-                             children=html.Div(
-                                 className='box',
-                                 children=[
-                                     build_sintetic_chart()
-                                 ],
-                             ),
-                             ),
+                    html.Div(
+                        className='box-wrapper',
+                        children=html.Div(
+                            className='box',
+                            children=[
+                                build_fourier()
+                            ],
+                        ),
+                    ),
+                    html.Div(
+                        className='box-wrapper',
+                        children=html.Div(
+                            className='box',
+                            children=[
+                                build_random()
+                            ],
+                        ),
+                    ),
+                    html.Div(
+                        className='box-wrapper',
+                        children=html.Div(
+                            className='box',
+                            children=[
+                                html.Div([
+                                    dcc.Graph(
+                                        figure=chaos_chart_figure('xyz')
+                                    ),
+                                ], className='space-y-1'),
+                            ],
+                        ),
+                    ),
+
                     html.Div(
                         className='box-wrapper',
                         children=html.Div(
@@ -381,7 +392,8 @@ def button_DB_names_refresh(n_clicks):
 
 
 @app.callback(
-    Output("loading-output-1", "children"),
+    [Output("button-fourier-save-label", "children"),
+     Output("loading-output-1", "children")],
     [Input('button-fourier-save', 'n_clicks')],
     [State('input-fourier-instrument-name', 'value')]
 )
@@ -423,13 +435,14 @@ def button_fourier_save_label(n_clicks, instrument):
         dfH1 = dfm30.drop(droplist).reset_index(drop=True)
         kdb_tmp.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
         kdb_tmp.close()
-    return [n_clicks]
+        return ['Saved {}'.format(n_clicks), '']
+    return ['', '']
 
 
 @app.callback(
     [Output('random-chart', 'figure')],
     [Input('input-random-number', 'value'),
-    Input('input-random-dim', 'value')
+     Input('input-random-dim', 'value')
      ]
 )
 def random_chart_figure(number, dim):
@@ -441,7 +454,6 @@ def random_chart_figure(number, dim):
     for ds in ds_list:
         df_random = pd.DataFrame(ds)
         fig.add_trace(go.Scatter(x=df_random['n'], y=df_random['bidopen'], opacity=0.5))
-
 
     return [fig]
 
