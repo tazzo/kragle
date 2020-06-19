@@ -148,96 +148,151 @@ def build_askbid_chart():
 def build_sintetic_chart():
     return html.Div([
         html.Div([
-            html.P('Fourier sintetic data generator', className='text-2xl font-bold'),
-            html.Div([
-                html.Div([
-                    html.P('Number of values', className='font-bold'),
-                    dcc.Input(
-                        id='input-fourier-number',
-                        className='w-40',
-                        placeholder='1000',
-                        type='text',
-                        value='1000'
-                    )
-                ]),
-                html.Div([
-                    html.P('Delta', className='font-bold'),
-                    dcc.Input(
-                        id='input-fourier-delta',
-                        className='w-24',
-                        placeholder='0.003',
-                        type='text',
-                        value='0.003'
-                    )
-                ]),
-                html.Div([
-                    html.P('Noise factor', className='font-bold'),
-                    dcc.Input(
-                        id='input-fourier-noise-factor',
-                        className='w-24',
-                        placeholder='0.5',
-                        type='text',
-                        value='0.5'
-                    )
-                ]),
-            ],
-                className='flex flex-wrap space-x-2',
-            ),
-            html.Div([
-                html.P('An', className='font-bold'),
-                dcc.Input(
-                    id='input-fourier-an',
-                    className='w-full',
-                    placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
-                    type='text',
-                    value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
-                )
-            ]),
-            html.Div([
-                html.P('Bn', className='font-bold'),
-                dcc.Input(
-                    id='input-fourier-bn',
-                    className='w-full',
-                    placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
-                    type='text',
-                    value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
-                )
-            ]),
-            html.Span('Instrument name', className='font-bold'),
-            html.Div([
-                dcc.Input(
-                    id='input-fourier-instrument-name',
-                    className='px-2',
-                    placeholder='fourier_01',
-                    type='text',
-                    value='fourier_01',
-                ),
-                html.Button(
-                    'Save values',
-                    id='button-fourier-save',
-                    className='btn btn-blue'
-                ),
-            ],
-                className='flex space-x-2',
-            ),
-            dcc.Loading(
-                id="loading-1",
-                type="default",
-                children=html.Div(id="loading-output-1")
-            ),
-            html.P('...', id='button-fourier-save-label'),
+            build_fourier(),
+            build_random(),
             dcc.Graph(
-                id='fourier-chart',
-            ),
-            dcc.Graph(
-                figure=chaosChartFigure('xyz')
+                figure=chaos_chart_figure('xyz')
             ),
         ], className='space-y-1'),
 
     ])
 
 
-def chaosChartFigure(axis):
+def build_random():
+    return html.Div([
+        html.P('Random sintetic data generator', className='text-2xl font-bold'),
+        html.Div([
+            html.Div([
+                html.P('Number of values', className='font-bold'),
+                dcc.Input(
+                    id='input-random-number',
+                    className='w-40',
+                    placeholder='1000',
+                    type='text',
+                    value='1000'
+                )
+            ]),
+        ], className='flex flex-wrap space-x-2'),
+        html.Div([
+            html.Div([
+                html.P('Dimensions', className='font-bold'),
+                dcc.Input(
+                    id='input-random-dim',
+                    className='w-40',
+                    placeholder='3',
+                    type='text',
+                    value='3'
+                )
+            ]),
+        ], className='flex flex-wrap space-x-2'),
+        html.Span('Instrument name', className='font-bold'),
+        html.Div([
+            dcc.Input(
+                id='input-random-instrument-name',
+                className='px-2',
+                placeholder='random_01',
+                type='text',
+                value='random_01',
+            ),
+            html.Button(
+                'Save values',
+                id='button-random-save',
+                className='btn btn-blue'
+            ),
+        ], className='flex space-x-2'),
+        dcc.Graph(
+            id='random-chart',
+        )
+    ], className='space-y-1')
+
+
+def build_fourier():
+    return html.Div([
+        html.P('Fourier sintetic data generator', className='text-2xl font-bold'),
+        html.Div([
+            html.Div([
+                html.P('Number of values', className='font-bold'),
+                dcc.Input(
+                    id='input-fourier-number',
+                    className='w-40',
+                    placeholder='1000',
+                    type='text',
+                    value='1000'
+                )
+            ]),
+            html.Div([
+                html.P('Delta', className='font-bold'),
+                dcc.Input(
+                    id='input-fourier-delta',
+                    className='w-24',
+                    placeholder='0.003',
+                    type='text',
+                    value='0.003'
+                )
+            ]),
+            html.Div([
+                html.P('Noise factor', className='font-bold'),
+                dcc.Input(
+                    id='input-fourier-noise-factor',
+                    className='w-24',
+                    placeholder='0.5',
+                    type='text',
+                    value='0.5'
+                )
+            ]),
+        ],
+            className='flex flex-wrap space-x-2',
+        ),
+        html.Div([
+            html.P('An', className='font-bold'),
+            dcc.Input(
+                id='input-fourier-an',
+                className='w-full',
+                placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
+                type='text',
+                value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
+            )
+        ]),
+        html.Div([
+            html.P('Bn', className='font-bold'),
+            dcc.Input(
+                id='input-fourier-bn',
+                className='w-full',
+                placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
+                type='text',
+                value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
+            )
+        ]),
+        html.Span('Instrument name', className='font-bold'),
+        html.Div([
+            dcc.Input(
+                id='input-fourier-instrument-name',
+                className='px-2',
+                placeholder='fourier_01',
+                type='text',
+                value='fourier_01',
+            ),
+            html.Button(
+                'Save values',
+                id='button-fourier-save',
+                className='btn btn-blue'
+            ),
+        ],
+            className='flex space-x-2',
+        ),
+        dcc.Loading(
+            id="loading-1",
+            type="default",
+            children=html.Div(id="loading-output-1")
+        ),
+        html.P('...', id='button-fourier-save-label'),
+        dcc.Graph(
+            id='fourier-chart',
+        ),
+    ], className='space-y-1')
+
+
+def chaos_chart_figure(axis):
     dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
 
@@ -301,7 +356,7 @@ def render_main_content():
      Output("chart-instruments-dropdown", "value")],
     [Input('chart-dbnames-dropdown', 'value')]
 )
-def chartInstrumentsRefresh(dbname):
+def chart_instruments_refresh(dbname):
     global kdb
     kdb.close()
     kdb = kragle.KragleDB(dbname)
@@ -317,7 +372,7 @@ def chartInstrumentsRefresh(dbname):
      Output("chart-dbnames-dropdown", "value")],
     [Input('button-dbnames-refresh', 'n_clicks')]
 )
-def buttonDBNamesRefresh(n_clicks):
+def button_DB_names_refresh(n_clicks):
     names = kragle.getDBNames()
     options = []
     for name in names:
@@ -330,7 +385,7 @@ def buttonDBNamesRefresh(n_clicks):
     [Input('button-fourier-save', 'n_clicks')],
     [State('input-fourier-instrument-name', 'value')]
 )
-def buttonFourierSaveLabel(n_clicks, instrument):
+def button_fourier_save_label(n_clicks, instrument):
     if n_clicks is not None:
         kdb_tmp = kragle.KragleDB('kragle_sintetic')
         # delete old collection
@@ -372,6 +427,26 @@ def buttonFourierSaveLabel(n_clicks, instrument):
 
 
 @app.callback(
+    [Output('random-chart', 'figure')],
+    [Input('input-random-number', 'value'),
+    Input('input-random-dim', 'value')
+     ]
+)
+def random_chart_figure(number, dim):
+    number = int(float(number))
+    dim = int(float(dim))
+    ds_list = kragle.sintetic.random_dataset(n=number, dim=dim)
+    fig = go.Figure()
+    fig.update_layout(title="Random")
+    for ds in ds_list:
+        df_random = pd.DataFrame(ds)
+        fig.add_trace(go.Scatter(x=df_random['n'], y=df_random['bidopen'], opacity=0.5))
+
+
+    return [fig]
+
+
+@app.callback(
     [Output('fourier-chart', 'figure')],
     [Input('input-fourier-number', 'value')
         , Input('input-fourier-delta', 'value')
@@ -380,7 +455,7 @@ def buttonFourierSaveLabel(n_clicks, instrument):
         , Input('input-fourier-noise-factor', 'value')
      ]
 )
-def fourierChartFigure(number, delta, an_str, bn_str, noise_factor):
+def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
     global df_fourier
     try:
         an = list(map(float, an_str.split(',')))
@@ -397,7 +472,7 @@ def fourierChartFigure(number, delta, an_str, bn_str, noise_factor):
         noise_factor = float(noise_factor)
     except:
         noise_factor = 1
-    val = kragle.sintetic.fourier_01(n=number, delta=delta, an=an, bn=bn, noise_factor=noise_factor)
+    val = kragle.sintetic.fourier_dataset(n=number, delta=delta, an=an, bn=bn, noise_factor=noise_factor)
     df_fourier = pd.DataFrame(val)
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 

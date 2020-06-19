@@ -5,30 +5,50 @@ from functools import reduce
 import operator
 
 
-def fourier(x,  an=[1], bn=[0]):
-    fcos = lambda a, n: a * math.cos(2 * math.pi * x * n )
-    fsin = lambda b, n: b * math.sin(2 * math.pi * x * n )
+def fourier_reconstruction(x, an=[1], bn=[0]):
+    fcos = lambda a, n: a * math.cos(2 * math.pi * x * n)
+    fsin = lambda b, n: b * math.sin(2 * math.pi * x * n)
     la = map(
         fcos,
         an,
         range(len(an))
     )
     lb = map(
-        fsin ,
+        fsin,
         bn,
         range(len(bn))
     )
 
-    return (reduce(operator.add, la)+reduce(operator.add, lb))
+    return (reduce(operator.add, la) + reduce(operator.add, lb))
 
 
-def fourier_01(n=100, delta=0.01, an = [1], bn = [0], noise_factor = 1):
+def random_dataset(n=100, dim=1):
+    ds_list = []
+    for j in range(dim):
+        res = {'n': [], 'bidopen': [], 'date': [], 'tickqty': []}
+        start = dt.datetime(2018, 11, 24, 23, 0)
+        value = 0
+        for i in range(n):
+            res['n'].append(i)
+            if (value > 20) | (value < -20):
+                balancer = -0.0001 * value
+            else:
+                balancer = 0
+            value = value + (random.random() - 0.5 + balancer)
+            res['bidopen'].append(value)
+            res['date'].append(start + dt.timedelta(minutes=i))
+            res['tickqty'].append(round(random.random() * 100))
+        ds_list.append(res)
+    return ds_list
+
+
+def fourier_dataset(n=100, delta=0.01, an=[1], bn=[0], noise_factor=1):
     res = {'n': [], 'bidopen': [], 'date': [], 'tickqty': []}
     start = dt.datetime(2018, 11, 24, 23, 0)
     noise = (random.random() - 0.5) * noise_factor
     for i in range(n):
         res['n'].append(i)
-        res['bidopen'].append(fourier(i * delta, an, bn) + noise)
+        res['bidopen'].append(fourier_reconstruction(i * delta, an, bn) + noise)
         res['date'].append(start + dt.timedelta(minutes=i))
         res['tickqty'].append(round(random.random() * 100))
 
