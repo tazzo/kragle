@@ -3,7 +3,6 @@ import datetime as dt
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_table
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -11,9 +10,6 @@ from dash.dependencies import Input, Output, State
 from plotly.subplots import make_subplots
 
 import kragle
-
-start = dt.datetime(2018, 11, 27, 13, 0)
-end = dt.datetime(2018, 11, 27, 23, 0)
 
 df_fourier = None
 
@@ -26,58 +22,6 @@ app = dash.Dash(__name__, meta_tags=[
 
 # app.config["suppress_callback_exceptions"] = True
 
-
-def build_explore_table():
-    return html.Div([
-        html.Div([
-            html.P('From'),
-            dcc.Input(
-                id='input-date-from',
-                placeholder='2018-11-27 13:00',
-                type='text',
-                value='2018-11-27 13:00'
-            )
-        ]),
-        html.Div([
-            html.P('To'),
-            dcc.Input(
-                id='input-date-to',
-                placeholder='2018-11-27 23:00',
-                type='text',
-                value='2018-11-27 23:00'
-            )
-        ]),
-        dcc.Dropdown(
-            id='table-period',
-            options=[
-                {'label': 'm1', 'value': 'm1'},
-                {'label': 'm5', 'value': 'm5'},
-                {'label': 'm15', 'value': 'm15'},
-                {'label': 'm30', 'value': 'm30'},
-                {'label': 'H1', 'value': 'H1'},
-            ],
-            value='m1',
-            clearable=False
-        ),
-
-        html.Div([
-            dash_table.DataTable(
-                id='datatable-interactivity',
-                columns=[
-                    {"name": i, "id": i} for i in ['date', 'bidopen', 'tickqty']
-                ],
-                data=[],
-                style_cell={'textAlign': 'left', 'padding': '5px'},
-                sort_mode="multi",
-                selected_columns=[],
-                selected_rows=[],
-                page_action="native",
-                page_current=0,
-                page_size=20,
-            ),
-        ]),
-        html.Br(),
-    ])
 
 
 def build_askbid_chart():
@@ -123,7 +67,7 @@ def build_askbid_chart():
             ]),
         ], className='flex space-x-2'),
         dcc.RadioItems(
-            id='askbid-table-period',
+            id='askbid-period',
             options=[
                 {'label': 'm1 ', 'value': 'm1'},
                 {'label': 'm5 ', 'value': 'm5'},
@@ -185,6 +129,12 @@ def build_random():
                 'Save values',
                 id='button-random-save',
                 className='btn btn-blue'
+            ),
+            html.P(id='button-random-label', className='w-24 font-mono font-bold text-gray-400'),
+            dcc.Loading(
+                id="loading-random",
+                type="dot",
+                children=html.Div(id="loading-random-output")
             ),
         ], className='flex space-x-2'),
         dcc.Graph(
@@ -266,9 +216,9 @@ def build_fourier():
             ),
             html.P(id='button-fourier-save-label', className='w-24 font-mono font-bold text-gray-400'),
             dcc.Loading(
-                id="loading-1",
-                type="default",
-                children=html.Div(id="loading-output-1")
+                id="loading-fourier-save",
+                type="dot",
+                children=html.Div(id="loading-fourier-save-output")
             ),
         ],
             className='flex space-x-2',
@@ -279,7 +229,7 @@ def build_fourier():
     ], className='space-y-1')
 
 
-def chaos_chart_figure(axis):
+def build_chaos_chart(axis):
     dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
 
@@ -335,7 +285,7 @@ def render_main_content():
                             children=[
                                 html.Div([
                                     dcc.Graph(
-                                        figure=chaos_chart_figure('xyz')
+                                        figure=build_chaos_chart('xyz')
                                     ),
                                 ], className='space-y-1'),
                             ],
@@ -347,13 +297,6 @@ def render_main_content():
                         children=html.Div(
                             className='box',
                             children=build_askbid_chart(),
-                        ),
-                    ),
-                    html.Div(
-                        className='box-wrapper',
-                        children=html.Div(
-                            className='box',
-                            children=build_explore_table(),
                         ),
                     ),
                 ],
@@ -393,7 +336,7 @@ def button_DB_names_refresh(n_clicks):
 
 @app.callback(
     [Output("button-fourier-save-label", "children"),
-     Output("loading-output-1", "children")],
+     Output("loading-fourier-save-output", "children")],
     [Input('button-fourier-save', 'n_clicks')],
     [State('input-fourier-instrument-name', 'value')]
 )
@@ -440,7 +383,8 @@ def button_fourier_save_label(n_clicks, instrument):
 
 
 @app.callback(
-    [Output('random-chart', 'figure')],
+    [Output('random-chart', 'figure'),
+     Output('loading-random-output', 'children')],
     [Input('input-random-number', 'value'),
      Input('input-random-dim', 'value')
      ]
@@ -455,7 +399,7 @@ def random_chart_figure(number, dim):
         df_random = pd.DataFrame(ds)
         fig.add_trace(go.Scatter(x=df_random['n'], y=df_random['bidopen'], opacity=0.5))
 
-    return [fig]
+    return [fig, '']
 
 
 @app.callback(
@@ -490,28 +434,11 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
 
 
 @app.callback(
-    [Output('datatable-interactivity', 'data')],
-    [Input('input-date-from', 'value')
-        , Input('input-date-to', 'value')
-        , Input('table-period', 'value')
-     ]
-)
-def update_table(start_date, end_date, period):
-    df = pd.DataFrame({})
-    if (not start_date == '') & (not end_date == ''):
-        start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
-        end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = kdb.get_instrument('EUR/USD', period, start, end)
-        df = df.loc[:, ['date', 'bidopen', 'tickqty']]
-    return [df.to_dict('records')]
-
-
-@app.callback(
     [Output('askbid-chart', 'figure')],
     [Input('askbid-input-date-from', 'value')
         , Input('askbid-input-date-to', 'value')
         , Input('chart-instruments-dropdown', 'value')
-        , Input('askbid-table-period', 'value')]
+        , Input('askbid-period', 'value')]
 )
 def update_askbid_chart(start_date, end_date, instrument, period):
     df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})

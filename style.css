@@ -9,7 +9,7 @@ h1 {
 }
 
 input {
-    @apply border;
+    @apply border px-2;
 }
 
 .btn{
@@ -39,7 +39,7 @@ input {
 }
 
 .box{
-    @apply bg-white p-4 rounded-lg shadow-xl border;
+    @apply bg-white p-4 rounded-lg shadow-xl border h-full;
 }
 
 /* This is for Dash chart button bar */
