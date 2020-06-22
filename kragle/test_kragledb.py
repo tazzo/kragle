@@ -112,11 +112,11 @@ def test_aggregate_dataframe(kdb):
 
 def test_create_value(kdb):
     m1date = dt.datetime(2018, 11, 27, 22, 0)
-    val = kdb.create_value(2, 'EUR/USD', ['m1', 'm5'], 8, m1date)
+    val = kdb.create_value( 'EUR/USD', ['m1', 'm5'], 8, m1date)
     assert val['x']['m5'][0]['tickqty'] == 159
 
     m1date = dt.datetime(2018, 11, 27, 17, 26)
-    val = kdb.create_value(2, 'EUR/USD', ['m1', 'm5'], 8, m1date)
+    val = kdb.create_value( 'EUR/USD', ['m1', 'm5'], 8, m1date)
     assert val['x']['m5'][0]['tickqty'] == 707
     assert val['x']['m5'][0]['bidopen'] == 1.12894
     assert val['x']['m5'][0]['bidclose'] == 1.12921
@@ -130,7 +130,7 @@ def test_create_value(kdb):
 
 def test_create_value_hour(kdb):
     m1date = dt.datetime(2018, 11, 27, 15, 2)
-    val = kdb.create_value(2, 'EUR/USD', ['m1', 'm5', 'H1'], 8, m1date)
+    val = kdb.create_value( 'EUR/USD', ['m1', 'm5', 'H1'], 8, m1date)
     assert val['x']['m5'][0]['tickqty'] == 692
     assert val['x']['m5'][0]['bidopen'] == 1.13195
     assert val['x']['m5'][0]['bidclose'] == 1.1323
