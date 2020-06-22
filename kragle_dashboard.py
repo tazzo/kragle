@@ -24,8 +24,9 @@ app = dash.Dash(__name__, meta_tags=[
 # app.config["suppress_callback_exceptions"] = True
 
 
-def build_askbid_chart():
+def build_explorer():
     return html.Div([
+        html.P('Data explorer', className='text-2xl font-bold'),
         html.Button(
             'Refresh DB names',
             id='button-dbnames-refresh',
@@ -50,7 +51,7 @@ def build_askbid_chart():
             html.Div([
                 html.P('From'),
                 dcc.Input(
-                    id='askbid-input-date-from',
+                    id='explore-input-date-from',
                     placeholder='2018-11-22 12:00',
                     type='text',
                     value='2018-11-22 12:00'
@@ -59,7 +60,7 @@ def build_askbid_chart():
             html.Div([
                 html.P('To'),
                 dcc.Input(
-                    id='askbid-input-date-to',
+                    id='explore-input-date-to',
                     placeholder='2018-11-26 12:00',
                     type='text',
                     value='2018-11-26 12:00',
@@ -67,7 +68,7 @@ def build_askbid_chart():
             ]),
         ], className='flex space-x-2'),
         dcc.RadioItems(
-            id='askbid-period',
+            id='explore-period',
             options=[
                 {'label': 'm1 ', 'value': 'm1'},
                 {'label': 'm5 ', 'value': 'm5'},
@@ -79,9 +80,14 @@ def build_askbid_chart():
             labelStyle={'display': 'inline-block'},
             inputClassName="mx-2"
         ),
+        html.Button(
+            'Create dataset',
+            id='button-create-dataset',
+            className='btn btn-blue'
+        ),
         html.Div([
             dcc.Graph(
-                id='askbid-chart'
+                id='explore-chart'
             )
         ]),
 
@@ -234,6 +240,61 @@ def build_fourier():
     ], className='space-y-1')
 
 
+def build_dataset_manager():
+    return html.Div([
+        html.P('Datasets manager', className='text-2xl font-bold'),
+        html.Div([
+            html.Div([
+                dcc.Dropdown(
+                    id='dataset-manager-instruments-dropdown',
+                    clearable=False
+                ),
+            ], className='w-1/2'),
+        ], className='flex'),
+        html.Div([
+            html.Div([
+                html.P('From'),
+                dcc.Input(
+                    id='dataset-manager-input-date-from',
+                    placeholder='2018-11-22 12:00',
+                    type='text',
+                    value='2018-11-22 12:00'
+                )
+            ]),
+            html.Div([
+                html.P('To'),
+                dcc.Input(
+                    id='dataset-manager-input-date-to',
+                    placeholder='2018-11-26 12:00',
+                    type='text',
+                    value='2018-11-26 12:00',
+                )
+            ]),
+        ], className='flex space-x-2'),
+        dcc.RadioItems(
+            id='dataset-manager-period',
+            options=[
+                {'label': 'm1 ', 'value': 'm1'},
+                {'label': 'm5 ', 'value': 'm5'},
+                {'label': 'm15 ', 'value': 'm15'},
+                {'label': 'H1 ', 'value': 'H1'},
+            ],
+            value='m1',
+            labelStyle={'display': 'inline-block'},
+            inputClassName="mx-2"
+        ),
+        html.Div([
+            dcc.Graph(
+                id='dataset-manager-chart'
+            )
+        ]),
+
+    ],
+        className='space-y-1')
+
+
+
+
 def build_chaos_chart(axis):
     dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
@@ -270,6 +331,22 @@ def render_main_content():
                         children=html.Div(
                             className='box',
                             children=[
+                                build_dataset_manager()
+                            ],
+                        ),
+                    ),
+                    html.Div(
+                        className='box-wrapper',
+                        children=html.Div(
+                            className='box',
+                            children=build_explorer(),
+                        ),
+                    ),
+                    html.Div(
+                        className='box-wrapper',
+                        children=html.Div(
+                            className='box',
+                            children=[
                                 build_fourier()
                             ],
                         ),
@@ -294,14 +371,6 @@ def render_main_content():
                                     ),
                                 ], className='space-y-1'),
                             ],
-                        ),
-                    ),
-
-                    html.Div(
-                        className='box-wrapper',
-                        children=html.Div(
-                            className='box',
-                            children=build_askbid_chart(),
                         ),
                     ),
                 ],
@@ -461,13 +530,13 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
 
 
 @app.callback(
-    [Output('askbid-chart', 'figure')],
-    [Input('askbid-input-date-from', 'value')
-        , Input('askbid-input-date-to', 'value')
+    [Output('explore-chart', 'figure')],
+    [Input('explore-input-date-from', 'value')
+        , Input('explore-input-date-to', 'value')
         , Input('chart-instruments-dropdown', 'value')
-        , Input('askbid-period', 'value')]
+        , Input('explore-period', 'value')]
 )
-def update_askbid_chart(start_date, end_date, instrument, period):
+def update_explore_chart(start_date, end_date, instrument, period):
     df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})
     try:
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')

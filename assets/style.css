@@ -17929,6 +17929,12 @@ input {
   }
 }
 
+@media (min-width: 1280px) {
+  .box-wrapper {
+    width: 33.333333%;
+  }
+}
+
 .box{
   --bg-opacity: 1;
   background-color: #fff;

@@ -38,6 +38,11 @@ input {
   }
 }
 
+@screen xl {
+  .box-wrapper {
+    @apply w-1/3;
+  }
+}
 .box{
     @apply bg-white p-4 rounded-lg shadow-xl border h-full;
 }

@@ -1,4 +1,4 @@
-import random as rnd
+import random
 import datetime as dt
 import pandas as pd
 from pymongo import MongoClient
@@ -42,19 +42,7 @@ class KragleDB:
 
     def get_instruments_and_periods(self):
         names = self.db.collection_names()
-        return self._calc_instruments_and_periods(names)
-
-    def _calc_instruments_and_periods(self, names):
-        res = {}
-        for name in names:
-            try:
-                l = name.split('.')
-                val = res.get(l[0], [])
-                val.append(l[1])
-                res[l[0]] = val
-            except:
-                pass
-        return res
+        return kutils.dot_names_to_dict(names)
 
     def get_instrument(self, instrument, period='m1', start=None, end=None, limit=100000):
 
@@ -103,35 +91,36 @@ class KragleDB:
         """
         df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
 
-    def dataframe_read_json(self, path):
-        """
-        Pandas read_json with orient='records'
-
-        Args:
-            path (String): path to file
-
-        Returns:
-            [DataFrame]: pandas dataframe
-        """
-        return pd.read_json(path, orient='records')
-
     # TODO: create a test
-    def create_dataset(self, n, instrument, periods, histlen, start, end):
-        if start >= end:
+    def create_dataset(self, n, instrument, periods, histlen, date_start, date_end):
+        if date_start >= date_end:
             raise ValueError('Date error, start date must be before end date.')
+        base_date_list = self.get_base_date_list(n, instrument, periods, date_start, date_end)
         ret = []
         for i in range(n):
-            m1date = kutils.random_date(start, end)
-            ret.append(self.create_value(instrument, periods, histlen, m1date))
+            tmp = base_date_list.pop(random.randrange(len(base_date_list)))
+            ret.append(self.create_value(instrument, periods, histlen, tmp['date']))
         return ret
 
+    def get_base_date_list(self, n, instrument, periods, date_start, date_end):
+        db = self.db[instrument][periods[0]]
+        base_date_list = list(db.find(
+            {'date': {'$gte': date_start, '$lte': date_end}},
+            {'date': 1,  '_id': 0}
+        ))
+        if len(base_date_list) < n * 2:
+            raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
+        return base_date_list
+
     def create_value(self, instrument, periods, history_len, m1date):
-        val = {'date': m1date, 'x': {}, 'y': rnd.random()}
+        val = {'date': m1date, 'x': {}, 'y': random.random()}
         before = None
         for period in periods:
             l = self.get_history(instrument, period, history_len, m1date)
             if len(l) < history_len:
                 raise ValueError('Not enough data to fulfill the request in period ' + period)
+            if (period == 'm1') & (l[0]['date'] != m1date):
+                raise ValueError('Date {} not in period'.format(m1date))
             if before is not None:
                 l = self.correct_last(l, before)
             before = l
