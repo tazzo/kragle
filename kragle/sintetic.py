@@ -27,17 +27,27 @@ def random_dataset(n=100, dim=1):
     for j in range(dim):
         res = {'n': [], 'bidopen': [], 'date': [], 'tickqty': []}
         start = dt.datetime(2018, 11, 24, 23, 0)
-        value = 0
+        value = random.random() * 40 - 20
+        tickqty = 10
         for i in range(n):
             res['n'].append(i)
+            #value balancing
             if (value > 20) | (value < -20):
                 balancer = -0.0001 * value
             else:
                 balancer = 0
             value = value + (random.random() - 0.5 + balancer)
+            #tickqty balancing
+            if tickqty > 100:
+                tickqty = tickqty * (random.random()  + 0.3)
+            else:
+                tickqty = tickqty * (random.random()  + 0.5)
+            if tickqty <= 1:
+                tickqty = random.random() * 20
+            tickqty = int(tickqty)
             res['bidopen'].append(value)
             res['date'].append(start + dt.timedelta(minutes=i))
-            res['tickqty'].append(round(random.random() * 100))
+            res['tickqty'].append(tickqty)
         ds_list.append(res)
     return ds_list
 

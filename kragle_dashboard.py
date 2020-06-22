@@ -12,6 +12,7 @@ from plotly.subplots import make_subplots
 import kragle
 
 df_fourier = None
+df_random_list = []
 
 kdb = kragle.KragleDB('forex_raw')
 
@@ -21,7 +22,6 @@ app = dash.Dash(__name__, meta_tags=[
 
 
 # app.config["suppress_callback_exceptions"] = True
-
 
 
 def build_askbid_chart():
@@ -51,18 +51,18 @@ def build_askbid_chart():
                 html.P('From'),
                 dcc.Input(
                     id='askbid-input-date-from',
-                    placeholder='2019-05-01 12:00',
+                    placeholder='2018-11-22 12:00',
                     type='text',
-                    value='2019-05-01 12:00'
+                    value='2018-11-22 12:00'
                 )
             ]),
             html.Div([
                 html.P('To'),
                 dcc.Input(
                     id='askbid-input-date-to',
-                    placeholder='2019-05-01 16:00',
+                    placeholder='2018-11-26 12:00',
                     type='text',
-                    value='2019-05-01 16:00'
+                    value='2018-11-26 12:00',
                 )
             ]),
         ], className='flex space-x-2'),
@@ -121,9 +121,9 @@ def build_random():
             dcc.Input(
                 id='input-random-instrument-name',
                 className='px-2',
-                placeholder='random_01',
+                placeholder='random_',
                 type='text',
-                value='random_01',
+                value='random_',
             ),
             html.Button(
                 'Save values',
@@ -135,6 +135,11 @@ def build_random():
                 id="loading-random",
                 type="dot",
                 children=html.Div(id="loading-random-output")
+            ),
+            dcc.Loading(
+                id="loading-random-2",
+                type="dot",
+                children=html.Div(id="loading-random-output-2")
             ),
         ], className='flex space-x-2'),
         dcc.Graph(
@@ -214,11 +219,11 @@ def build_fourier():
                 id='button-fourier-save',
                 className='btn btn-blue'
             ),
-            html.P(id='button-fourier-save-label', className='w-24 font-mono font-bold text-gray-400'),
+            html.P(id='button-fourier-label', className='w-24 font-mono font-bold text-gray-400'),
             dcc.Loading(
                 id="loading-fourier-save",
                 type="dot",
-                children=html.Div(id="loading-fourier-save-output")
+                children=html.Div(id="loading-fourier-output")
             ),
         ],
             className='flex space-x-2',
@@ -335,51 +340,70 @@ def button_DB_names_refresh(n_clicks):
 
 
 @app.callback(
-    [Output("button-fourier-save-label", "children"),
-     Output("loading-fourier-save-output", "children")],
+    [Output("button-random-label", "children"),
+     Output("loading-random-output-2", "children")],
+    [Input('button-random-save', 'n_clicks')],
+    [State('input-random-instrument-name', 'value')]
+)
+def button_random_save(n_clicks, instrument):
+    if n_clicks is not None:
+        kdb_tmp = kragle.KragleDB('kragle_sintetic')
+        for i, df in enumerate(df_random_list):
+            fetch_serie(kdb_tmp, instrument + str(i), df)
+        return ['Saved {}'.format(n_clicks), '']
+    return ['', '']
+
+
+@app.callback(
+    [Output("button-fourier-label", "children"),
+     Output("loading-fourier-output", "children")],
     [Input('button-fourier-save', 'n_clicks')],
     [State('input-fourier-instrument-name', 'value')]
 )
-def button_fourier_save_label(n_clicks, instrument):
+def button_fourier_save(n_clicks, instrument):
     if n_clicks is not None:
         kdb_tmp = kragle.KragleDB('kragle_sintetic')
-        # delete old collection
-        for period in kragle.periods:
-            kdb_tmp.drop('{}.{}'.format(instrument, period))
 
-        # m1
-        kdb_tmp.fetch_dataframe(df_fourier, instrument, 'm1', check_duplicates=False)
-        # m5
-        droplist = []
-        for i in range(df_fourier.shape[0]):
-            if i % 5 != 0:
-                droplist.append(i)
-        dfm5 = df_fourier.drop(droplist).reset_index(drop=True)
-        kdb_tmp.fetch_dataframe(dfm5, instrument, 'm5', check_duplicates=False)
-        # m15
-        droplist = []
-        for i in range(dfm5.shape[0]):
-            if i % 3 != 0:
-                droplist.append(i)
-        dfm15 = dfm5.drop(droplist).reset_index(drop=True)
-        kdb_tmp.fetch_dataframe(dfm15, instrument, 'm15', check_duplicates=False)
-        # m30
-        droplist = []
-        for i in range(dfm15.shape[0]):
-            if i % 2 != 0:
-                droplist.append(i)
-        dfm30 = dfm15.drop(droplist).reset_index(drop=True)
-        kdb_tmp.fetch_dataframe(dfm30, instrument, 'm30', check_duplicates=False)
-        # H1
-        droplist = []
-        for i in range(dfm30.shape[0]):
-            if i % 2 != 0:
-                droplist.append(i)
-        dfH1 = dfm30.drop(droplist).reset_index(drop=True)
-        kdb_tmp.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
-        kdb_tmp.close()
+        fetch_serie(kdb_tmp, instrument, df_fourier)
         return ['Saved {}'.format(n_clicks), '']
     return ['', '']
+
+
+def fetch_serie(kdb, instrument, df):
+    # delete old collection
+    for period in kragle.periods:
+        kdb.drop('{}.{}'.format(instrument, period))
+
+    kdb.fetch_dataframe(df, instrument, 'm1', check_duplicates=False)
+    # m5
+    droplist = []
+    for i in range(df.shape[0]):
+        if i % 5 != 0:
+            droplist.append(i)
+    dfm5 = df.drop(droplist).reset_index(drop=True)
+    kdb.fetch_dataframe(dfm5, instrument, 'm5', check_duplicates=False)
+    # m15
+    droplist = []
+    for i in range(dfm5.shape[0]):
+        if i % 3 != 0:
+            droplist.append(i)
+    dfm15 = dfm5.drop(droplist).reset_index(drop=True)
+    kdb.fetch_dataframe(dfm15, instrument, 'm15', check_duplicates=False)
+    # m30
+    droplist = []
+    for i in range(dfm15.shape[0]):
+        if i % 2 != 0:
+            droplist.append(i)
+    dfm30 = dfm15.drop(droplist).reset_index(drop=True)
+    kdb.fetch_dataframe(dfm30, instrument, 'm30', check_duplicates=False)
+    # H1
+    droplist = []
+    for i in range(dfm30.shape[0]):
+        if i % 2 != 0:
+            droplist.append(i)
+    dfH1 = dfm30.drop(droplist).reset_index(drop=True)
+    kdb.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
+    kdb.close()
 
 
 @app.callback(
@@ -390,6 +414,8 @@ def button_fourier_save_label(n_clicks, instrument):
      ]
 )
 def random_chart_figure(number, dim):
+    global df_random_list
+    df_random_list = []
     number = int(float(number))
     dim = int(float(dim))
     ds_list = kragle.sintetic.random_dataset(n=number, dim=dim)
@@ -397,6 +423,7 @@ def random_chart_figure(number, dim):
     fig.update_layout(title="Random")
     for ds in ds_list:
         df_random = pd.DataFrame(ds)
+        df_random_list.append(df_random)
         fig.add_trace(go.Scatter(x=df_random['n'], y=df_random['bidopen'], opacity=0.5))
 
     return [fig, '']
