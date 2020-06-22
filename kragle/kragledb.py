@@ -122,17 +122,17 @@ class KragleDB:
         ret = []
         for i in range(n):
             m1date = kutils.random_date(start, end)
-            ret.append(self.create_value(n, instrument, periods, histlen, m1date))
+            ret.append(self.create_value(instrument, periods, histlen, m1date))
         return ret
 
-    def create_value(self, n, instrument, periods, histlen, m1date):
+    def create_value(self, instrument, periods, history_len, m1date):
         val = {'date': m1date, 'x': {}, 'y': rnd.random()}
         before = None
         for period in periods:
-            l = self.get_history(instrument, period, histlen, m1date)
-            if len(l) < histlen:
+            l = self.get_history(instrument, period, history_len, m1date)
+            if len(l) < history_len:
                 raise ValueError('Not enough data to fulfill the request in period ' + period)
-            if before != None:
+            if before is not None:
                 l = self.correct_last(l, before)
             before = l
             val['x'][period] = l
@@ -155,13 +155,13 @@ class KragleDB:
 
         return l
 
-    def get_history(self, instrument, period, histlen, date):
+    def get_history(self, instrument, period, history_len, date):
         """[summary]
 
         Args:
             instrument ([type]): [description]
             period ([type]): [description]
-            histlen ([type]): [description]
+            history_len ([type]): [description]
             date ([type]): [description]
 
         Returns:
@@ -170,7 +170,7 @@ class KragleDB:
         return list(self.db[instrument][period]
                     .find({'date': {'$lte': date}})
                     .sort([('date', -1)])
-                    .limit(histlen)
+                    .limit(history_len)
                     )
 
     def insert_future(self, instrument, period, start, end, field='bidopen', d=12, r=2):

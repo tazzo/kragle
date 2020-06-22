@@ -349,7 +349,7 @@ def button_random_save(n_clicks, instrument):
     if n_clicks is not None:
         kdb_tmp = kragle.KragleDB('kragle_sintetic')
         for i, df in enumerate(df_random_list):
-            fetch_serie(kdb_tmp, instrument + str(i), df)
+            fetch_sintetic(kdb_tmp, instrument + str(i), df)
         return ['Saved {}'.format(n_clicks), '']
     return ['', '']
 
@@ -364,12 +364,12 @@ def button_fourier_save(n_clicks, instrument):
     if n_clicks is not None:
         kdb_tmp = kragle.KragleDB('kragle_sintetic')
 
-        fetch_serie(kdb_tmp, instrument, df_fourier)
+        fetch_sintetic(kdb_tmp, instrument, df_fourier)
         return ['Saved {}'.format(n_clicks), '']
     return ['', '']
 
 
-def fetch_serie(kdb, instrument, df):
+def fetch_sintetic(kdb, instrument, df):
     # delete old collection
     for period in kragle.periods:
         kdb.drop('{}.{}'.format(instrument, period))
