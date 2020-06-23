@@ -1,6 +1,7 @@
 import datetime as dt
 import pandas as pd
 import kragle.utils as kutils
+import numpy as np
 
 
 def test_random_date():
@@ -61,7 +62,8 @@ def test_dataset_to_dataframe():
     }
     ds = {'date': date1, 'x': d, 'y': 1}
     df = kutils.dataset_to_dataframe(ds)
-    assert df.loc[0,'m1'] == 1
-    assert df.loc[0,'m5'] == 5
-    assert df.loc[0,'tickqty'] == 2
-    assert df.loc[1,'m1'] == 3
+    assert df.loc[0, 'm1'] == 1
+    assert df.loc[0, 'm5'] == 5
+    assert df.loc[0, 'tickqty'] == 2
+    assert df.loc[1, 'm1'] == 3
+    assert np.isnan(df.loc[1, 'm5']) == True
