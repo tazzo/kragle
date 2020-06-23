@@ -91,7 +91,7 @@ def test_create_dataset(kdb):
 
 
 def test_create_value_raise_date_period(kdb):
-    with pytest.raises(ValueError, match=r".*Date.*not in period.*"):
+    with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 0)
         kdb.create_value('EUR/USD', ['m1', 'm5'], 8, date_start)
         date_start = dt.datetime(2018, 11, 27, 23, 20)
@@ -104,17 +104,17 @@ def test_create_value_raise_date_period(kdb):
 def test_create_value(kdb):
     m1date = dt.datetime(2018, 11, 27, 17, 26)
     val = kdb.create_value('EUR/USD', ['m1', 'm5'], 8, m1date)
-    assert val['x']['m5'][0]['bidopen'] == 1.12894
+    assert val['x']['m5'][0]['value'] == 1.12894
 
 
 
 def test_create_value_hour(kdb):
     m1date = dt.datetime(2018, 11, 27, 15, 2)
     val = kdb.create_value('EUR/USD', ['m1', 'm5', 'H1'], 8, m1date)
-    assert val['x']['m5'][0]['bidopen'] == 1.13195
+    assert val['x']['m5'][0]['value'] == 1.13195
 
     # Hour test
-    assert val['x']['H1'][0]['bidopen'] == 1.13195
+    assert val['x']['H1'][0]['value'] == 1.13195
 
 
 

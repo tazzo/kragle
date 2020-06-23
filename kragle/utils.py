@@ -1,7 +1,7 @@
 import datetime as dt
 import random
 import pandas as pd
-
+import  logging
 
 # TODO: maybe remove this function
 def random_date(start, end):
@@ -48,16 +48,8 @@ def dataframe_read_json(path):
     return pd.read_json(path, orient='records')
 
 
-def dataset_to_dataframe(ds):
+def dataset_to_dataframe_dict(ds):
     res = {}
-    periods = list(ds['x'])
-    for period in periods:
-        value_list = ds['x'][period]
-        for val in value_list:
-            d = res.get(val['date'], {})
-            d['date'] = val['date']
-            d[period] = val['bidopen']
-            if period == 'm1':
-                d['tickqty'] = val['tickqty']
-            res[val['date']] = d
-    return pd.DataFrame(res.values())
+    for name, value_list in ds['x'].items():
+        res[name] = pd.DataFrame(value_list)
+    return res

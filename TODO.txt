@@ -1,8 +1,8 @@
 - test per get_instrument
-- complete chart bib tick interactivity
 - fetch_dataframe too slow if I check for duplicates
-- migliorare dashboard
+- add index to date !!!!!
+- add test for create_dataset tickqty field
 - DB per data test già preparati 
-    - normalizzati
+    - normalizzati?
     - raggruppati
-    - con future normalizzato
+    - con future normalizzato?

@@ -8,12 +8,12 @@ import plotly.express as px
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
 from plotly.subplots import make_subplots
-
+import logging
 import kragle
 
 df_fourier = None
 df_random_list = []
-
+dataset = None
 kdb = kragle.KragleDB('forex_raw')
 
 app = dash.Dash(__name__, meta_tags=[
@@ -49,7 +49,7 @@ def build_explorer():
         ], className='flex'),
         html.Div([
             html.Div([
-                html.P('From'),
+                html.P('From', className='font-bold'),
                 dcc.Input(
                     id='explore-input-date-from',
                     placeholder='2018-11-22 12:00',
@@ -58,7 +58,7 @@ def build_explorer():
                 )
             ]),
             html.Div([
-                html.P('To'),
+                html.P('To', className='font-bold'),
                 dcc.Input(
                     id='explore-input-date-to',
                     placeholder='2018-11-26 12:00',
@@ -80,11 +80,32 @@ def build_explorer():
             labelStyle={'display': 'inline-block'},
             inputClassName="mx-2"
         ),
+        html.Div([
+            html.Div([
+                html.P('Number', className='font-bold'),
+                dcc.Input(
+                    id='number-create-dataset',
+                    placeholder='10',
+                    type='text',
+                    value='10'
+                ),
+            ]),
+            html.Div([
+                html.P('History length', className='font-bold'),
+                dcc.Input(
+                    id='history_len-create-dataset',
+                    placeholder='4',
+                    type='text',
+                    value='4'
+                ),
+            ]),
+        ], className='flex space-x-2'),
         html.Button(
             'Create dataset',
             id='button-create-dataset',
             className='btn btn-blue'
         ),
+        html.P(id='label-create-dataset'),
         html.Div([
             dcc.Graph(
                 id='explore-chart'
@@ -243,6 +264,11 @@ def build_fourier():
 def build_dataset_manager():
     return html.Div([
         html.P('Datasets manager', className='text-2xl font-bold'),
+        html.Button(
+            'Refresh',
+            id='button-manager-refresh',
+            className='btn btn-blue'
+        ),
         html.Div([
             html.Div([
                 dcc.Dropdown(
@@ -253,7 +279,7 @@ def build_dataset_manager():
         ], className='flex'),
         html.Div([
             html.Div([
-                html.P('From'),
+                html.P('From', className='font-bold'),
                 dcc.Input(
                     id='dataset-manager-input-date-from',
                     placeholder='2018-11-22 12:00',
@@ -262,7 +288,7 @@ def build_dataset_manager():
                 )
             ]),
             html.Div([
-                html.P('To'),
+                html.P('To', className='font-bold'),
                 dcc.Input(
                     id='dataset-manager-input-date-to',
                     placeholder='2018-11-26 12:00',
@@ -314,8 +340,7 @@ def render_top():
                     html.P("AI - Trading", className="ml-4 text- text-xs inline-block"),
                 ],
             )
-        ],
-        **{"aria-label": "main-navigation"},
+        ]
     )
 
 
@@ -379,6 +404,32 @@ def render_main_content():
     )
 
 
+
+
+
+@app.callback(
+    [Output("dataset-manager-chart", "figure"),],
+    [Input('button-manager-refresh', 'n_clicks')]
+)
+def button_manager_refresh(n_clicks):
+    if n_clicks is not None:
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.update_layout(title="Dataset")
+        df_dict = kragle.dataset_to_dataframe_dict(dataset[0])
+        for name, df in df_dict.items():
+            fig.add_trace(
+                go.Scatter(
+                    x=df_dict[name]['date'],
+                    y=df_dict[name]['value'],
+                    opacity=0.5,
+                    name=name),
+                secondary_y=(name == 'tickqty'))
+        return [fig]
+    return [go.Figure()]
+
+
+
+
 @app.callback(
     [Output("chart-instruments-dropdown", "options"),
      Output("chart-instruments-dropdown", "value")],
@@ -435,6 +486,7 @@ def button_fourier_save(n_clicks, instrument):
 
         fetch_sintetic(kdb_tmp, instrument, df_fourier)
         return ['Saved {}'.format(n_clicks), '']
+
     return ['', '']
 
 
@@ -528,6 +580,30 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
     df_fourier = pd.DataFrame(val)
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
+
+@app.callback(
+    [Output('label-create-dataset', 'children')],
+    [Input('button-create-dataset', 'n_clicks')],
+    [State('chart-instruments-dropdown', 'value'),
+     State('number-create-dataset', 'value'),
+     State('history_len-create-dataset', 'value'),
+     State('explore-input-date-from', 'value'),
+     State('explore-input-date-to', 'value'),]
+)
+def button_create_dataset(n_clicks, instrument,  nval, history_len, date_start, date_end):
+    global dataset
+    if n_clicks is not None:
+        try:
+            nval = int(float(nval))
+            history_len = int(float(history_len))
+            date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
+            date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
+        except:
+            return ['']
+        dataset = kdb.create_dataset(nval, instrument, ['m1', 'm5', 'm15','H1'], history_len, date_start, date_end)
+
+        return ['instr:{} nval:{} history length:{}'.format(instrument, nval, history_len)]
+    return ['']
 
 @app.callback(
     [Output('explore-chart', 'figure')],

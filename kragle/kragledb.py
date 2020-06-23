@@ -2,7 +2,7 @@ import random
 import datetime as dt
 import pandas as pd
 from pymongo import MongoClient
-
+import logging
 import kragle.utils as kutils
 
 instruments = ['USD/SEK',
@@ -106,7 +106,7 @@ class KragleDB:
         db = self.db[instrument][periods[0]]
         base_date_list = list(db.find(
             {'date': {'$gte': date_start, '$lte': date_end}},
-            {'date': 1,  '_id': 0}
+            {'date': 1, '_id': 0}
         ))
         if len(base_date_list) < n * 2:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
@@ -115,33 +115,37 @@ class KragleDB:
     def create_value(self, instrument, periods, history_len, m1date):
         val = {'date': m1date, 'x': {}, 'y': random.random()}
         for period in periods:
-            if period == periods[0]:
-                l = self.get_history_bidopen_tickqty(instrument, period, history_len, m1date)
-            else:
-                l = self.get_history_bidopen(instrument, period, history_len, m1date)
-
+            l = self.get_history_bidopen(instrument, period, history_len, m1date)
             if len(l) < history_len:
                 raise ValueError('Not enough data to fulfill the request in period ' + period)
             if (period == 'm1') & (l[0]['date'] != m1date):
-                raise ValueError('Date {} not in period'.format(m1date))
+                raise ValueError('Date {} not in requested period'.format(m1date))
 
             val['x'][period] = l
 
+            # tickqty
+            if period == periods[0]:
+                l = self.get_history_tickqty(instrument, period, history_len, m1date)
+                val['x']['tickqty'] = l
         return val
 
-    def get_history_bidopen_tickqty(self, instrument, period, history_len, date):
-        return list(self.db[instrument][period]
-                    .find({'date': {'$lte': date}}, {'date': 1, 'bidopen': 1, 'tickqty': 1, '_id': 0})
-                    .sort([('date', -1)])
-                    .limit(history_len)
-                    )
+    def get_history_tickqty(self, instrument, period, history_len, date):
+        return list(self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$lte': date}}},
+            {'$sort': {'date': -1}},
+            {'$limit': history_len},
+            {'$project': {'date': 1, 'value': '$tickqty', '_id': 0}},
+        ]))
+
 
     def get_history_bidopen(self, instrument, period, history_len, date):
-        return list(self.db[instrument][period]
-                    .find({'date': {'$lte': date}}, {'date': 1, 'bidopen': 1, '_id': 0})
-                    .sort([('date', -1)])
-                    .limit(history_len)
-                    )
+        return list(self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$lte': date}}},
+            {'$sort': {'date': -1}},
+            {'$limit': history_len},
+            {'$project': {'date': 1, 'value': '$bidopen', '_id': 0}},
+        ]))
+
 
     def insert_future(self, instrument, period, start, end, field='bidopen', d=12, r=2):
         """[summary]

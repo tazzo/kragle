@@ -53,17 +53,16 @@ def test_aggregate_dataframe():
     assert agg['tickqty'] == 184
 
 
-def test_dataset_to_dataframe():
+def test_dataset_to_dataframe_dict():
     date1 = dt.datetime(2018, 11, 28, 22, 50)
     date2 = dt.datetime(2018, 11, 28, 22, 51)
     d = {
-        'm1': [{'date': date1, 'bidopen': 1, 'tickqty': 2}, {'date': date2, 'bidopen': 3, 'tickqty': 4}],
-        'm5': [{'date': date1, 'bidopen': 5, 'tickqty': 6}],
+        'm1': [{'date': date1, 'value': 1}, {'date': date2, 'value': 3}],
+        'm5': [{'date': date1, 'value': 5}],
     }
     ds = {'date': date1, 'x': d, 'y': 1}
-    df = kutils.dataset_to_dataframe(ds)
-    assert df.loc[0, 'm1'] == 1
-    assert df.loc[0, 'm5'] == 5
-    assert df.loc[0, 'tickqty'] == 2
-    assert df.loc[1, 'm1'] == 3
-    assert np.isnan(df.loc[1, 'm5']) == True
+    df_dict = kutils.dataset_to_dataframe_dict(ds)
+    assert df_dict['m1'].loc[0, 'value'] == 1
+    assert df_dict['m5'].loc[0, 'value'] == 5
+    assert df_dict['m1'].loc[1, 'value'] == 3
+
