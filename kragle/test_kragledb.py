@@ -102,45 +102,20 @@ def test_create_value_raise_date_period(kdb):
     kdb.create_value('EUR/USD', ['m1', 'm5'], 8, date_start)
 
 def test_create_value(kdb):
-    m1date = dt.datetime(2018, 11, 27, 22, 0)
-    val = kdb.create_value('EUR/USD', ['m1', 'm5'], 8, m1date)
-    assert val['x']['m5'][0]['tickqty'] == 159
-
     m1date = dt.datetime(2018, 11, 27, 17, 26)
     val = kdb.create_value('EUR/USD', ['m1', 'm5'], 8, m1date)
-    assert val['x']['m5'][0]['tickqty'] == 707
     assert val['x']['m5'][0]['bidopen'] == 1.12894
-    assert val['x']['m5'][0]['bidclose'] == 1.12921
-    assert val['x']['m5'][0]['bidhigh'] == 1.12923
-    assert val['x']['m5'][0]['bidlow'] == 1.12894
-    assert val['x']['m5'][0]['askopen'] == 1.12909
-    assert val['x']['m5'][0]['askclose'] == 1.12935
-    assert val['x']['m5'][0]['askhigh'] == 1.12937
-    assert val['x']['m5'][0]['asklow'] == 1.12908
+
 
 
 def test_create_value_hour(kdb):
     m1date = dt.datetime(2018, 11, 27, 15, 2)
     val = kdb.create_value('EUR/USD', ['m1', 'm5', 'H1'], 8, m1date)
-    assert val['x']['m5'][0]['tickqty'] == 692
     assert val['x']['m5'][0]['bidopen'] == 1.13195
-    assert val['x']['m5'][0]['bidclose'] == 1.1323
-    assert val['x']['m5'][0]['bidhigh'] == 1.13233
-    assert val['x']['m5'][0]['bidlow'] == 1.13192
-    assert val['x']['m5'][0]['askopen'] == 1.13211
-    assert val['x']['m5'][0]['askclose'] == 1.13245
-    assert val['x']['m5'][0]['askhigh'] == 1.13247
-    assert val['x']['m5'][0]['asklow'] == 1.1320700000000001
+
     # Hour test
-    assert val['x']['H1'][0]['tickqty'] == 692
     assert val['x']['H1'][0]['bidopen'] == 1.13195
-    assert val['x']['H1'][0]['bidclose'] == 1.1323
-    assert val['x']['H1'][0]['bidhigh'] == 1.13233
-    assert val['x']['H1'][0]['bidlow'] == 1.13192
-    assert val['x']['H1'][0]['askopen'] == 1.13211
-    assert val['x']['H1'][0]['askclose'] == 1.13245
-    assert val['x']['H1'][0]['askhigh'] == 1.13247
-    assert val['x']['H1'][0]['asklow'] == 1.1320700000000001
+
 
 
 def test_insert_future(kdb_future):

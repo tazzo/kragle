@@ -22,6 +22,7 @@ def test_random_very_near_date():
     assert rand >= start
     assert rand.second == 0
 
+
 def test_dot_names_to_dict():
     l = ['A.1', 'A.2', 'A.3', 'B.1', 'B.2', 'C.1', 'C.2', 'C.3', 'C.4']
     res = kutils.dot_names_to_dict(l)
@@ -29,6 +30,7 @@ def test_dot_names_to_dict():
     assert res['B'] == ['1', '2']
     assert res['C'] == ['1', '2', '3', '4']
     assert list(res) == ['A', 'B', 'C']
+
 
 def test_aggregate_dataframe():
     date1 = dt.datetime(2018, 11, 28, 22, 52)
@@ -47,11 +49,19 @@ def test_aggregate_dataframe():
 
     assert agg['date'] == date3
     assert agg['bidopen'] == 5
-    assert agg['bidclose'] == 2
-    assert agg['bidhigh'] == 35
-    assert agg['bidlow'] == 4
-    assert agg['askopen'] == 55
-    assert agg['askclose'] == 6
-    assert agg['askhigh'] == 75
-    assert agg['asklow'] == 8
     assert agg['tickqty'] == 184
+
+
+def test_dataset_to_dataframe():
+    date1 = dt.datetime(2018, 11, 28, 22, 50)
+    date2 = dt.datetime(2018, 11, 28, 22, 51)
+    d = {
+        'm1': [{'date': date1, 'bidopen': 1, 'tickqty': 2}, {'date': date2, 'bidopen': 3, 'tickqty': 4}],
+        'm5': [{'date': date1, 'bidopen': 5, 'tickqty': 6}],
+    }
+    ds = {'date': date1, 'x': d, 'y': 1}
+    df = kutils.dataset_to_dataframe(ds)
+    assert df.loc[0,'m1'] == 1
+    assert df.loc[0,'m5'] == 5
+    assert df.loc[0,'tickqty'] == 2
+    assert df.loc[1,'m1'] == 3

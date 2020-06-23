@@ -114,50 +114,31 @@ class KragleDB:
 
     def create_value(self, instrument, periods, history_len, m1date):
         val = {'date': m1date, 'x': {}, 'y': random.random()}
-        before = None
         for period in periods:
-            l = self.get_history(instrument, period, history_len, m1date)
+            if period == periods[0]:
+                l = self.get_history_bidopen_tickqty(instrument, period, history_len, m1date)
+            else:
+                l = self.get_history_bidopen(instrument, period, history_len, m1date)
+
             if len(l) < history_len:
                 raise ValueError('Not enough data to fulfill the request in period ' + period)
             if (period == 'm1') & (l[0]['date'] != m1date):
                 raise ValueError('Date {} not in period'.format(m1date))
-            if before is not None:
-                l = self.correct_last(l, before)
-            before = l
+
             val['x'][period] = l
 
         return val
 
-    def correct_last(self, l, before):
-        df = pd.DataFrame(before)
-        df = df.loc[df.date >= l[0]['date'], :]
-        agg = kutils.aggregate_dataframe(df)
-        l[0]['bidopen'] = agg['bidopen']
-        l[0]['bidclose'] = agg['bidclose']
-        l[0]['bidhigh'] = agg['bidhigh']
-        l[0]['bidlow'] = agg['bidlow']
-        l[0]['askopen'] = agg['askopen']
-        l[0]['askclose'] = agg['askclose']
-        l[0]['askhigh'] = agg['askhigh']
-        l[0]['asklow'] = agg['asklow']
-        l[0]['tickqty'] = agg['tickqty']
-
-        return l
-
-    def get_history(self, instrument, period, history_len, date):
-        """[summary]
-
-        Args:
-            instrument ([type]): [description]
-            period ([type]): [description]
-            history_len ([type]): [description]
-            date ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """
+    def get_history_bidopen_tickqty(self, instrument, period, history_len, date):
         return list(self.db[instrument][period]
-                    .find({'date': {'$lte': date}})
+                    .find({'date': {'$lte': date}}, {'date': 1, 'bidopen': 1, 'tickqty': 1, '_id': 0})
+                    .sort([('date', -1)])
+                    .limit(history_len)
+                    )
+
+    def get_history_bidopen(self, instrument, period, history_len, date):
+        return list(self.db[instrument][period]
+                    .find({'date': {'$lte': date}}, {'date': 1, 'bidopen': 1, '_id': 0})
                     .sort([('date', -1)])
                     .limit(history_len)
                     )

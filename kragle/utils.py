@@ -3,6 +3,7 @@ import random
 import pandas as pd
 
 
+# TODO: maybe remove this function
 def random_date(start, end):
     """Generate a random datetime between `start` and `end` in minutes"""
     return start + dt.timedelta(
@@ -12,18 +13,9 @@ def random_date(start, end):
 
 
 def aggregate_dataframe(df):
-    high = df[['bidhigh', 'askhigh']].max()
-    low = df[['bidlow', 'asklow']].min()
     sum = df[['tickqty']].sum()
     res = {'date': df.iloc[-1]['date'],
            'bidopen': df.iloc[-1]['bidopen'],
-           'bidclose': df.iloc[0]['bidclose'],
-           'bidhigh': high['bidhigh'],
-           'bidlow': low['bidlow'],
-           'askopen': df.iloc[-1]['askopen'],
-           'askclose': df.iloc[0]['askclose'],
-           'askhigh': high['askhigh'],
-           'asklow': low['asklow'],
            'tickqty': sum['tickqty'],
            }
     return res
@@ -35,7 +27,7 @@ def dot_names_to_dict(name_list):
         try:
             l = name.split('.')
             val = res.get(l[0], [])
-            if len(l)==2:
+            if len(l) == 2:
                 val.append(l[1])
                 res[l[0]] = val
         except:
@@ -54,3 +46,18 @@ def dataframe_read_json(path):
         [DataFrame]: pandas dataframe
     """
     return pd.read_json(path, orient='records')
+
+
+def dataset_to_dataframe(ds):
+    res = {}
+    periods = list(ds['x'])
+    for period in periods:
+        value_list = ds['x'][period]
+        for val in value_list:
+            d = res.get(val['date'], {})
+            d['date'] = val['date']
+            d[period] = val['bidopen']
+            if period == 'm1':
+                d['tickqty'] = val['tickqty']
+            res[val['date']] = d
+    return pd.DataFrame(res.values())
