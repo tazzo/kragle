@@ -495,35 +495,35 @@ def fetch_sintetic(kdb, instrument, df):
     for period in kragle.periods:
         kdb.drop('{}.{}'.format(instrument, period))
 
-    kdb.fetch_dataframe(df, instrument, 'm1', check_duplicates=False)
+    kdb.fetch_dataframe(df, instrument, 'm1')
     # m5
     droplist = []
     for i in range(df.shape[0]):
         if i % 5 != 0:
             droplist.append(i)
     dfm5 = df.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfm5, instrument, 'm5', check_duplicates=False)
+    kdb.fetch_dataframe(dfm5, instrument, 'm5')
     # m15
     droplist = []
     for i in range(dfm5.shape[0]):
         if i % 3 != 0:
             droplist.append(i)
     dfm15 = dfm5.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfm15, instrument, 'm15', check_duplicates=False)
+    kdb.fetch_dataframe(dfm15, instrument, 'm15')
     # m30
     droplist = []
     for i in range(dfm15.shape[0]):
         if i % 2 != 0:
             droplist.append(i)
     dfm30 = dfm15.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfm30, instrument, 'm30', check_duplicates=False)
+    kdb.fetch_dataframe(dfm30, instrument, 'm30')
     # H1
     droplist = []
     for i in range(dfm30.shape[0]):
         if i % 2 != 0:
             droplist.append(i)
     dfH1 = dfm30.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfH1, instrument, 'H1', check_duplicates=False)
+    kdb.fetch_dataframe(dfH1, instrument, 'H1')
     kdb.close()
 
 

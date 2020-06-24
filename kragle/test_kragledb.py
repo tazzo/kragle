@@ -65,7 +65,8 @@ def test_create_dataset_raise_few_data2(kdb):
     with pytest.raises(ValueError, match=r".*fulfill.*m1.*"):
         kdb.create_dataset(10, 'EUR/USD', ['m1', 'm5'], 4, start, end)
     with pytest.raises(ValueError, match=r".*fulfill.*m1.*"):
-        kdb.create_dataset(3, 'EUR/USD', ['m1', 'm5'], 4, start, end)
+        kdb.create_dataset(6, 'EUR/USD', ['m1', 'm5'], 4, start, end)
+    kdb.create_dataset(5, 'EUR/USD', ['m1', 'm5'], 4, start, end)
 
 
 def test_create_dataset(kdb):

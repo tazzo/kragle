@@ -1,7 +1,8 @@
 import datetime as dt
 import random
 import pandas as pd
-import  logging
+import logging
+
 
 # TODO: maybe remove this function
 def random_date(start, end):
@@ -53,3 +54,19 @@ def dataset_to_dataframe_dict(ds):
     for name, value_list in ds['x'].items():
         res[name] = pd.DataFrame(value_list)
     return res
+
+
+def prune_and_index_db(db):
+    for coll_name in db.list_collection_names():
+        print('Prune {}'.format(coll_name))
+        l = list(db[coll_name]
+            .aggregate([
+            {"$group": {'_id': {"date": '$date'}, "count": {"$sum": 1}}},
+            {"$match": {"count": {"$gt": 1}}},
+            {'$sort': {"_id": 1}},
+
+        ]))
+        for val in l:
+            one = db[coll_name].find_one({'date': val['_id']['date']})
+            db[coll_name].delete_one({'_id': one['_id']})
+        db[coll_name].create_index([('date', -1)], unique=True)

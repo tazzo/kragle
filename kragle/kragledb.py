@@ -23,6 +23,15 @@ def getDBNames():
     return l
 
 
+def check_date_index_db(db):
+    for coll_name in db.list_collection_names():
+        db[coll_name].create_index([('date', -1)], unique=True)
+
+
+def check_date_index_collection(db):
+    db.create_index([('date', -1)], unique=True)
+
+
 class KragleDB:
 
     def __init__(self, dbname='forex_raw'):
@@ -30,6 +39,7 @@ class KragleDB:
         self.client = MongoClient('localhost', 27017)
         self.db = self.client[dbname]
         self.dbname = dbname
+        check_date_index_db(self.db)
 
     def close(self):
         self.client.close()
@@ -53,8 +63,11 @@ class KragleDB:
         elif type(end) is not dt.datetime:
             raise ValueError('End date must be a datetime.datetime not {} '.format(type(end)))
         else:
-            data = list(db.find({'date': {'$gte': start, '$lte': end}}).limit(limit))
-
+            data = list(db.aggregate([
+                {'$match': {'date': {'$gte': start, '$lte': end}}},
+                {'$sort': {'date': 1}},
+                {'$limit': limit},
+            ]))
         return pd.DataFrame(data)
 
     def get_instrument_value(self, instrument, period, date):
@@ -65,7 +78,7 @@ class KragleDB:
         return self.db[instrument].drop()
 
     # TODO: add a test
-    def fetch_dataframe(self, df, instrument, period, check_duplicates=True):
+    def fetch_dataframe(self, df, instrument, period):
         """
         Fetch the dataframe in the DB using 'date' to replace existing elements o creating a new one
 
@@ -74,11 +87,11 @@ class KragleDB:
             instrument (String): the forex instrument ('EUR/USD', 'EUR/JPY' ... )
             period (String): the instrument period ('m1', 'm5', 'm15' ... )
         """
-        if check_duplicates:
-            for record in df.to_dict("records"):
-                self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
-        else:
-            self.db[instrument][period].insert_many(df.to_dict("records"))
+        check_date_index_collection(self.db[instrument][period])
+
+        for record in df.to_dict("records"):
+            self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
+
 
     def dataframe_to_json(self, df, path):
         """
@@ -108,7 +121,7 @@ class KragleDB:
             {'date': {'$gte': date_start, '$lte': date_end}},
             {'date': 1, '_id': 0}
         ))
-        if len(base_date_list) < n * 2:
+        if len(base_date_list) < n :
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
 
@@ -168,8 +181,10 @@ class KragleDB:
             tmp = df.loc[[(i + r + gap) for i in range(win)], field]
             start = df.loc[r, field]
             future = round((tmp.mean() - start), 4)
-
+            id = df.loc[r, '_id']
             self.db[instrument][period].update_one(
-                {'_id': df.loc[r, '_id']}
-                , {'$set': {"future": future}}
-                , upsert=False)
+                {'_id': id},
+                {'$set': {"future": future}},
+                upsert=False)
+
+
