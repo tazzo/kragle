@@ -2,6 +2,7 @@ import datetime as dt
 import random
 import pandas as pd
 import logging
+import math
 
 
 # TODO: maybe remove this function
@@ -23,6 +24,11 @@ def aggregate_dataframe(df):
 
 
 def dot_names_to_dict(name_list):
+    """
+    given a list like ['A.1', 'A.2', 'A.3', 'B.1', 'B.2', 'C.1', 'C.2', 'C.3', 'C.4']
+    return a dict {'A': ['1', '2', '3'], 'B': ['1', '2'], 'C': ['1', '2', '3', '4']}
+
+    """
     res = {}
     for name in name_list:
         try:
@@ -70,3 +76,45 @@ def prune_and_index_db(db):
             one = db[coll_name].find_one({'date': val['_id']['date']})
             db[coll_name].delete_one({'_id': one['_id']})
         db[coll_name].create_index([('date', -1)], unique=True)
+
+
+class MeanStdDevCalculator:
+
+    def __init__(self):
+        self.n = 0
+        self.mean = 0
+        self.stddev = 0
+
+    def add(self, value):
+        self.n = self.n + 1
+        self.mean = self.mean + value
+        self.stddev = self.stddev + value * value
+
+    def get_mean(self):
+        return self.mean / self.n
+
+    def get_stddev(self):
+        return math.sqrt(self.stddev / self.n - self.get_mean() * self.get_mean())
+
+
+def calc_mean_stddev_on_m1(db):
+    """
+    Calc mean and stddev on bidopen and tickqty on H1 period
+    """
+    d = dot_names_to_dict(db.list_collection_names())
+    res = {}
+    for instrument in list(d):
+        print(instrument)
+        res[instrument] = {}
+        period = 'm1'
+        b_calc = MeanStdDevCalculator()
+        t_calc = MeanStdDevCalculator()
+        for v in db[instrument][period].find({}):
+            b_calc.add(v['bidopen'])
+            t_calc.add(v['tickqty'])
+
+        res[instrument]['bidopen-mean'] = b_calc.get_mean()
+        res[instrument]['bidopen-stddev'] = b_calc.get_stddev()
+        res[instrument]['tickqty-mean'] = t_calc.get_mean()
+        res[instrument]['tickqty-stddev'] = t_calc.get_stddev()
+    return res

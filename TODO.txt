@@ -1,3 +1,5 @@
+- add strategy test
+- create_value fix y is random
 - add future in dataset creation?
 - test per get_instrument
 - add test for create_dataset tickqty field

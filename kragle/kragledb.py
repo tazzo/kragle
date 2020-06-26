@@ -126,6 +126,7 @@ class KragleDB:
         return base_date_list
 
     def create_value(self, instrument, periods, history_len, m1date):
+        #TODO: fix y
         val = {'date': m1date, 'x': {}, 'y': random.random()}
         for period in periods:
             l = self.get_history_bidopen(instrument, period, history_len, m1date)

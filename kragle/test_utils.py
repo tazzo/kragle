@@ -33,6 +33,7 @@ def test_dot_names_to_dict():
     assert list(res) == ['A', 'B', 'C']
 
 
+
 def test_aggregate_dataframe():
     date1 = dt.datetime(2018, 11, 28, 22, 52)
     date2 = dt.datetime(2018, 11, 28, 22, 51)
