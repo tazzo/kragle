@@ -112,7 +112,7 @@ class KragleDB:
         ret = []
         for i in range(n):
             tmp = base_date_list.pop(random.randrange(len(base_date_list)))
-            ret.append(self.create_value(instrument, periods, histlen, tmp['date']))
+            ret.append(self.create_train_value(instrument, periods, histlen, tmp['date']))
         return ret
 
     def get_base_date_list(self, n, instrument, periods, date_start, date_end):
@@ -125,7 +125,7 @@ class KragleDB:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
 
-    def create_value(self, instrument, periods, history_len, m1date):
+    def create_train_value(self, instrument, periods, history_len, m1date):
         #TODO: fix y
         val = {'date': m1date, 'x': {}, 'y': random.random()}
         for period in periods:
@@ -144,22 +144,18 @@ class KragleDB:
         return val
 
     def get_history_tickqty(self, instrument, period, history_len, date):
-        return list(self.db[instrument][period].aggregate([
-            {'$match': {'date': {'$lte': date}}},
-            {'$sort': {'date': -1}},
-            {'$limit': history_len},
-            {'$project': {'date': 1, 'value': '$tickqty', '_id': 0}},
-        ]))
-
+        return self.get_history_field(instrument, period, 'tickqty', history_len, date)
 
     def get_history_bidopen(self, instrument, period, history_len, date):
+        return self.get_history_field(instrument, period, 'bidopen', history_len, date)
+
+    def get_history_field(self, instrument, period, field, history_len, date):
         return list(self.db[instrument][period].aggregate([
             {'$match': {'date': {'$lte': date}}},
             {'$sort': {'date': -1}},
             {'$limit': history_len},
-            {'$project': {'date': 1, 'value': '$bidopen', '_id': 0}},
+            {'$project': {'date': 1, 'value': '${}'.format(field), '_id': 0}},
         ]))
-
 
     def insert_future(self, instrument, period, start, end, field='bidopen', d=12, r=2):
         """[summary]

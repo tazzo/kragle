@@ -82,36 +82,40 @@ def test_create_dataset(kdb):
     # test 0 element
     assert 'm1' in dataset[0]['x']
     assert 'm5' in dataset[0]['x']
+    assert 'tickqty' in dataset[0]['x']
     assert len(dataset[0]['x']['m1']) == 4
     assert len(dataset[0]['x']['m5']) == 4
+    assert len(dataset[0]['x']['tickqty']) == 4
     # test 1 element
     assert 'm1' in dataset[1]['x']
     assert 'm5' in dataset[1]['x']
+    assert 'tickqty' in dataset[1]['x']
     assert len(dataset[1]['x']['m1']) == 4
     assert len(dataset[1]['x']['m5']) == 4
+    assert len(dataset[1]['x']['tickqty']) == 4
 
 
-def test_create_value_raise_date_period(kdb):
+def test_create_train_value_raise_date_period(kdb):
     with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 0)
-        kdb.create_value('EUR/USD', ['m1', 'm5'], 8, date_start)
+        kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
         date_start = dt.datetime(2018, 11, 27, 23, 20)
-        kdb.create_value('EUR/USD', ['m1', 'm5'], 8, date_start)
+        kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
         date_start = dt.datetime(2018, 11, 27, 23, 30)
-        kdb.create_value('EUR/USD', ['m1', 'm5'], 8, date_start)
+        kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
     date_start = dt.datetime(2018, 11, 27, 22, 59)
-    kdb.create_value('EUR/USD', ['m1', 'm5'], 8, date_start)
+    kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
 
-def test_create_value(kdb):
+def test_create_train_value(kdb):
     m1date = dt.datetime(2018, 11, 27, 17, 26)
-    val = kdb.create_value('EUR/USD', ['m1', 'm5'], 8, m1date)
+    val = kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, m1date)
     assert val['x']['m5'][0]['value'] == 1.12894
 
 
 
-def test_create_value_hour(kdb):
+def test_create_train_value_hour(kdb):
     m1date = dt.datetime(2018, 11, 27, 15, 2)
-    val = kdb.create_value('EUR/USD', ['m1', 'm5', 'H1'], 8, m1date)
+    val = kdb.create_train_value('EUR/USD', ['m1', 'm5', 'H1'], 8, m1date)
     assert val['x']['m5'][0]['value'] == 1.13195
 
     # Hour test

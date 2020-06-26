@@ -21,9 +21,9 @@ class Strategy():
         """
         value like val = {  'date': m1date,
                             'x': {
-                                'm1':[1.1, 1.2, ...],
-                                'm5':[1.1, 1.4, ...],
-                                'tickqty':[10, 14, ...],
+                                'm1':[],
+                                'm5':[],
+                                'tickqty':[],
                                 ...},
                             'y': 0.7}
         """

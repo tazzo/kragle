@@ -3,6 +3,23 @@ import math
 import random
 from functools import reduce
 import operator
+from kragle.utils import MeanStdDevCalculator
+
+EUR_USD = {
+    'bidopen-mean': 1.1504,
+    'bidopen-stddev': 0.041538,
+    'tickqty-mean': 180.143,
+    'tickqty-stddev': 207.86
+}
+
+
+def renormalize(values, mean_stddev_calc, target_mean, target_stddev):
+    res = []
+    for value in values:
+        new_value = (((value - mean_stddev_calc.get_mean()) / mean_stddev_calc.get_stddev())
+                     * target_stddev) + target_mean
+        res.append(new_value)
+    return res
 
 
 def fourier_reconstruction(x, an=[1], bn=[0]):
@@ -29,25 +46,32 @@ def random_dataset(n=100, dim=1):
         start = dt.datetime(2018, 11, 24, 23, 0)
         value = random.random() * 40 - 20
         tickqty = 10
+        b_calc = MeanStdDevCalculator()
+        t_calc = MeanStdDevCalculator()
         for i in range(n):
             res['n'].append(i)
-            #value balancing
+            # value balancing
             if (value > 20) | (value < -20):
                 balancer = -0.0001 * value
             else:
                 balancer = 0
             value = value + (random.random() - 0.5 + balancer)
-            #tickqty balancing
+            # tickqty balancing
             if tickqty > 100:
-                tickqty = tickqty * (random.random()  + 0.3)
+                tickqty = tickqty * (random.random() + 0.3)
             else:
-                tickqty = tickqty * (random.random()  + 0.5)
+                tickqty = tickqty * (random.random() + 0.5)
             if tickqty <= 1:
                 tickqty = random.random() * 20
             tickqty = int(tickqty)
+            b_calc.add(value)
             res['bidopen'].append(value)
             res['date'].append(start + dt.timedelta(minutes=i))
+            t_calc.add(tickqty)
             res['tickqty'].append(tickqty)
+        res['bidopen'] = renormalize(res['bidopen'], b_calc, EUR_USD['bidopen-mean'], EUR_USD['bidopen-stddev'])
+        res['tickqty'] = renormalize(res['tickqty'], b_calc, EUR_USD['tickqty-mean'], EUR_USD['tickqty-stddev'])
+
         ds_list.append(res)
     return ds_list
 
@@ -56,13 +80,21 @@ def fourier_dataset(n=100, delta=0.01, an=[1], bn=[0], noise_factor=1):
     res = {'n': [], 'bidopen': [], 'date': [], 'tickqty': []}
     start = dt.datetime(2018, 11, 24, 23, 0)
     noise = (random.random() - 0.5) * noise_factor
+    b_calc = MeanStdDevCalculator()
+    t_calc = MeanStdDevCalculator()
     for i in range(n):
         res['n'].append(i)
-        res['bidopen'].append(fourier_reconstruction(i * delta, an, bn) + noise)
+        value = fourier_reconstruction(i * delta, an, bn) + noise
+        b_calc.add(value)
+        res['bidopen'].append(value)
         res['date'].append(start + dt.timedelta(minutes=i))
-        res['tickqty'].append(round(random.random() * 100))
+        tickqty = round(random.random() * 100)
+        t_calc.add(tickqty)
+        res['tickqty'].append(tickqty)
 
         noise = noise * 0.9 + (random.random() - 0.5) * noise_factor * 0.3
+    res['bidopen'] = renormalize(res['bidopen'], b_calc, EUR_USD['bidopen-mean'], EUR_USD['bidopen-stddev'])
+    res['tickqty'] = renormalize(res['tickqty'], b_calc, EUR_USD['tickqty-mean'], EUR_USD['tickqty-stddev'])
     return res
 
 
