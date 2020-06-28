@@ -319,8 +319,6 @@ def build_dataset_manager():
         className='space-y-1')
 
 
-
-
 def build_chaos_chart(axis):
     dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
@@ -404,11 +402,8 @@ def render_main_content():
     )
 
 
-
-
-
 @app.callback(
-    [Output("dataset-manager-chart", "figure"),],
+    [Output("dataset-manager-chart", "figure"), ],
     [Input('button-manager-refresh', 'n_clicks')]
 )
 def button_manager_refresh(n_clicks):
@@ -426,8 +421,6 @@ def button_manager_refresh(n_clicks):
                 secondary_y=(name == 'tickqty'))
         return [fig]
     return [go.Figure()]
-
-
 
 
 @app.callback(
@@ -452,7 +445,7 @@ def chart_instruments_refresh(dbname):
     [Input('button-dbnames-refresh', 'n_clicks')]
 )
 def button_DB_names_refresh(n_clicks):
-    names = kragle.getDBNames()
+    names = kragle.get_db_names()
     options = []
     for name in names:
         options.append({'label': name, 'value': name})
@@ -588,9 +581,9 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
      State('number-create-dataset', 'value'),
      State('history_len-create-dataset', 'value'),
      State('explore-input-date-from', 'value'),
-     State('explore-input-date-to', 'value'),]
+     State('explore-input-date-to', 'value'), ]
 )
-def button_create_dataset(n_clicks, instrument,  nval, history_len, date_start, date_end):
+def button_create_dataset(n_clicks, instrument, nval, history_len, date_start, date_end):
     global dataset
     if n_clicks is not None:
         try:
@@ -600,10 +593,11 @@ def button_create_dataset(n_clicks, instrument,  nval, history_len, date_start, 
             date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
         except:
             return ['']
-        dataset = kdb.create_dataset(nval, instrument, ['m1', 'm5', 'm15','H1'], history_len, date_start, date_end)
+        dataset = kdb.create_dataset(nval, instrument, ['m1', 'm5', 'm15', 'H1'], history_len, date_start, date_end)
 
         return ['instr:{} nval:{} history length:{}'.format(instrument, nval, history_len)]
     return ['']
+
 
 @app.callback(
     [Output('explore-chart', 'figure')],

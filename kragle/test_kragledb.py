@@ -1,8 +1,5 @@
 import datetime as dt
-
-import pandas as pd
 import pytest
-
 from kragle import KragleDB
 import kragle.utils as kutils
 
@@ -59,6 +56,7 @@ def test_create_dataset_raise_few_data(kdb):
     with pytest.raises(ValueError, match=r".*fulfill.*"):
         dataset = kdb.create_dataset(2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
 
+
 def test_create_dataset_raise_few_data2(kdb):
     start = dt.datetime(2018, 11, 27, 17, 0)
     end = dt.datetime(2018, 11, 27, 17, 4)
@@ -99,18 +97,20 @@ def test_create_train_value_raise_date_period(kdb):
     with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 0)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
+    with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 20)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
+    with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 30)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
     date_start = dt.datetime(2018, 11, 27, 22, 59)
     kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
 
+
 def test_create_train_value(kdb):
     m1date = dt.datetime(2018, 11, 27, 17, 26)
     val = kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, m1date)
     assert val['x']['m5'][0]['value'] == 1.12894
-
 
 
 def test_create_train_value_hour(kdb):
@@ -120,7 +120,6 @@ def test_create_train_value_hour(kdb):
 
     # Hour test
     assert val['x']['H1'][0]['value'] == 1.13195
-
 
 
 def test_insert_future(kdb_future):

@@ -16,7 +16,7 @@ done = ['EUR/USD', 'USD/JPY', 'ETH/USD', 'USD/CHF', 'GBP/USD', 'USD/CAD',
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
 
-def getDBNames():
+def get_db_names():
     client = MongoClient('localhost', 27017)
     l = client.list_database_names()
     client.close()
@@ -48,23 +48,23 @@ class KragleDB:
         return list(self.get_instruments_and_periods())
 
     def get_periods(self, instrument):
-        return self.getInstrumentsAndPeriods()[instrument]
+        return self.get_instruments_and_periods()[instrument]
 
     def get_instruments_and_periods(self):
         names = self.db.collection_names()
         return kutils.dot_names_to_dict(names)
 
-    def get_instrument(self, instrument, period='m1', start=None, end=None, limit=100000):
+    def get_instrument(self, instrument, period='m1', date_start=None, date_end=None, limit=100000):
 
         db = self.db[instrument][period]
 
-        if type(start) is not dt.datetime:
-            raise ValueError('Start date must be a datetime.datetime not {} '.format(type(start)))
-        elif type(end) is not dt.datetime:
-            raise ValueError('End date must be a datetime.datetime not {} '.format(type(end)))
+        if type(date_start) is not dt.datetime:
+            raise ValueError('Start date must be a datetime.datetime not {} '.format(type(date_start)))
+        elif type(date_end) is not dt.datetime:
+            raise ValueError('End date must be a datetime.datetime not {} '.format(type(date_end)))
         else:
             data = list(db.aggregate([
-                {'$match': {'date': {'$gte': start, '$lte': end}}},
+                {'$match': {'date': {'$gte': date_start, '$lte': date_end}}},
                 {'$sort': {'date': 1}},
                 {'$limit': limit},
             ]))
@@ -155,6 +155,13 @@ class KragleDB:
             {'$sort': {'date': -1}},
             {'$limit': history_len},
             {'$project': {'date': 1, 'value': '${}'.format(field), '_id': 0}},
+        ]))
+
+    def get_date_list(self, instrument, period, date_start, date_end):
+        return list(self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$gte': date_start, '$lte': date_end}}},
+            {'$sort': {'date': 1}},
+            {'$project': {'date': 1, '_id': 0}},
         ]))
 
     def insert_future(self, instrument, period, start, end, field='bidopen', d=12, r=2):

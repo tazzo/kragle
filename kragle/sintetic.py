@@ -36,7 +36,7 @@ def fourier_reconstruction(x, an=[1], bn=[0]):
         range(len(bn))
     )
 
-    return (reduce(operator.add, la) + reduce(operator.add, lb))
+    return reduce(operator.add, la) + reduce(operator.add, lb)
 
 
 def random_dataset(n=100, dim=1):
@@ -102,9 +102,6 @@ def attractor(n=100, dt=0.01):
     x = 0.4
     y = -0.1
     z = 0.1
-    dx = 0
-    dy = 0
-    dz = 0
     res = {'i': [], 'x': [], 'y': [], 'z': [], 'xyz': []}
     j = 0
     k = 0
@@ -127,6 +124,8 @@ def attractor(n=100, dt=0.01):
         res['y'].append(y)
         res['z'].append(z)
         res['xyz'].append((di * x + dj * res['x'][j]) + dk * res['x'][k])
-        if i % pj == 0: j = j + 1
-        if i % pk == 0: k = k + 1
+        if i % pj == 0:
+            j = j + 1
+        if i % pk == 0:
+            k = k + 1
     return res
