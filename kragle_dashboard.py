@@ -10,6 +10,7 @@ from dash.dependencies import Input, Output, State
 from plotly.subplots import make_subplots
 import logging
 import kragle
+from kragle import BuyStrategy, AgentTester, RandomStrategy
 
 df_fourier = None
 df_random_list = []
@@ -319,6 +320,45 @@ def build_dataset_manager():
         className='space-y-1')
 
 
+def build_agent_box():
+    return html.Div([
+        html.P('Agent Tester', className='text-2xl font-bold'),
+        html.Button(
+            'Run',
+            id='button-agent-run',
+            className='btn btn-blue'
+        ),
+        html.Div([
+            html.Div([
+                html.P('From', className='font-bold'),
+                dcc.Input(
+                    id='agent-input-date-from',
+                    placeholder='2018-11-22 12:00',
+                    type='text',
+                    value='2018-11-22 12:00'
+                )
+            ]),
+            html.Div([
+                html.P('To', className='font-bold'),
+                dcc.Input(
+                    id='agent-input-date-to',
+                    placeholder='2018-11-23 12:00',
+                    type='text',
+                    value='2018-11-23 12:00',
+                )
+            ]),
+        ], className='flex space-x-2'),
+
+        html.Div([
+            dcc.Graph(
+                id='agent-chart'
+            )
+        ]),
+
+    ],
+        className='space-y-1')
+
+
 def build_chaos_chart(axis):
     dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
@@ -349,6 +389,15 @@ def render_main_content():
             html.Div(
                 className="box-container",
                 children=[
+                    html.Div(
+                        className='box-wrapper',
+                        children=html.Div(
+                            className='box',
+                            children=[
+                                build_agent_box()
+                            ],
+                        ),
+                    ),
                     html.Div(
                         className='box-wrapper',
                         children=html.Div(
@@ -400,6 +449,53 @@ def render_main_content():
             ),
         ]
     )
+
+
+@app.callback(
+    [Output("agent-chart", "figure"), ],
+    [Input('button-agent-run', 'n_clicks')],
+    [State('agent-input-date-from', 'value'),
+     State('agent-input-date-to', 'value')]
+)
+def button_agent_run(n_clicks, date_start, date_end):
+    if n_clicks is not None:
+        try:
+            date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
+            date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
+        except:
+            return [go.Figure()]
+
+        logging.error('AgentTester')
+        at = AgentTester(kdb, RandomStrategy())
+        logging.error('test strategy')
+        at.test_strategy('EUR/USD', date_start, date_end)
+
+        fig = make_subplots(specs=[[{"secondary_y": True}]])
+        fig.update_layout(title="Agent")
+        logging.error('bidopen')
+        # bidopen chart
+        fig.add_trace(
+            go.Scatter(
+                x=at.df['date'],
+                y=at.df['bidopen'],
+                opacity=0.5,
+                name='bidopen',
+                mode='markers',
+                marker={'size': 4, 'color': at.df['color']}),
+            secondary_y=False)
+        logging.error('wallet')
+        # wallet
+        fig.add_trace(
+            go.Scatter(
+                x=at.df['date'],
+                y=at.df['wallet'],
+                opacity=0.5,
+                name='wallet'),
+            secondary_y=True)
+        logging.error(str(at.df.head()))
+        logging.error(str(at.wallet))
+        return [fig]
+    return [go.Figure()]
 
 
 @app.callback(

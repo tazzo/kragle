@@ -5,7 +5,6 @@ import logging
 import math
 from enum import Enum
 
-
 PIP = .0001
 
 
@@ -28,14 +27,19 @@ class AgentTester:
         self.periods = ['m1', 'm5', 'm15', 'H1']
         self.hist_len = 1
         self.action = Action.HOLD
+        self.df = None
 
     def test_strategy(self, instrument, date_start, date_end):
+        self.df = pd.DataFrame(columns=['date', 'bidopen', 'action', 'color',  'wallet'])
         date_list = self.kdb.get_date_list(instrument, 'm1', date_start, date_end)
         for date_value in date_list:
+            df_value = {}
+
             tvalue = self.kdb.create_train_value(instrument, self.periods, self.hist_len, date_value['date'])
             value = tvalue['x']['m1'][0]['value']
+            action = self.strategy.action(tvalue)
+
             if self.action == Action.HOLD:
-                action = self.strategy.action(tvalue)
                 if action == Action.HOLD:
                     continue
                 else:
@@ -45,12 +49,18 @@ class AgentTester:
                 if (value > self.price + self.take_profit) | (value < self.price - self.stop_loss):
                     self.wallet = self.wallet + value - self.price - 2 * PIP
                     self.action = Action.HOLD
-            else:# self.action == Action.SELL
+            else:  # self.action == Action.SELL
                 if (value < self.price - self.take_profit) | (value > self.price + self.stop_loss):
                     self.wallet = self.wallet - value + self.price - 2 * PIP
                     self.action = Action.HOLD
 
-
+            # create df_value
+            df_value['date'] = date_value['date']
+            df_value['bidopen'] = tvalue['x']['m1'][0]['value']
+            df_value['action'] = action
+            df_value['color'] = action.value * 10
+            df_value['wallet'] = self.wallet
+            self.df = self.df.append(df_value, ignore_index=True)
 
 
 class Strategy:
@@ -79,6 +89,7 @@ class BuyStrategy(Strategy):
     def action(self, value):
         return Action.BUY
 
+
 class SellStrategy(Strategy):
 
     def __init__(self):
@@ -86,6 +97,7 @@ class SellStrategy(Strategy):
 
     def action(self, value):
         return Action.SELL
+
 
 class RandomStrategy(Strategy):
 
