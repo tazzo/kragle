@@ -16,6 +16,7 @@ df_fourier = None
 df_random_list = []
 dataset = None
 kdb = kragle.KragleDB('forex_raw')
+kdb_agent = kragle.KragleDB('forex_raw')
 
 app = dash.Dash(__name__, meta_tags=[
     {"name": "viewport", "content": "width=device-width, initial-scale=1"}
@@ -30,7 +31,7 @@ def build_explorer():
         html.P('Data explorer', className='text-2xl font-bold'),
         html.Button(
             'Refresh DB names',
-            id='button-dbnames-refresh',
+            id='button-explorer-dbnames-refresh',
             className='btn btn-blue'
         ),
         html.Div([
@@ -323,11 +324,33 @@ def build_dataset_manager():
 def build_agent_box():
     return html.Div([
         html.P('Agent Tester', className='text-2xl font-bold'),
-        html.Button(
-            'Run',
-            id='button-agent-run',
-            className='btn btn-blue'
-        ),
+        html.Div([
+            html.Button(
+                'Refresh DB names',
+                id='button-agent-dbnames-refresh',
+                className='btn btn-blue'
+            ),
+            html.Button(
+                'Run',
+                id='button-agent-run',
+                className='btn btn-blue'
+            ),
+        ], className='flex  space-x-2'),
+        html.Div([
+            html.Div([
+                dcc.Dropdown(
+                    id='agent-dbnames-dropdown',
+                    clearable=False
+
+                ),
+            ], className='w-1/2'),
+            html.Div([
+                dcc.Dropdown(
+                    id='agent-instruments-dropdown',
+                    clearable=False
+                ),
+            ], className='w-1/2'),
+        ], className='flex'),
         html.Div([
             html.Div([
                 html.P('From', className='font-bold'),
@@ -450,14 +473,42 @@ def render_main_content():
         ]
     )
 
+@app.callback(
+    [Output("agent-instruments-dropdown", "options"),
+     Output("agent-instruments-dropdown", "value")],
+    [Input('agent-dbnames-dropdown', 'value')]
+)
+def agent_instruments_refresh(dbname):
+    global kdb_agent
+    kdb_agent.close()
+    kdb_agent = kragle.KragleDB(dbname)
+    insrtuments = kdb_agent.get_instruments()
+    options = []
+    for insrtument in insrtuments:
+        options.append({'label': insrtument, 'value': insrtument})
+    return [options, insrtuments[0]]
+
+
+@app.callback(
+    [Output("agent-dbnames-dropdown", "options"),
+     Output("agent-dbnames-dropdown", "value")],
+    [Input('button-agent-dbnames-refresh', 'n_clicks')]
+)
+def button_agent_DB_names_refresh(n_clicks):
+    names = kragle.get_db_names()
+    options = []
+    for name in names:
+        options.append({'label': name, 'value': name})
+    return [options, 'forex_raw']
 
 @app.callback(
     [Output("agent-chart", "figure"), ],
     [Input('button-agent-run', 'n_clicks')],
     [State('agent-input-date-from', 'value'),
-     State('agent-input-date-to', 'value')]
+     State('agent-input-date-to', 'value'),
+     State("agent-instruments-dropdown", "value")]
 )
-def button_agent_run(n_clicks, date_start, date_end):
+def button_agent_run(n_clicks, date_start, date_end, instrument):
     if n_clicks is not None:
         try:
             date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
@@ -465,14 +516,11 @@ def button_agent_run(n_clicks, date_start, date_end):
         except:
             return [go.Figure()]
 
-        logging.error('AgentTester')
-        at = AgentTester(kdb, RandomStrategy())
-        logging.error('test strategy')
-        at.test_strategy('EUR/USD', date_start, date_end)
+        at = AgentTester(kdb_agent, RandomStrategy())
+        at.test_strategy(instrument, date_start, date_end)
 
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig.update_layout(title="Agent")
-        logging.error('bidopen')
         # bidopen chart
         fig.add_trace(
             go.Scatter(
@@ -480,10 +528,11 @@ def button_agent_run(n_clicks, date_start, date_end):
                 y=at.df['bidopen'],
                 opacity=0.5,
                 name='bidopen',
-                mode='markers',
-                marker={'size': 4, 'color': at.df['color']}),
+                mode='lines+markers',
+                marker={'size': at.df['size'].tolist(),
+                        'color': at.df['color']}
+            ),
             secondary_y=False)
-        logging.error('wallet')
         # wallet
         fig.add_trace(
             go.Scatter(
@@ -492,8 +541,6 @@ def button_agent_run(n_clicks, date_start, date_end):
                 opacity=0.5,
                 name='wallet'),
             secondary_y=True)
-        logging.error(str(at.df.head()))
-        logging.error(str(at.wallet))
         return [fig]
     return [go.Figure()]
 
@@ -538,9 +585,9 @@ def chart_instruments_refresh(dbname):
 @app.callback(
     [Output("chart-dbnames-dropdown", "options"),
      Output("chart-dbnames-dropdown", "value")],
-    [Input('button-dbnames-refresh', 'n_clicks')]
+    [Input('button-explorer-dbnames-refresh', 'n_clicks')]
 )
-def button_DB_names_refresh(n_clicks):
+def button_chart_DB_names_refresh(n_clicks):
     names = kragle.get_db_names()
     options = []
     for name in names:

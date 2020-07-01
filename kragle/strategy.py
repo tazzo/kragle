@@ -30,7 +30,7 @@ class AgentTester:
         self.df = None
 
     def test_strategy(self, instrument, date_start, date_end):
-        self.df = pd.DataFrame(columns=['date', 'bidopen', 'action', 'color',  'wallet'])
+        self.df = pd.DataFrame(columns=['date', 'bidopen', 'action', 'color', 'size',  'wallet'])
         date_list = self.kdb.get_date_list(instrument, 'm1', date_start, date_end)
         for date_value in date_list:
             df_value = {}
@@ -39,12 +39,15 @@ class AgentTester:
             value = tvalue['x']['m1'][0]['value']
             action = self.strategy.action(tvalue)
 
+            df_value['size'] = 6
             if self.action == Action.HOLD:
                 if action == Action.HOLD:
                     continue
                 else:
+                    df_value['size'] = 12
                     self.action = action
                     self.price = value
+
             elif self.action == Action.BUY:
                 if (value > self.price + self.take_profit) | (value < self.price - self.stop_loss):
                     self.wallet = self.wallet + value - self.price - 2 * PIP
@@ -58,7 +61,12 @@ class AgentTester:
             df_value['date'] = date_value['date']
             df_value['bidopen'] = tvalue['x']['m1'][0]['value']
             df_value['action'] = action
-            df_value['color'] = action.value * 10
+            if action == Action.HOLD:
+                df_value['color'] = 'grey'
+            elif action == Action.SELL:
+                df_value['color'] = 'red'
+            else:
+                df_value['color'] = 'green'
             df_value['wallet'] = self.wallet
             self.df = self.df.append(df_value, ignore_index=True)
 
