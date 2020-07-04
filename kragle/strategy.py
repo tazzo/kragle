@@ -10,8 +10,8 @@ PIP = .0001
 
 class Action(Enum):
     BUY = 1
-    SELL = 2
-    HOLD = 3
+    SELL = -1
+    HOLD = 0
 
 
 class AgentTester:
@@ -21,16 +21,16 @@ class AgentTester:
         self.strategy = strategy
         self.wallet = 0
         self.price = 0
-        self.stop_loss = 10 * PIP
-        self.take_profit = 20 * PIP
+        self.stop_loss = 6 * PIP
+        self.take_profit = 10 * PIP
         # test
         self.periods = ['m1', 'm5', 'm15', 'H1']
-        self.hist_len = 1
+        self.hist_len = 50
         self.action = Action.HOLD
         self.df = None
 
     def test_strategy(self, instrument, date_start, date_end):
-        self.df = pd.DataFrame(columns=['date', 'bidopen', 'action', 'color', 'size',  'wallet'])
+        self.df = pd.DataFrame(columns=['date', 'bidopen', 'action', 'color', 'size', 'wallet'])
         date_list = self.kdb.get_date_list(instrument, 'm1', date_start, date_end)
         for date_value in date_list:
             df_value = {}
@@ -38,7 +38,6 @@ class AgentTester:
             tvalue = self.kdb.create_train_value(instrument, self.periods, self.hist_len, date_value['date'])
             value = tvalue['x']['m1'][0]['value']
             action = self.strategy.action(tvalue)
-
             df_value['size'] = 6
             if self.action == Action.HOLD:
                 if action == Action.HOLD:
@@ -118,3 +117,22 @@ class RandomStrategy(Strategy):
 
     def action(self, value):
         return self.action_list[random.randrange(len(self.action_list))]
+
+
+class DeviationStrategy(Strategy):
+
+    def __init__(self, win=5, npip=0.5):
+        super().__init__()
+        self.win = win
+        self.npip = npip
+
+    def action(self, value):
+        df = pd.DataFrame(value['x']['m1'])
+        df = df.diff().shift(-1).iloc[:self.win, :]['value']
+        delta_mean = df.mean()
+        if delta_mean > self.npip * PIP:
+            return Action.BUY
+        elif delta_mean < - self.npip * PIP:
+            return Action.SELL
+        else:
+            return Action.HOLD

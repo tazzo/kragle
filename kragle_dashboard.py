@@ -10,7 +10,7 @@ from dash.dependencies import Input, Output, State
 from plotly.subplots import make_subplots
 import logging
 import kragle
-from kragle import BuyStrategy, AgentTester, RandomStrategy
+from kragle import BuyStrategy, AgentTester, RandomStrategy, DeviationStrategy
 
 df_fourier = None
 df_random_list = []
@@ -365,9 +365,9 @@ def build_agent_box():
                 html.P('To', className='font-bold'),
                 dcc.Input(
                     id='agent-input-date-to',
-                    placeholder='2018-11-23 12:00',
+                    placeholder='2018-11-22 22:00',
                     type='text',
-                    value='2018-11-23 12:00',
+                    value='2018-11-22 22:00',
                 )
             ]),
         ], className='flex space-x-2'),
@@ -486,7 +486,7 @@ def agent_instruments_refresh(dbname):
     options = []
     for insrtument in insrtuments:
         options.append({'label': insrtument, 'value': insrtument})
-    return [options, insrtuments[0]]
+    return [options,'EUR/USD']
 
 
 @app.callback(
@@ -516,7 +516,7 @@ def button_agent_run(n_clicks, date_start, date_end, instrument):
         except:
             return [go.Figure()]
 
-        at = AgentTester(kdb_agent, RandomStrategy())
+        at = AgentTester(kdb_agent, DeviationStrategy())
         at.test_strategy(instrument, date_start, date_end)
 
         fig = make_subplots(specs=[[{"secondary_y": True}]])
