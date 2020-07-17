@@ -6,10 +6,10 @@ import operator
 from kragle.utils import MeanStdDevCalculator
 
 EUR_USD = {
-    'bidopen-mean': 1.1504,
-    'bidopen-stddev': 0.041538,
-    'tickqty-mean': 180.143,
-    'tickqty-stddev': 207.86
+    'bidopen-mean': 1.15,
+    'bidopen-stddev': 0.0012,
+    'tickqty-mean': 180,
+    'tickqty-stddev': 200
 }
 
 

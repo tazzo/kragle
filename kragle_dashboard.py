@@ -84,6 +84,38 @@ def build_explorer():
         ),
         html.Div([
             html.Div([
+                html.P('Distance', className='font-bold'),
+                dcc.Input(
+                    id='distance-insert-future',
+                    placeholder='60',
+                    type='text',
+                    value='60'
+                ),
+            ]),
+            html.Div([
+                html.P('Window', className='font-bold'),
+                dcc.Input(
+                    id='window-insert-future',
+                    placeholder='10',
+                    type='text',
+                    value='10'
+                ),
+            ]),
+        ], className='flex space-x-2'),
+        html.Div([
+            html.Button(
+                'Insert Future',
+                id='button-insert-future',
+                className='btn btn-blue'
+            ),
+            dcc.Loading(
+                id="loading-future",
+                type="dot",
+                children=html.Div(id="loading-future-output")
+            ),
+        ], className='flex space-x-8'),
+        html.Div([
+            html.Div([
                 html.P('Number', className='font-bold'),
                 dcc.Input(
                     id='number-create-dataset',
@@ -716,6 +748,25 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
     df_fourier = pd.DataFrame(val)
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
+@app.callback(
+    [Output("loading-future-output", "children")],
+    [Input('button-insert-future', 'n_clicks')],
+    [State('explore-input-date-from', 'value')
+        , State('explore-input-date-to', 'value')
+        , State('chart-instruments-dropdown', 'value')
+        , State('explore-period', 'value')
+        , State('distance-insert-future', 'value')
+        , State('window-insert-future', 'value')
+    ]
+)
+def button_insert_future(n_clicks, date_start, date_end, instrument, period, distance, window):
+    try:
+        date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
+        date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
+    except:
+        return ['']
+    kdb.insert_future(instrument, period, date_start, date_end, distance, window)
+    return ['']
 
 @app.callback(
     [Output('label-create-dataset', 'children')],
@@ -750,7 +801,7 @@ def button_create_dataset(n_clicks, instrument, nval, history_len, date_start, d
         , Input('explore-period', 'value')]
 )
 def update_explore_chart(start_date, end_date, instrument, period):
-    df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})
+    df = pd.DataFrame({})
     try:
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
@@ -758,7 +809,7 @@ def update_explore_chart(start_date, end_date, instrument, period):
     except:
         pass
     if df.shape[0] == 0:
-        df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': []})
+        df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': [], 'future':[]})
     ########################
 
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -767,6 +818,11 @@ def update_explore_chart(start_date, end_date, instrument, period):
         go.Scatter(x=df["date"], y=df["bidopen"], name="bidopen"),
         secondary_y=False,
     )
+    if 'future' in df.columns:
+        fig1.add_trace(
+            go.Scatter(x=df["date"], y=df["future"], name="future", opacity=0.3),
+            secondary_y=False,
+        )
     fig1.add_trace(
         go.Scatter(x=df["date"], y=df["tickqty"], name="tickqty", opacity=0.3),
         secondary_y=True,

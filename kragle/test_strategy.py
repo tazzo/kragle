@@ -31,7 +31,7 @@ def kdb():
     __test_db_teardown(kdb)
 
 
-def test_ageent_tester(kdb):
+def _test_agent_tester(kdb):
     # Buy strategy
     start = dt.datetime(2018, 11, 27, 13, 0)
     end = dt.datetime(2018, 11, 27, 15, 47)
