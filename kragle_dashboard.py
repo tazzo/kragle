@@ -14,13 +14,16 @@ import logging
 import kragle
 from kragle import BuyStrategy, AgentTester, RandomStrategy, DeviationStrategy
 
+tmp = 0
 def sensor():
     """ Function for test purposes. """
-    print("Scheduler is alive!")
+    global tmp
+    tmp +=1
+    print("Scheduler is alive!" + str(tmp))
 
-sched = BackgroundScheduler(daemon=True)
-sched.add_job(sensor,'interval',seconds=2)
-sched.start()
+scheduler = BackgroundScheduler(daemon=True)
+scheduler.add_job(func=sensor, trigger='interval', seconds=1, id='my_job_id',max_instances=1)
+scheduler.start()
 
 df_fourier = None
 df_random_list = []
@@ -843,4 +846,5 @@ def update_explore_chart(start_date, end_date, instrument, period):
 app.layout = render_content()
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True,use_reloader=False)
+
