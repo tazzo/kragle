@@ -1,5 +1,7 @@
 import datetime as dt
 
+from apscheduler.schedulers.background import BackgroundScheduler
+
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -11,6 +13,14 @@ from plotly.subplots import make_subplots
 import logging
 import kragle
 from kragle import BuyStrategy, AgentTester, RandomStrategy, DeviationStrategy
+
+def sensor():
+    """ Function for test purposes. """
+    print("Scheduler is alive!")
+
+sched = BackgroundScheduler(daemon=True)
+sched.add_job(sensor,'interval',seconds=2)
+sched.start()
 
 df_fourier = None
 df_random_list = []

@@ -7,7 +7,9 @@
     "test": "pipenv run pytest -s -v",
     "dashboard": "pipenv run python kragle_dashboard.py",
     "notebook": "pipenv run jupyter-notebook forex_history.ipynb",
-    "build": "tailwindcss build style.css -o assets/style.css"
+    "build": "tailwindcss build style.css -o assets/style.css",
+    "update" : "pipenv update --outdated",
+    "install" : "pipenv install"
   },
   "repository": {
     "type": "git",

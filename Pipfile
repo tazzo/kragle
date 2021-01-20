@@ -17,6 +17,7 @@ dash-daq = "*"
 python-socketio = "*"
 dash-bootstrap-components = "*"
 jupyter = "*"
+apscheduler = "*"
 
 [requires]
 python_version = "3.7"
