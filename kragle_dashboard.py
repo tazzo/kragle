@@ -1,6 +1,7 @@
 import datetime as dt
 
-from apscheduler.schedulers.background import BackgroundScheduler
+import threading
+import time
 
 import dash
 import dash_core_components as dcc
@@ -18,12 +19,16 @@ tmp = 0
 def sensor():
     """ Function for test purposes. """
     global tmp
-    tmp +=1
-    print("Scheduler is alive!" + str(tmp))
+    while True:
+        tmp +=1
+        print("Scheduler is alive!" + str(tmp))
+        time.sleep(2)
 
-scheduler = BackgroundScheduler(daemon=True)
-scheduler.add_job(func=sensor, trigger='interval', seconds=1, id='my_job_id',max_instances=1)
-scheduler.start()
+for t in threading.enumerate():
+    print ('Thread -- >>' + t.name)
+
+a = threading.Thread(target=sensor, name='Scheduler', daemon = True)
+a.start()
 
 df_fourier = None
 df_random_list = []
@@ -846,5 +851,6 @@ def update_explore_chart(start_date, end_date, instrument, period):
 app.layout = render_content()
 
 if __name__ == '__main__':
-    app.run_server(debug=True,use_reloader=False)
+    app.run_server(debug=True)
+    #    app.run_server(debug=True,use_reloader=False)
 
