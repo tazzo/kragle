@@ -8,8 +8,8 @@
     "dashboard": "pipenv run python kragle_dashboard.py",
     "notebook": "pipenv run jupyter-notebook forex_history.ipynb",
     "build": "tailwindcss build style.css -o assets/style.css",
-    "update" : "pipenv update --outdated",
-    "install" : "pipenv install"
+    "update": "pipenv update --outdated",
+    "install": "pipenv install & npm install tailwindcss@latest postcss@latest autoprefixer@latest"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/tazzo/kragle#readme",
   "dependencies": {
-    "tailwindcss": "^1.4.6"
+    "autoprefixer": "^10.2.3",
+    "postcss": "^8.2.4",
+    "tailwindcss": "^2.0.2"
   }
 }

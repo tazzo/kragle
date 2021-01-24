@@ -15,20 +15,21 @@ import logging
 import kragle
 from kragle import BuyStrategy, AgentTester, RandomStrategy, DeviationStrategy
 
-tmp = 0
-def sensor():
-    """ Function for test purposes. """
-    global tmp
-    while True:
-        tmp +=1
-        print("Scheduler is alive!" + str(tmp))
-        time.sleep(2)
+# tmp = 0
+# def sensor():
+#     """ Function for test purposes. """
+#     global tmp
+#     while True:
+#         tmp +=1
+#         print("Scheduler is alive!" + str(tmp))
+#         time.sleep(2)
+#
+#
+# a = threading.Thread(target=sensor, name='Scheduler', daemon = True)
+# a.start()
 
-for t in threading.enumerate():
-    print ('Thread -- >>' + t.name)
 
-a = threading.Thread(target=sensor, name='Scheduler', daemon = True)
-a.start()
+
 
 df_fourier = None
 df_random_list = []
@@ -438,17 +439,35 @@ def build_chaos_chart(axis):
 
 
 def render_content():
-    return html.Div(children=[render_top(), render_main_content()])
+    return html.Div(children=[render_top(),
+                              dcc.Location(id='url', refresh=False),
+                              html.Div(id='page-content')])
+
+# Update the index
+@app.callback(Output('page-content', 'children'),
+              [Input('url', 'pathname')])
+def display_page(pathname):
+    if pathname == '/page-1':
+        return "page_1_layout"
+    else:
+        return render_main_content()
+    # You could also return a 404 "URL not found" page here
 
 
 def render_top():
     return html.Nav(
         children=[
             html.Div(
-                className="bg-gray-900 text-gray-200 px-4 ",
+                className="bg-gray-900 text-gray-200 px-4 space-x-4",
                 children=[
-                    html.P("Kragle", className="text-5xl text-bold inline-block"),
-                    html.P("AI - Trading", className="ml-4 text- text-xs inline-block"),
+                    dcc.Link('Kragle', href='/', className="text-5xl text-blue-800 text-bold inline-block"),
+                    html.P("AI - Trading", className="ml-4 text-blue-600 text-xs inline-block"),
+                    html.P(' ', className="inline-block"),
+                    html.P(' ', className="inline-block"),
+
+                    dcc.Link('Trading', href='/page-1', className="inline-block"),
+                    dcc.Link('Dashboard', href='/page-1', className="inline-block")
+
                 ],
             )
         ]
@@ -851,6 +870,6 @@ def update_explore_chart(start_date, end_date, instrument, period):
 app.layout = render_content()
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0')
     #    app.run_server(debug=True,use_reloader=False)
 
