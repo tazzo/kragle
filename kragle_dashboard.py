@@ -42,7 +42,7 @@ app = dash.Dash(__name__, meta_tags=[
 ])
 
 
-# app.config["suppress_callback_exceptions"] = True
+app.config["suppress_callback_exceptions"] = True
 
 
 def build_explorer():
@@ -447,8 +447,8 @@ def render_content():
 @app.callback(Output('page-content', 'children'),
               [Input('url', 'pathname')])
 def display_page(pathname):
-    if pathname == '/page-1':
-        return "page_1_layout"
+    if pathname == '/trading':
+        return "page trading"
     else:
         return render_main_content()
     # You could also return a 404 "URL not found" page here
@@ -458,15 +458,18 @@ def render_top():
     return html.Nav(
         children=[
             html.Div(
-                className="bg-gray-900 text-gray-200 px-4 space-x-4",
+                className="bg-gray-200 text-gray-200 p-4 space-x-4",
                 children=[
-                    dcc.Link('Kragle', href='/', className="text-5xl text-blue-800 text-bold inline-block"),
-                    html.P("AI - Trading", className="ml-4 text-blue-600 text-xs inline-block"),
-                    html.P(' ', className="inline-block"),
-                    html.P(' ', className="inline-block"),
-
-                    dcc.Link('Trading', href='/page-1', className="inline-block"),
-                    dcc.Link('Dashboard', href='/page-1', className="inline-block")
+                    html.Div([
+                        dcc.Link(
+                            html.Img(src='assets/logo-100.png', className=" inline-block"),
+                            href='/'
+                        ),
+                        #dcc.Link('Kragle', href='/', className="text-5xl text-bold inline-block"),
+                        html.P("AI - Trading", className="ml-4 text-xs inline-block")
+                    ], className="inline-block text-gray-900"),
+                    dcc.Link('Trading', href='/trading', className="inline-block px-8 text-gray-900"),
+                    dcc.Link('Dashboard', href='/dashboard', className="inline-block px-8 text-gray-900")
 
                 ],
             )
@@ -871,5 +874,5 @@ app.layout = render_content()
 
 if __name__ == '__main__':
     app.run_server(debug=True, host='0.0.0.0')
-    #    app.run_server(debug=True,use_reloader=False)
+    #app.run_server(debug=True,use_reloader=False)
 
