@@ -9,6 +9,7 @@ pytest = "*"
 
 [packages]
 fxcmpy = "*"
+python-socketio = "*"
 pymongo = "*"
 dash = "*"
 jupyter = "*"

@@ -5,7 +5,7 @@
   "main": "",
   "scripts": {
     "test": "pipenv run pytest -s -v",
-    "dashboard": "pipenv run python kragle_dashboard.py",
+    "app": "pipenv run python app.py",
     "notebook": "pipenv run jupyter-notebook forex_history.ipynb",
     "build": "tailwindcss build style.css -o assets/style.css",
     "update": "pipenv update --outdated",

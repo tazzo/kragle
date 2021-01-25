@@ -9,7 +9,7 @@ from plotly.subplots import make_subplots
 import kragle
 import kragle.sintetic
 import kragle.kragledb
-from kragle.app import app
+from app_layout import app
 from kragle.kragledb import *
 from kragle.strategy import AgentTester, DeviationStrategy
 

@@ -29,7 +29,7 @@ input {
 }
 
 .box-wrapper{
-    @apply w-full p-4;
+    @apply w-full p-2;
 }
 
 @screen lg {
