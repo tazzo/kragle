@@ -7,7 +7,6 @@
     "test": "pipenv run pytest -s -v",
     "app": "pipenv run python app.py",
     "notebook": "pipenv run jupyter-notebook forex_history.ipynb",
-    "build": "tailwindcss build style.css -o assets/style.css",
     "update": "pipenv update --outdated",
     "install": "pipenv install",
     "install-dev": "pipenv install -d "
@@ -24,8 +23,5 @@
   },
   "homepage": "https://github.com/tazzo/kragle#readme",
   "dependencies": {
-    "autoprefixer": "^10.2.3",
-    "postcss": "^8.2.4",
-    "tailwindcss": "^2.0.2"
   }
 }

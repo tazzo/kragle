@@ -20,9 +20,9 @@ dataset = None
 kdb = KragleDB('forex_raw')
 kdb_agent = KragleDB('forex_raw')
 
-
 class_box = 'shadow p-2 bg-white rounded mb-3 border border-secondary'
 class_col = "p-3"
+
 
 def render_dashboard_page():
     return dbc.Container(
@@ -40,7 +40,7 @@ def render_dashboard_page():
                         ),
                     ),
                     dbc.Col(
-                        className=class_col,  lg=6, xl=4,
+                        className=class_col, lg=6, xl=4,
                         children=html.Div(
                             className=class_box,
                             children=[
@@ -49,14 +49,14 @@ def render_dashboard_page():
                         ),
                     ),
                     dbc.Col(
-                        className=class_col,  lg=6, xl=4,
+                        className=class_col, lg=6, xl=4,
                         children=html.Div(
                             className=class_box,
                             children=build_explorer(),
                         ),
                     ),
                     dbc.Col(
-                        className=class_col,  lg=6, xl=4,
+                        className=class_col, lg=6, xl=4,
                         children=html.Div(
                             className=class_box,
                             children=[
@@ -65,7 +65,7 @@ def render_dashboard_page():
                         ),
                     ),
                     dbc.Col(
-                        className=class_col,  lg=6, xl=4,
+                        className=class_col, lg=6, xl=4,
                         children=html.Div(
                             className=class_box,
                             children=[
@@ -74,7 +74,7 @@ def render_dashboard_page():
                         ),
                     ),
                     dbc.Col(
-                        className=class_col,  lg=6, xl=4,
+                        className=class_col, lg=6, xl=4,
                         children=html.Div(
                             className=class_box,
                             children=[
@@ -153,7 +153,7 @@ def build_agent_box():
             ]),
         ]),
 
-    ],)
+    ], )
 
 
 def build_dataset_manager():
@@ -216,7 +216,7 @@ def build_dataset_manager():
             ]),
         ]),
 
-    ],)
+    ], )
 
 
 def build_explorer():
@@ -336,7 +336,7 @@ def build_explorer():
             'Create dataset',
             id='button-create-dataset',
             className='btn btn-primary'
-        ),                html.P(id='label-create-dataset'),
+        ), html.P(id='label-create-dataset'),
         dbc.Row([
             dbc.Col([
                 dcc.Graph(
@@ -344,151 +344,156 @@ def build_explorer():
                 )
             ]),
         ]),
-    ],)
+    ], )
 
 
 def build_fourier():
     return html.Div([
-        html.P('Fourier sintetic data generator', className='text-2xl font-bold'),
-        html.Div([
-            html.Div([
-                html.P('Number of values', className='font-bold'),
+        html.H1('Fourier sintetic data generator'),
+        dbc.Row([
+            dbc.Col([
+                html.P('Number of values', className='font-weight-bold'),
                 dcc.Input(
                     id='input-fourier-number',
-                    className='w-40',
                     placeholder='1000',
                     type='text',
                     value='1000'
                 )
-            ]),
-            html.Div([
-                html.P('Delta', className='font-bold'),
+            ], width='auto'),
+            dbc.Col([
+                html.P('Delta', className='font-weight-bold'),
                 dcc.Input(
                     id='input-fourier-delta',
-                    className='w-24',
                     placeholder='0.003',
                     type='text',
                     value='0.003'
                 )
-            ]),
-            html.Div([
-                html.P('Noise factor', className='font-bold'),
+            ], width='auto'),
+            dbc.Col([
+                html.P('Noise factor', className='font-weight-bold'),
                 dcc.Input(
                     id='input-fourier-noise-factor',
-                    className='w-24',
                     placeholder='0.5',
                     type='text',
                     value='0.5'
                 )
+            ], width='auto'),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('An', className='font-weight-bold'),
+                dcc.Input(
+                    id='input-fourier-an',
+                    placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
+                    type='text',
+                    value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
+                    className='w-100',
+                )
+            ], width=12),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('Bn', className='font-weight-bold'),
+                dcc.Input(
+                    id='input-fourier-bn',
+                    placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
+                    type='text',
+                    value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
+                    className='w-100',
+                )
             ]),
-        ],
-            className='flex flex-wrap space-x-2',
-        ),
-        html.Div([
-            html.P('An', className='font-bold'),
-            dcc.Input(
-                id='input-fourier-an',
-                className='w-full',
-                placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
-                type='text',
-                value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
-            )
         ]),
-        html.Div([
-            html.P('Bn', className='font-bold'),
-            dcc.Input(
-                id='input-fourier-bn',
-                className='w-full',
-                placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
-                type='text',
-                value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
-            )
+        html.Span('Instrument name', className='font-weight-bold'),
+        dbc.Row([
+            dbc.Col([
+                dcc.Input(
+                    id='input-fourier-instrument-name',
+                    placeholder='fourier_01',
+                    type='text',
+                    value='fourier_01',
+                ),
+                html.Button(
+                    'Save values',
+                    id='button-fourier-save',
+                    className='btn btn-primary'
+                ),
+                html.P(id='button-fourier-label'),
+                dcc.Loading(
+                    id="loading-fourier-save",
+                    type="dot",
+                    children=html.Div(id="loading-fourier-output")
+                ),
+            ]),
         ]),
-        html.Span('Instrument name', className='font-bold'),
-        html.Div([
-            dcc.Input(
-                id='input-fourier-instrument-name',
-                className='px-2',
-                placeholder='fourier_01',
-                type='text',
-                value='fourier_01',
-            ),
-            html.Button(
-                'Save values',
-                id='button-fourier-save',
-                className='btn btn-blue'
-            ),
-            html.P(id='button-fourier-label', className='w-24 font-mono font-bold text-gray-400'),
-            dcc.Loading(
-                id="loading-fourier-save",
-                type="dot",
-                children=html.Div(id="loading-fourier-output")
-            ),
-        ],
-            className='flex space-x-2',
-        ),
-        dcc.Graph(
-            id='fourier-chart',
-        ),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(
+                    id='fourier-chart',
+                ),
+            ]),
+        ]),
     ], className='space-y-1')
 
 
 def build_random():
     return html.Div([
-        html.P('Random sintetic data generator', className='text-2xl font-bold'),
-        html.Div([
-            html.Div([
-                html.P('Number of values', className='font-bold'),
+        html.H1('Random sintetic data generator'),
+        dbc.Row([
+            dbc.Col([
+                html.P('Number of values', className='font-weight-bold'),
                 dcc.Input(
                     id='input-random-number',
-                    className='w-40',
                     placeholder='1000',
                     type='text',
                     value='1000'
                 )
             ]),
-        ], className='flex flex-wrap space-x-2'),
-        html.Div([
-            html.Div([
-                html.P('Dimensions', className='font-bold'),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('Dimensions', className='font-weight-bold'),
                 dcc.Input(
                     id='input-random-dim',
-                    className='w-40',
                     placeholder='3',
                     type='text',
                     value='3'
                 )
             ]),
-        ], className='flex flex-wrap space-x-2'),
-        html.Span('Instrument name', className='font-bold'),
-        html.Div([
-            dcc.Input(
-                id='input-random-instrument-name',
-                className='px-2',
-                placeholder='random_',
-                type='text',
-                value='random_',
-            ),
-            html.Button(
-                'Save values',
-                id='button-random-save',
-                className='btn btn-blue'
-            ),
-            html.P(id='button-random-label', className='w-24 font-mono font-bold text-gray-400'),
-            dcc.Loading(
-                id="loading-random",
-                type="dot",
-                children=html.Div(id="loading-random-output")
-            ),
-            dcc.Loading(
-                id="loading-random-2",
-                type="dot",
-                children=html.Div(id="loading-random-output-2")
-            ),
-        ], className='flex space-x-2'),
-        dcc.Graph(
-            id='random-chart',
-        )
+        ]),
+        html.Span('Instrument name', className='font-weight-bold'),
+        dbc.Row([
+            dbc.Col([
+                dcc.Input(
+                    id='input-random-instrument-name',
+                    placeholder='random_',
+                    type='text',
+                    value='random_',
+                ),
+                html.Button(
+                    'Save values',
+                    id='button-random-save',
+                    className='btn btn-primary'
+                ),
+                html.P(id='button-random-label'),
+                dcc.Loading(
+                    id="loading-random",
+                    type="dot",
+                    children=html.Div(id="loading-random-output")
+                ),
+                dcc.Loading(
+                    id="loading-random-2",
+                    type="dot",
+                    children=html.Div(id="loading-random-output-2")
+                ),
+            ]),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(
+                    id='random-chart',
+                )
+            ]),
+        ]),
     ], className='space-y-1')
 
 
