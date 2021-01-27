@@ -9,8 +9,8 @@
     "notebook": "pipenv run jupyter-notebook forex_history.ipynb",
     "build": "tailwindcss build style.css -o assets/style.css",
     "update": "pipenv update --outdated",
-    "install": "pipenv install & npm install tailwindcss@latest postcss@latest autoprefixer@latest",
-    "install-dev": "pipenv install -d & npm install tailwindcss@latest postcss@latest autoprefixer@latest"
+    "install": "pipenv install",
+    "install-dev": "pipenv install -d "
   },
   "repository": {
     "type": "git",

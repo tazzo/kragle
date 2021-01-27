@@ -12,8 +12,9 @@ fxcmpy = "*"
 python-socketio = "*"
 pymongo = "*"
 dash = "*"
+dash-bootstrap-components = "*"
 jupyter = "*"
 
 
 [requires]
-python_version = "3.7"
+python_version = "3.9"
