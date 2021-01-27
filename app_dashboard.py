@@ -4,6 +4,7 @@ import dash_html_components as html
 import plotly.express as px
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
+import dash_bootstrap_components as dbc
 from plotly.subplots import make_subplots
 
 import kragle
@@ -20,60 +21,62 @@ kdb = KragleDB('forex_raw')
 kdb_agent = KragleDB('forex_raw')
 
 
+class_box = 'shadow p-2 bg-white rounded mb-3 border border-secondary'
+class_col = "p-3"
+
 def render_dashboard_page():
-    return html.Div(
-        className="bg-white font-sans leading-normal tracking-normal mt-12 w-full",
+    return dbc.Container(
+        className='p-3', fluid=True,
         children=[
-            html.Div(
-                className="box-container",
+            dbc.Row(
                 children=[
-                    html.Div(
-                        className='box-wrapper',
+                    dbc.Col(
+                        className=class_col, lg=6, xl=4,
                         children=html.Div(
-                            className='box',
+                            className=class_box,
                             children=[
                                 build_agent_box()
                             ],
                         ),
                     ),
-                    html.Div(
-                        className='box-wrapper',
+                    dbc.Col(
+                        className=class_col,  lg=6, xl=4,
                         children=html.Div(
-                            className='box',
+                            className=class_box,
                             children=[
                                 build_dataset_manager()
                             ],
                         ),
                     ),
-                    html.Div(
-                        className='box-wrapper',
+                    dbc.Col(
+                        className=class_col,  lg=6, xl=4,
                         children=html.Div(
-                            className='box',
+                            className=class_box,
                             children=build_explorer(),
                         ),
                     ),
-                    html.Div(
-                        className='box-wrapper',
+                    dbc.Col(
+                        className=class_col,  lg=6, xl=4,
                         children=html.Div(
-                            className='box',
+                            className=class_box,
                             children=[
                                 build_fourier()
                             ],
                         ),
                     ),
-                    html.Div(
-                        className='box-wrapper',
+                    dbc.Col(
+                        className=class_col,  lg=6, xl=4,
                         children=html.Div(
-                            className='box',
+                            className=class_box,
                             children=[
                                 build_random()
                             ],
                         ),
                     ),
-                    html.Div(
-                        className='box-wrapper',
+                    dbc.Col(
+                        className=class_col,  lg=6, xl=4,
                         children=html.Div(
-                            className='box',
+                            className=class_box,
                             children=[
                                 html.Div([
                                     dcc.Graph(
@@ -91,37 +94,39 @@ def render_dashboard_page():
 
 def build_agent_box():
     return html.Div([
-        html.P('Agent Tester', className='text-2xl font-bold'),
-        html.Div([
-            html.Button(
-                'Refresh DB names',
-                id='button-agent-dbnames-refresh',
-                className='btn btn-blue'
-            ),
-            html.Button(
-                'Run',
-                id='button-agent-run',
-                className='btn btn-blue'
-            ),
-        ], className='flex  space-x-2'),
-        html.Div([
-            html.Div([
+        html.H1('Agent Tester'),
+        dbc.Row([
+            dbc.Col([
+                html.Button(
+                    'Refresh DB names',
+                    id='button-agent-dbnames-refresh',
+                    className='btn btn-primary mr-3'
+                ),
+                html.Button(
+                    'Run',
+                    id='button-agent-run',
+                    className='btn btn-primary'
+                ),
+            ]),
+        ]),
+        dbc.Row([
+            dbc.Col([
                 dcc.Dropdown(
                     id='agent-dbnames-dropdown',
                     clearable=False
 
                 ),
-            ], className='w-1/2'),
-            html.Div([
+            ], width=6),
+            dbc.Col([
                 dcc.Dropdown(
                     id='agent-instruments-dropdown',
                     clearable=False
                 ),
-            ], className='w-1/2'),
-        ], className='flex'),
-        html.Div([
-            html.Div([
-                html.P('From', className='font-bold'),
+            ], width=6),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('From', className='font-weight-bold'),
                 dcc.Input(
                     id='agent-input-date-from',
                     placeholder='2018-11-22 12:00',
@@ -129,8 +134,8 @@ def build_agent_box():
                     value='2018-11-22 12:00'
                 )
             ]),
-            html.Div([
-                html.P('To', className='font-bold'),
+            dbc.Col([
+                html.P('To', className='font-weight-bold'),
                 dcc.Input(
                     id='agent-input-date-to',
                     placeholder='2018-11-22 22:00',
@@ -138,37 +143,38 @@ def build_agent_box():
                     value='2018-11-22 22:00',
                 )
             ]),
-        ], className='flex space-x-2'),
-
-        html.Div([
-            dcc.Graph(
-                id='agent-chart'
-            )
         ]),
 
-    ],
-        className='space-y-1')
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(
+                    id='agent-chart'
+                )
+            ]),
+        ]),
+
+    ],)
 
 
 def build_dataset_manager():
     return html.Div([
-        html.P('Datasets manager', className='text-2xl font-bold'),
+        html.H1('Datasets manager'),
         html.Button(
             'Refresh',
             id='button-manager-refresh',
-            className='btn btn-blue'
+            className='btn btn-primary'
         ),
-        html.Div([
-            html.Div([
+        dbc.Row([
+            dbc.Col([
                 dcc.Dropdown(
                     id='dataset-manager-instruments-dropdown',
                     clearable=False
                 ),
-            ], className='w-1/2'),
-        ], className='flex'),
-        html.Div([
-            html.Div([
-                html.P('From', className='font-bold'),
+            ], width=6),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('From', className='font-weight-bold'),
                 dcc.Input(
                     id='dataset-manager-input-date-from',
                     placeholder='2018-11-22 12:00',
@@ -176,8 +182,8 @@ def build_dataset_manager():
                     value='2018-11-22 12:00'
                 )
             ]),
-            html.Div([
-                html.P('To', className='font-bold'),
+            dbc.Col([
+                html.P('To', className='font-weight-bold'),
                 dcc.Input(
                     id='dataset-manager-input-date-to',
                     placeholder='2018-11-26 12:00',
@@ -185,55 +191,59 @@ def build_dataset_manager():
                     value='2018-11-26 12:00',
                 )
             ]),
-        ], className='flex space-x-2'),
-        dcc.RadioItems(
-            id='dataset-manager-period',
-            options=[
-                {'label': 'm1 ', 'value': 'm1'},
-                {'label': 'm5 ', 'value': 'm5'},
-                {'label': 'm15 ', 'value': 'm15'},
-                {'label': 'H1 ', 'value': 'H1'},
-            ],
-            value='m1',
-            labelStyle={'display': 'inline-block'},
-            inputClassName="mx-2"
-        ),
-        html.Div([
-            dcc.Graph(
-                id='dataset-manager-chart'
-            )
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.RadioItems(
+                    id='dataset-manager-period',
+                    options=[
+                        {'label': 'm1 ', 'value': 'm1'},
+                        {'label': 'm5 ', 'value': 'm5'},
+                        {'label': 'm15 ', 'value': 'm15'},
+                        {'label': 'H1 ', 'value': 'H1'},
+                    ],
+                    value='m1',
+                    labelStyle={'display': 'inline-block'},
+                    inputClassName="mx-2"
+                ),
+            ]),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(
+                    id='dataset-manager-chart'
+                )
+            ]),
         ]),
 
-    ],
-        className='space-y-1')
+    ],)
 
 
 def build_explorer():
     return html.Div([
-        html.P('Data explorer', className='text-2xl font-bold'),
+        html.H1('Data explorer'),
         html.Button(
             'Refresh DB names',
             id='button-explorer-dbnames-refresh',
-            className='btn btn-blue'
+            className='btn btn-primary'
         ),
-        html.Div([
-            html.Div([
+        dbc.Row([
+            dbc.Col([
                 dcc.Dropdown(
                     id='chart-dbnames-dropdown',
                     clearable=False
-
                 ),
-            ], className='w-1/2'),
-            html.Div([
+            ]),
+            dbc.Col([
                 dcc.Dropdown(
                     id='chart-instruments-dropdown',
                     clearable=False
                 ),
-            ], className='w-1/2'),
-        ], className='flex'),
-        html.Div([
-            html.Div([
-                html.P('From', className='font-bold'),
+            ]),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('From', className='font-weight-bold'),
                 dcc.Input(
                     id='explore-input-date-from',
                     placeholder='2018-11-22 12:00',
@@ -241,8 +251,8 @@ def build_explorer():
                     value='2018-11-22 12:00'
                 )
             ]),
-            html.Div([
-                html.P('To', className='font-bold'),
+            dbc.Col([
+                html.P('To', className='font-weight-bold'),
                 dcc.Input(
                     id='explore-input-date-to',
                     placeholder='2018-11-26 12:00',
@@ -250,23 +260,27 @@ def build_explorer():
                     value='2018-11-26 12:00',
                 )
             ]),
-        ], className='flex space-x-2'),
-        dcc.RadioItems(
-            id='explore-period',
-            options=[
-                {'label': 'm1 ', 'value': 'm1'},
-                {'label': 'm5 ', 'value': 'm5'},
-                {'label': 'm15 ', 'value': 'm15'},
-                {'label': 'm30 ', 'value': 'm30'},
-                {'label': 'H1 ', 'value': 'H1'},
-            ],
-            value='m1',
-            labelStyle={'display': 'inline-block'},
-            inputClassName="mx-2"
-        ),
-        html.Div([
-            html.Div([
-                html.P('Distance', className='font-bold'),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                dcc.RadioItems(
+                    id='explore-period',
+                    options=[
+                        {'label': 'm1 ', 'value': 'm1'},
+                        {'label': 'm5 ', 'value': 'm5'},
+                        {'label': 'm15 ', 'value': 'm15'},
+                        {'label': 'm30 ', 'value': 'm30'},
+                        {'label': 'H1 ', 'value': 'H1'},
+                    ],
+                    value='m1',
+                    labelStyle={'display': 'inline-block'},
+                    inputClassName="mx-2"
+                ),
+            ]),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('Distance', className='font-weight-bold'),
                 dcc.Input(
                     id='distance-insert-future',
                     placeholder='60',
@@ -274,8 +288,8 @@ def build_explorer():
                     value='60'
                 ),
             ]),
-            html.Div([
-                html.P('Window', className='font-bold'),
+            dbc.Col([
+                html.P('Window', className='font-weight-bold'),
                 dcc.Input(
                     id='window-insert-future',
                     placeholder='10',
@@ -284,21 +298,23 @@ def build_explorer():
                 ),
             ]),
         ], className='flex space-x-2'),
-        html.Div([
-            html.Button(
-                'Insert Future',
-                id='button-insert-future',
-                className='btn btn-blue'
-            ),
-            dcc.Loading(
-                id="loading-future",
-                type="dot",
-                children=html.Div(id="loading-future-output")
-            ),
-        ], className='flex space-x-8'),
-        html.Div([
-            html.Div([
-                html.P('Number', className='font-bold'),
+        dbc.Row([
+            dbc.Col([
+                html.Button(
+                    'Insert Future',
+                    id='button-insert-future',
+                    className='btn btn-outline-primary'
+                ),
+                dcc.Loading(
+                    id="loading-future",
+                    type="dot",
+                    children=html.Div(id="loading-future-output")
+                ),
+            ]),
+        ]),
+        dbc.Row([
+            dbc.Col([
+                html.P('Number', className='font-weight-bold'),
                 dcc.Input(
                     id='number-create-dataset',
                     placeholder='10',
@@ -306,8 +322,8 @@ def build_explorer():
                     value='10'
                 ),
             ]),
-            html.Div([
-                html.P('History length', className='font-bold'),
+            dbc.Col([
+                html.P('History length', className='font-weight-bold'),
                 dcc.Input(
                     id='history_len-create-dataset',
                     placeholder='4',
@@ -315,21 +331,20 @@ def build_explorer():
                     value='4'
                 ),
             ]),
-        ], className='flex space-x-2'),
+        ]),
         html.Button(
             'Create dataset',
             id='button-create-dataset',
-            className='btn btn-blue'
-        ),
-        html.P(id='label-create-dataset'),
-        html.Div([
-            dcc.Graph(
-                id='explore-chart'
-            )
+            className='btn btn-primary'
+        ),                html.P(id='label-create-dataset'),
+        dbc.Row([
+            dbc.Col([
+                dcc.Graph(
+                    id='explore-chart'
+                )
+            ]),
         ]),
-
-    ],
-        className='space-y-1')
+    ],)
 
 
 def build_fourier():
@@ -482,7 +497,6 @@ def build_chaos_chart(axis):
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
 
 
-
 @app.callback(
     [Output("agent-instruments-dropdown", "options"),
      Output("agent-instruments-dropdown", "value")],
@@ -496,7 +510,7 @@ def agent_instruments_refresh(dbname):
     options = []
     for insrtument in insrtuments:
         options.append({'label': insrtument, 'value': insrtument})
-    return [options,'EUR/USD']
+    return [options, 'EUR/USD']
 
 
 @app.callback(
@@ -510,6 +524,7 @@ def button_agent_DB_names_refresh(n_clicks):
     for name in names:
         options.append({'label': name, 'value': name})
     return [options, 'forex_raw']
+
 
 @app.callback(
     [Output("agent-chart", "figure"), ],
@@ -726,6 +741,7 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
     df_fourier = pd.DataFrame(val)
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
+
 @app.callback(
     [Output("loading-future-output", "children")],
     [Input('button-insert-future', 'n_clicks')],
@@ -735,7 +751,7 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
         , State('explore-period', 'value')
         , State('distance-insert-future', 'value')
         , State('window-insert-future', 'value')
-    ]
+     ]
 )
 def button_insert_future(n_clicks, date_start, date_end, instrument, period, distance, window):
     try:
@@ -745,6 +761,7 @@ def button_insert_future(n_clicks, date_start, date_end, instrument, period, dis
         return ['']
     kdb.insert_future(instrument, period, date_start, date_end, distance, window)
     return ['']
+
 
 @app.callback(
     [Output('label-create-dataset', 'children')],
@@ -787,7 +804,7 @@ def update_explore_chart(start_date, end_date, instrument, period):
     except:
         pass
     if df.shape[0] == 0:
-        df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': [], 'future':[]})
+        df = pd.DataFrame({'date': [], 'bidopen': [], 'tickqty': [], 'future': []})
     ########################
 
     fig1 = make_subplots(specs=[[{"secondary_y": True}]])
@@ -806,4 +823,3 @@ def update_explore_chart(start_date, end_date, instrument, period):
         secondary_y=True,
     )
     return [fig1]
-

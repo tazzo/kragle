@@ -8,8 +8,9 @@ pylint = "*"
 pytest = "*"
 
 [packages]
-fxcmpy = "*"
-python-socketio = "*"
+fxcmpy = "==1.2.6"
+python-socketio = "==4.6.1"
+python-engineio = "<4"
 pymongo = "*"
 dash = "*"
 dash-bootstrap-components = "*"
