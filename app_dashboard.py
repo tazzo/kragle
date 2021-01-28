@@ -7,8 +7,9 @@ from dash.dependencies import Input, Output, State
 import dash_bootstrap_components as dbc
 from plotly.subplots import make_subplots
 
+import kragle.kragle_commons as kcommons
 import kragle
-import kragle.sintetic
+import kragle.synthetic
 import kragle.kragledb
 from app_layout import app
 from kragle.kragledb import *
@@ -21,7 +22,7 @@ kdb = KragleDB('forex_raw')
 kdb_agent = KragleDB('forex_raw')
 
 class_box = 'shadow p-2 bg-white rounded mb-3 border border-secondary'
-class_col = "p-3"
+class_col = "p-3 d-table-cell"
 
 
 def render_dashboard_page():
@@ -349,7 +350,7 @@ def build_explorer():
 
 def build_fourier():
     return html.Div([
-        html.H1('Fourier sintetic data generator'),
+        html.H1('Fourier synthetic data generator'),
         dbc.Row([
             dbc.Col([
                 html.P('Number of values', className='font-weight-bold'),
@@ -437,7 +438,7 @@ def build_fourier():
 
 def build_random():
     return html.Div([
-        html.H1('Random sintetic data generator'),
+        html.H1('Random synthetic data generator'),
         dbc.Row([
             dbc.Col([
                 html.P('Number of values', className='font-weight-bold'),
@@ -498,7 +499,7 @@ def build_random():
 
 
 def build_chaos_chart(axis):
-    dftmp = pd.DataFrame(kragle.sintetic.attractor(20000, 0.01))
+    dftmp = pd.DataFrame(kragle.synthetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
 
 
@@ -633,9 +634,9 @@ def button_chart_DB_names_refresh(n_clicks):
 )
 def button_random_save(n_clicks, instrument):
     if n_clicks is not None:
-        kdb_tmp = KragleDB('kragle_sintetic')
+        kdb_tmp = KragleDB('kragle_synthetic')
         for i, df in enumerate(df_random_list):
-            fetch_sintetic(kdb_tmp, instrument + str(i), df)
+            fetch_synthetic(kdb_tmp, instrument + str(i), df)
         return ['Saved {}'.format(n_clicks), '']
     return ['', '']
 
@@ -648,17 +649,17 @@ def button_random_save(n_clicks, instrument):
 )
 def button_fourier_save(n_clicks, instrument):
     if n_clicks is not None:
-        kdb_tmp = KragleDB('kragle_sintetic')
+        kdb_tmp = KragleDB('kragle_synthetic')
 
-        fetch_sintetic(kdb_tmp, instrument, df_fourier)
+        fetch_synthetic(kdb_tmp, instrument, df_fourier)
         return ['Saved {}'.format(n_clicks), '']
 
     return ['', '']
 
 
-def fetch_sintetic(kdb, instrument, df):
+def fetch_synthetic(kdb, instrument, df):
     # delete old collection
-    for period in kragle.kragledb.periods:
+    for period in kcommons.periods:
         kdb.drop('{}.{}'.format(instrument, period))
 
     kdb.fetch_dataframe(df, instrument, 'm1')
@@ -705,7 +706,7 @@ def random_chart_figure(number, dim):
     df_random_list = []
     number = int(float(number))
     dim = int(float(dim))
-    ds_list = kragle.sintetic.random_dataset(n=number, dim=dim)
+    ds_list = kragle.synthetic.random_dataset(n=number, dim=dim)
     fig = go.Figure()
     fig.update_layout(title="Random")
     for ds in ds_list:
@@ -742,7 +743,7 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
         noise_factor = float(noise_factor)
     except:
         noise_factor = 1
-    val = kragle.sintetic.fourier_dataset(n=number, delta=delta, an=an, bn=bn, noise_factor=noise_factor)
+    val = kragle.synthetic.fourier_dataset(n=number, delta=delta, an=an, bn=bn, noise_factor=noise_factor)
     df_fourier = pd.DataFrame(val)
     return [px.line(df_fourier, x="n", y='bidopen', title='Fourier')]
 
