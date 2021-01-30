@@ -1,18 +1,10 @@
-import dash_html_components as html
-import dash_core_components as dcc
-import dash_bootstrap_components as dbc
 import dash_table
-from dash.dependencies import Input, Output, State
+import pandas as pd
+from dash.dependencies import Input, Output
 
-import kragle.kragle_fxcm
+from app_layout import *
 
-from app_layout import app
-
-# TODO sistemare le classi in app_layout ?
-class_box = 'shadow p-3 bg-white rounded mb-3 border border-secondary'
-class_col = ""
-
-trader = kragle.kragle_fxcm.FxcmTrader()
+trader = None
 
 
 def render_trading_page():
@@ -33,7 +25,7 @@ def render_trading_page():
 
 
 def build_subscription_box():
-    df = trader.get_prices()
+    df = trader.get_prices() if trader is not None else pd.DataFrame()
     return html.Div(
         [
             dbc.Row([
@@ -45,6 +37,13 @@ def build_subscription_box():
                     ),
                     html.H1('EUR/USD subscription'),
                 ]),
+                dbc.Col([
+                    html.Div(
+                        [dbc.Button("Connect", id="connect-button", className="mx-1"),
+                         dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")],
+                        id='connection-div'
+                    )
+                ], width=1),
             ]),
             dbc.Row([
                 dbc.Col(
@@ -52,14 +51,39 @@ def build_subscription_box():
                         id='table-subscription',
                         columns=[{"name": i, "id": i} for i in df.columns],
                         data=df.to_dict('records'),
-                    )
+                    ),
+                    width=6
                 ),
             ]),
         ]
     )
 
 
+@app.callback(
+    [Output("connection-div", "children")],
+    [Input("connect-button", "n_clicks"), Input("disconnect-button", "n_clicks")]
+)
+def on_connection_button_click(n_connect, n_disconnect):
+    ctx = dash.callback_context
+    global trader
+
+    if not ctx.triggered:
+        return [[dbc.Button("Connect", id="connect-button", className="mx-1"),
+                 dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
+    else:
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        if button_id == 'disconnect-button':
+            # trader.close()
+            # trader = None
+            return [[dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
+                     dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
+        else:
+            # trader = kragle.kragle_fxcm.FxcmTrader()
+            return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
+                     dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]
+
+
 @app.callback(Output('table-subscription', 'data'),
               Input('interval-subscription', 'n_intervals'))
 def update_subscription(n):
-    return trader.get_prices().to_dict('records')
+    return trader.get_prices().to_dict('records') if trader is not None else pd.DataFrame().to_dict('records')

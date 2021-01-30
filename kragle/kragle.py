@@ -3,14 +3,7 @@ import datetime as dt
 import json
 import pandas as pd
 from pymongo import MongoClient
-
-instruments = ['USD/SEK',
-               'USD/NOK', 'USD/MXN', 'USD/ZAR', 'USD/HKD', 'USD/TRY', 'USD/ILS', 'USD/CNH', 'XAU/USD',
-               'XAG/USD', 'BTC/USD', 'BCH/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD']
-
-done = ['EUR/USD', 'USD/JPY', 'ETH/USD', 'USD/CHF', 'GBP/USD', 'USD/CAD', 'AUD/USD', 'NZD/USD', 'EUR/GBP',
-        'EUR/JPY', 'EUR/CHF']
-periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
+import kragle.kragle_commons as kcommons
 
 
 class Manager:
@@ -60,7 +53,7 @@ class Manager:
                     tmpend = end
 
     def fetch_instrument(self, instrument, start, end):
-        for p in periods:
+        for p in kcommons.periods:
             print('Fetching ' + instrument + ' period ' + p)
             self.fetch_candles(instrument, start, end, period=p)
 
@@ -108,7 +101,7 @@ class Manager:
             res.append({'date': tmpdate})
             tmpdate = tmpdate + dt.timedelta(minutes=1)
 
-            if (tmpdate.weekday() == 4):
+            if tmpdate.weekday() == 4:
                 if (tmpdate.hour == 22) & (tmpdate.minute == 59):
                     tmpdate = tmpdate + dt.timedelta(days=2)
                     tmpdate.replace(hour=20)

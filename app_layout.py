@@ -11,6 +11,9 @@ app = dash.Dash(__name__, meta_tags=[
 # app.config["suppress_callback_exceptions"] = True
 
 
+class_box = 'shadow p-3 bg-white rounded mb-3 border border-secondary'
+class_col = ""
+
 def render_top():
     return dbc.NavbarSimple(
         children=[

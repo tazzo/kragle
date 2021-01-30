@@ -1,17 +1,13 @@
-import dash_core_components as dcc
-import dash_html_components as html
-
 import plotly.express as px
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 from plotly.subplots import make_subplots
 
-import kragle.kragle_commons as kcommons
 import kragle
-import kragle.synthetic
+import kragle.kragle_commons as kcommons
 import kragle.kragledb
-from app_layout import app
+import kragle.synthetic
+from app_layout import *
 from kragle.kragledb import *
 from kragle.strategy import AgentTester, DeviationStrategy
 
@@ -21,8 +17,7 @@ dataset = None
 kdb = KragleDB('forex_raw')
 kdb_agent = KragleDB('forex_raw')
 
-class_box = 'shadow p-2 bg-white rounded mb-3 border border-secondary'
-class_col = "p-3 d-table-cell"
+
 
 
 def render_dashboard_page():

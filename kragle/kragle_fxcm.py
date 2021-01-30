@@ -1,9 +1,7 @@
-import fxcmpy
-import pandas as pd
-import datetime as dt
 import atexit
 import signal
 
+import fxcmpy
 
 
 class FxcmTrader:
