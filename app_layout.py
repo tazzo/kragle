@@ -8,7 +8,7 @@ app = dash.Dash(__name__, meta_tags=[
                 external_stylesheets=[dbc.themes.YETI])
 
 
-# app.config["suppress_callback_exceptions"] = True
+app.config["suppress_callback_exceptions"] = True
 
 
 class_box = 'shadow p-3 bg-white rounded mb-3 border border-secondary'

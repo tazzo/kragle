@@ -66,10 +66,14 @@ def build_subscription_box():
 def on_connection_button_click(n_connect, n_disconnect):
     ctx = dash.callback_context
     global trader
-
     if not ctx.triggered:
-        return [[dbc.Button("Connect", id="connect-button", className="mx-1"),
-                 dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
+        if trader is None:
+            return [[dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
+                      dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
+        else:
+            return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
+                     dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]
+
     else:
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
         if button_id == 'disconnect-button':
