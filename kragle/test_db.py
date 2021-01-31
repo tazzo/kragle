@@ -1,6 +1,6 @@
 import datetime as dt
 import pytest
-from kragle.kragledb import KragleDB
+from kragle.db import KragleDB
 import kragle.utils as kutils
 
 

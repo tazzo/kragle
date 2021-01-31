@@ -4,11 +4,10 @@ from dash.dependencies import Input, Output, State
 from plotly.subplots import make_subplots
 
 import kragle
-import kragle.kragle_commons as kcommons
-import kragle.kragledb
+import kragle.utils as kutils
 import kragle.synthetic
 from app_layout import *
-from kragle.kragledb import *
+from kragle.db import *
 from kragle.strategy import AgentTester, DeviationStrategy
 
 df_fourier = None
@@ -16,8 +15,6 @@ df_random_list = []
 dataset = None
 kdb = KragleDB('forex_raw')
 kdb_agent = KragleDB('forex_raw')
-
-
 
 
 def render_dashboard_page():
@@ -520,7 +517,7 @@ def agent_instruments_refresh(dbname):
     [Input('button-agent-dbnames-refresh', 'n_clicks')]
 )
 def button_agent_DB_names_refresh(n_clicks):
-    names = kragle.kragledb.get_db_names()
+    names = kragle.db.get_db_names()
     options = []
     for name in names:
         options.append({'label': name, 'value': name})
@@ -579,7 +576,7 @@ def button_manager_refresh(n_clicks):
     if n_clicks is not None:
         fig = make_subplots(specs=[[{"secondary_y": True}]])
         fig.update_layout(title="Dataset")
-        df_dict = kragle.dataset_to_dataframe_dict(dataset[0])
+        df_dict = kragle.utils.dataset_to_dataframe_dict(dataset[0])
         for name, df in df_dict.items():
             fig.add_trace(
                 go.Scatter(
@@ -614,7 +611,7 @@ def chart_instruments_refresh(dbname):
     [Input('button-explorer-dbnames-refresh', 'n_clicks')]
 )
 def button_chart_DB_names_refresh(n_clicks):
-    names = kragle.kragledb.get_db_names()
+    names = kragle.db.get_db_names()
     options = []
     for name in names:
         options.append({'label': name, 'value': name})
@@ -654,7 +651,7 @@ def button_fourier_save(n_clicks, instrument):
 
 def fetch_synthetic(kdb, instrument, df):
     # delete old collection
-    for period in kcommons.periods:
+    for period in kutils.periods:
         kdb.drop('{}.{}'.format(instrument, period))
 
     kdb.fetch_dataframe(df, instrument, 'm1')

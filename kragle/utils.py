@@ -1,8 +1,15 @@
 import datetime as dt
-import random
-import pandas as pd
-import logging
 import math
+import random
+
+import pandas as pd
+
+instruments = ['USD/SEK',
+               'USD/NOK', 'USD/MXN', 'USD/ZAR', 'USD/HKD', 'USD/TRY',
+               'USD/ILS', 'USD/CNH', 'XAU/USD',
+               'XAG/USD', 'BTC/USD', 'BCH/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD']
+
+periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
 
 # TODO: maybe remove this function

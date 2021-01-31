@@ -3,7 +3,7 @@ import datetime as dt
 import json
 import pandas as pd
 from pymongo import MongoClient
-import kragle.kragle_commons as kcommons
+import kragle.utils as kutils
 
 
 class Manager:
@@ -53,7 +53,7 @@ class Manager:
                     tmpend = end
 
     def fetch_instrument(self, instrument, start, end):
-        for p in kcommons.periods:
+        for p in kutils.periods:
             print('Fetching ' + instrument + ' period ' + p)
             self.fetch_candles(instrument, start, end, period=p)
 

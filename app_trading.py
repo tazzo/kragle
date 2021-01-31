@@ -2,9 +2,12 @@ import dash_table
 import pandas as pd
 from dash.dependencies import Input, Output
 
+import kragle.fxcm
 from app_layout import *
 
 trader = None
+
+fake_connection = False
 
 
 def render_trading_page():
@@ -69,7 +72,7 @@ def on_connection_button_click(n_connect, n_disconnect):
     if not ctx.triggered:
         if trader is None:
             return [[dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
-                      dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
+                     dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
         else:
             return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
                      dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]
@@ -77,14 +80,26 @@ def on_connection_button_click(n_connect, n_disconnect):
     else:
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
         if button_id == 'disconnect-button':
-            # trader.close()
-            # trader = None
+            if not fake_connection:
+                print('Closing ... ')
+                trader.close()
+                print('Closed ... ')
+                trader = None
             return [[dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
                      dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
         else:
-            # trader = kragle.kragle_fxcm.FxcmTrader()
-            return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
-                     dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]
+            if not fake_connection:
+                try:
+                    print('Connecting ... ')
+                    trader = kragle.fxcm.FxcmTrader()
+                    print('Connected!')
+                    return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
+                             dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]
+                except Exception as e:
+                    print (e)
+                    return [[dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
+                             dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
+
 
 
 @app.callback(Output('table-subscription', 'data'),

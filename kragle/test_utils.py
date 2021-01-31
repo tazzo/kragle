@@ -33,7 +33,6 @@ def test_dot_names_to_dict():
     assert list(res) == ['A', 'B', 'C']
 
 
-
 def test_aggregate_dataframe():
     date1 = dt.datetime(2018, 11, 28, 22, 52)
     date2 = dt.datetime(2018, 11, 28, 22, 51)
@@ -66,4 +65,3 @@ def test_dataset_to_dataframe_dict():
     assert df_dict['m1'].loc[0, 'value'] == 1
     assert df_dict['m5'].loc[0, 'value'] == 5
     assert df_dict['m1'].loc[1, 'value'] == 3
-
