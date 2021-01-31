@@ -1,3 +1,5 @@
+import logging
+
 import dash_table
 import pandas as pd
 from dash.dependencies import Input, Output

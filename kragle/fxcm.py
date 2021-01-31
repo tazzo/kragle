@@ -1,21 +1,8 @@
-import atexit
-import signal
-
+import threading
 import fxcmpy
+import time
+import logging
 
-
-# tmp = 0
-# def sensor():
-#     """ Function for test purposes. """
-#     global tmp
-#     while True:
-#         tmp +=1
-#         print("Scheduler is alive!" + str(tmp))
-#         time.sleep(2)
-#
-#
-# a = threading.Thread(target=sensor, name='Scheduler', daemon = True)
-# a.start()
 
 class FxcmTrader:
 
@@ -23,6 +10,9 @@ class FxcmTrader:
         self.con = fxcmpy.fxcmpy(config_file='fxcm.cfg')
         self.con.subscribe_market_data(instrument)
         self.instrument = instrument
+        self._loop = True
+        th = threading.Thread(target=self.loop, name='loop', daemon=True)
+        th.start()
 
     def get_prices(self):
         return self.con.get_prices(self.instrument)
@@ -30,3 +20,9 @@ class FxcmTrader:
     def close(self):
         print('closing <<<<----------------')
         self.con.close()
+        self._loop = False
+
+    def loop(self):
+        while self._loop:
+            logging.error('---->> loop <<----')
+            time.sleep(2)
