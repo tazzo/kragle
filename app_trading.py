@@ -19,7 +19,8 @@ def render_trading_page():
                     children=[
                         build_subscription_box()
                     ]), className=class_col, width=12),
-                dbc.Col(html.Div("2 One of four columns", className=class_box), className=class_col, md=6, xl=4),
+                dbc.Col(html.Div("2 One of four columns", className=class_box, id='interval-counter-div'),
+                        className=class_col, md=6, xl=4),
                 dbc.Col(html.Div("3 One of four columns", className=class_box), className=class_col, md=6, xl=4),
             ]),
         ],
@@ -54,6 +55,7 @@ def build_subscription_box():
                         id='table-subscription',
                         columns=[{"name": i, "id": i} for i in df.columns],
                         data=df.to_dict('records'),
+                        page_size=10,
                     ),
                     width=6
                 ),
@@ -96,13 +98,17 @@ def on_connection_button_click(n_connect, n_disconnect):
                     return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
                              dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]
                 except Exception as e:
-                    print (e)
+                    print(e)
                     return [[dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
                              dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]]
 
 
-
-@app.callback(Output('table-subscription', 'data'),
-              Input('interval-subscription', 'n_intervals'))
+@app.callback([Output('table-subscription', 'data'), Output('table-subscription', 'columns'),
+               Output('interval-counter-div', 'children')],
+              Input('interval-subscription', 'n_intervals')
+              )
 def update_subscription(n):
-    return trader.get_prices().to_dict('records') if trader is not None else pd.DataFrame().to_dict('records')
+    df = trader.get_prices() if trader is not None else pd.DataFrame()
+    d = df.to_dict('records')
+    df_columns = [{"name": i, "id": i} for i in df.columns]
+    return [d, df_columns, n]
