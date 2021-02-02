@@ -1,6 +1,5 @@
 from app_dashboard import *
 from app_trading import *
-import logging
 import logging.config
 
 
@@ -16,13 +15,8 @@ def display_page(pathname):
     # You could also return a 404 "URL not found" page here
 
 
-logging.config.fileConfig('config.ini')
+logging.config.fileConfig('log.cfg')
 
 if __name__ == '__main__':
-    logging.debug('debug message')
-    logging.info('info message')
-    logging.warning('warn message')
-    logging.error('error message')
-    logging.critical('critical message')
     app.run_server(debug=True, host='0.0.0.0')
     # app.run_server(debug=True,use_reloader=False)

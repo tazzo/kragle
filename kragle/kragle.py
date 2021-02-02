@@ -7,13 +7,13 @@ import kragle.utils as kutils
 
 
 class Manager:
-    def __init__(self, config_file='config.ini', dbname='krangle'):
+    def __init__(self, config_file='fxcm.cfg', dbname='krangle'):
 
         client = MongoClient('localhost', 27017)
         self.db = client[dbname]
 
     def init_fxcm(self):
-        self.fxcon = fxcmpy.fxcmpy(config_file='config.ini')
+        self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
 
     def fetch_candles(self, instrument, start, end, period='m1'):
         delta = 600

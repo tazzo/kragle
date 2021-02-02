@@ -1,5 +1,7 @@
 import random
 import datetime as dt
+import logging
+
 import pandas as pd
 from pymongo import MongoClient
 import kragle.utils as kutils
@@ -24,7 +26,7 @@ def check_date_index_collection(db):
 class KragleDB:
 
     def __init__(self, dbname='forex_raw'):
-
+        self.logger = logging.getLogger('kragle')
         self.client = MongoClient('localhost', 27017)
         self.db = self.client[dbname]
         self.dbname = dbname
