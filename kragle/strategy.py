@@ -14,6 +14,24 @@ class Action(Enum):
     HOLD = 0
 
 
+class Strategy:
+
+    def __init__(self):
+        pass
+
+    def action(self, value):
+        """
+        value like val = {  'date': m1date,
+                            'x': {
+                                'm1':[],
+                                'm5':[],
+                                'tickqty':[],
+                                ...},
+                            'y': 0.7}
+        """
+        raise ValueError('You must implement this method')
+
+
 class AgentTester:
 
     def __init__(self, kdb, strategy):
@@ -70,24 +88,6 @@ class AgentTester:
             self.df = self.df.append(df_value, ignore_index=True)
 
 
-class Strategy:
-
-    def __init__(self):
-        pass
-
-    def action(self, value):
-        """
-        value like val = {  'date': m1date,
-                            'x': {
-                                'm1':[],
-                                'm5':[],
-                                'tickqty':[],
-                                ...},
-                            'y': 0.7}
-        """
-        raise ValueError('You must implement this method')
-
-
 class BuyStrategy(Strategy):
 
     def __init__(self):
@@ -104,6 +104,19 @@ class SellStrategy(Strategy):
 
     def action(self, value):
         return Action.SELL
+
+
+class ProgrammableStrategy(Strategy):
+
+    def __init__(self):
+        super().__init__()
+        self._action = Action.HOLD
+
+    def action(self, value):
+        return self._action
+
+    def setAction(self, action):
+        self._action = action
 
 
 class RandomStrategy(Strategy):
