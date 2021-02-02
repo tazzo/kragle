@@ -3,10 +3,13 @@ import fxcmpy
 import time
 import logging
 
+import pandas as pd
+import kragle.strategy
 
 class FxcmTrader:
 
-    def __init__(self, config_file='fxcm.cfg', instrument='EUR/USD', sleep=10):
+    def __init__(self, config_file='fxcm.cfg', instrument='EUR/USD', strategy=None, sleep=10):
+        self.strategy = strategy
         self.sleep = sleep
         self.logger = logging.getLogger('kragle')
         self.con = fxcmpy.fxcmpy(config_file='fxcm.cfg')
@@ -31,6 +34,18 @@ class FxcmTrader:
             if self.check_time():  # non troppi ordini di fila
                 if self.check_orders():  # controllo numero massim ordini
                     self.logger.info('Order and time check passed, trying strategy')
+                    if self.strategy is not None:
+                        a = self.strategy.action(pd.DataFrame())
+                        if a == kragle.strategy.Action.HOLD:
+                            pass
+                        elif a == kragle.strategy.Action.SELL:
+                            self.sellOrder()
+                        elif a == kragle.strategy.Action.BUY:
+                            self.buyOrder()
+                        else:
+                            self.logger.error('Should not be here. Strategy action should be one of 3 action HOLD/BUY/SELL, got: ' + str(a))
+                    else:
+                        self.logger.warning('None strategy found.')
             time.sleep(self.sleep)
 
     def check_time(self):
@@ -40,3 +55,10 @@ class FxcmTrader:
     def check_orders(self):
         self.logger.info('check_orders')
         return True
+
+    def buyOrder(self):
+        pass
+
+    def sellOrder(self):
+        pass
+
