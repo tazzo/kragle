@@ -7,12 +7,12 @@ app = dash.Dash(__name__, meta_tags=[
     {"name": "viewport", "content": "width=device-width, initial-scale=1"}, ],
                 external_stylesheets=[dbc.themes.YETI])
 
-
 app.config["suppress_callback_exceptions"] = True
 
-
-class_box = 'shadow p-3 bg-white rounded mb-3 border border-secondary'
+class_box = 'shadow p-3 rounded mb-3 border border-secondary'
+class_card = 'shadow rounded my-3'
 class_col = ""
+
 
 def render_top():
     return dbc.NavbarSimple(

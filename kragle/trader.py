@@ -13,8 +13,17 @@ class FxcmTrader:
         self.strategy = strategy
         self.sleep = sleep
         self.logger = logging.getLogger('kragle')
+        self.accounts = pd.DataFrame()
+        self.open_positions = pd.DataFrame()
+        self.closed_positions = pd.DataFrame()
+        self.orders = pd.DataFrame()
+        self.open_positions_summary = pd.DataFrame()
+        self.closed_positions_summary = pd.DataFrame()
+        self.accounts_summary = pd.DataFrame()
+        self.summary = pd.DataFrame()
+
         self.con = fxcmpy.fxcmpy(config_file='fxcm.cfg')
-        self.con.subscribe_market_data(instrument)
+        # self.con.subscribe_market_data(instrument)
         self.instrument = instrument
         self._loop = True
         th = threading.Thread(target=self.loop, name='loop', daemon=True)
@@ -30,8 +39,13 @@ class FxcmTrader:
         self._loop = False
 
     def loop(self):
+        #
+
         while self._loop:
             self.logger.info('Trader Loop')
+            # update periodico dati
+            self.update()
+            # nuovi ordini
             if self.check_time():  # non troppi ordini di fila
                 if self.check_orders():  # controllo numero massim ordini
                     self.logger.info('Order and time check passed, trying strategy')
@@ -64,3 +78,18 @@ class FxcmTrader:
 
     def sellOrder(self):
         pass
+
+    def get_accounts(self):
+        return self.accounts
+
+    def update(self):
+        self.logger.info('Trader update internal data')
+        self.accounts = self.con.get_accounts()
+        self.accounts_summary = self.con.get_accounts_summary()
+        self.open_positions = self.con.get_open_positions()
+        self.open_positions_summary = self.con.get_open_positions_summary()
+        self.closed_positions = self.con.get_closed_positions()
+        self.closed_positions_summary = self.con.get_closed_positions_summary()
+        self.orders = self.con.get_orders()
+        self.summary = self.con.get_summary()
+
