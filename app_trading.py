@@ -4,7 +4,7 @@ import dash_table
 import pandas as pd
 from dash.dependencies import Input, Output
 
-import kragle.fxcm
+import kragle.trader
 from app_layout import *
 
 trader = None
@@ -95,7 +95,7 @@ def on_connection_button_click(n_connect, n_disconnect):
             if not fake_connection:
                 try:
                     print('Connecting ... ')
-                    trader = kragle.fxcm.FxcmTrader()
+                    trader = kragle.trader.FxcmTrader()
                     print('Connected!')
                     return [[dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
                              dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]]

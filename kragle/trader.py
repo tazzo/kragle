@@ -6,6 +6,7 @@ import logging
 import pandas as pd
 import kragle.strategy
 
+
 class FxcmTrader:
 
     def __init__(self, config_file='fxcm.cfg', instrument='EUR/USD', strategy=None, sleep=10):
@@ -43,7 +44,9 @@ class FxcmTrader:
                         elif a == kragle.strategy.Action.BUY:
                             self.buyOrder()
                         else:
-                            self.logger.error('Should not be here. Strategy action should be one of 3 action HOLD/BUY/SELL, got: ' + str(a))
+                            self.logger.error(
+                                'Should not be here. Strategy action should be one of 3 action HOLD/BUY/SELL, got: ' + str(
+                                    a))
                     else:
                         self.logger.warning('None strategy found.')
             time.sleep(self.sleep)
@@ -61,4 +64,3 @@ class FxcmTrader:
 
     def sellOrder(self):
         pass
-
