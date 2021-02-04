@@ -21,6 +21,8 @@ class FxcmTrader:
         self.closed_positions_summary = pd.DataFrame()
         self.accounts_summary = pd.DataFrame()
         self.summary = pd.DataFrame()
+        self.offers = pd.DataFrame()
+        self.candles = pd.DataFrame()
 
         self.con = fxcmpy.fxcmpy(config_file='fxcm.cfg')
         # self.con.subscribe_market_data(instrument)
@@ -42,7 +44,7 @@ class FxcmTrader:
         #
 
         while self._loop:
-            self.logger.info('Trader Loop')
+            self.logger.info('Trader Loop (sleep time = {})'.format(self.sleep))
             # update periodico dati
             self.update()
             # nuovi ordini
@@ -92,4 +94,6 @@ class FxcmTrader:
         self.closed_positions_summary = self.con.get_closed_positions_summary()
         self.orders = self.con.get_orders()
         self.summary = self.con.get_summary()
+        self.offers = self.con.get_offers()
+        self.candles = self.con.get_candles('EUR/USD', period='m1')
 
