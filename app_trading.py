@@ -4,6 +4,7 @@ from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 
 import kragle.trader
+import kragle.utils
 from app_layout import *
 
 trader = None
@@ -16,7 +17,8 @@ def render_trading_page():
                 dbc.Col(build_trader_box(), className=class_col, width=12),
             ]),
             dbc.Row([
-                dbc.Col(build_card('Chart', 'chart-live'), className=class_col, md=6, xl=4),
+                dbc.Col(build_card(),
+                        className=class_col, md=6, xl=4),
                 dbc.Col(build_counter_card(), className=class_col, md=6, xl=4),
             ]),
         ],
@@ -47,7 +49,7 @@ def build_trader_box():
         dbc.CardHeader([
             dbc.Row([
                 dbc.Col(
-                    html.H2('FXCM Trader'),
+                    html.H2('FXCM Trader', className="font-weight-bold"),
                     width=3
                 ),
                 dbc.Col(
@@ -59,6 +61,13 @@ def build_trader_box():
                     html1.Div(dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1"),
                               id='disconnection-div'
                               ), width=1
+                ),
+                dbc.Col(
+                    dcc.Loading(
+                        id="loading-connection",
+                        type="dot",
+                        children=html.Div(id="loading-connection-output", className='mt-3')
+                    ), width=1,
                 ),
             ]),
             dcc.Interval(
@@ -78,10 +87,48 @@ def build_trader_box():
     ], className='shadow rounded mb-3 h-100', )
 
 
-def build_card(header, id):
+def build_card():
     return dbc.Card([
-        dbc.CardHeader(header),
-        dbc.CardBody(id=id)
+        dbc.CardHeader(html.H4('Chart', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col(
+                    dbc.InputGroup(
+                        [
+                            dbc.InputGroupAddon("hours", addon_type="prepend"),
+                            dbc.Input(placeholder="1", type="number"),
+                        ],
+                        className="mb-3 w-50   ",
+                    ),
+                ),
+            ]),
+            dbc.Row([
+                dbc.Col(
+                    dbc.InputGroup(
+                        [
+                            dbc.InputGroupAddon("periods", addon_type="prepend"),
+                            dbc.Select(
+                                options=[{"label": v, "value": v} for v in kragle.utils.periods],
+                                value='m1',
+                                id="chart-period-input",
+                            ),
+                        ],
+                        className="mb-3 w-50",
+                    ),
+                ),
+            ]),
+            dbc.Row([
+                dbc.Col(
+                    html.Div(id='chart-live')
+                ),
+            ]),
+        ]),
+        dcc.Interval(
+            id='chart-live-interval',
+            interval=2 * 1000,  # in milliseconds
+            n_intervals=0
+        ),
+        dbc.CardFooter('Footer')
     ], className=class_card, outline=True)
 
 
@@ -94,19 +141,28 @@ def build_counter_card():
 
 
 @app.callback(
-    [Output("connection-div", "children"), Output("disconnection-div", "children")],
-    [Input("connect-button", "n_clicks"), Input("disconnect-button", "n_clicks")]
+    [Output("connection-div", "children"),
+     Output("disconnection-div", "children"),
+     Output("loading-connection-output", "children")],
+    [Input("connect-button", "n_clicks"),
+     Input("disconnect-button", "n_clicks")]
 )
 def on_connection_button_click(n_connect, n_disconnect):
     ctx = dash.callback_context
     global trader
+    button_connect = dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1")
+    button_connect_disabled = dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1")
+    button_disconnect = dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")
+    button_disconnect_disabled = dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")
     if not ctx.triggered:
         if trader is None:
-            return [dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
-                    dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]
+            return [button_connect,
+                    button_disconnect_disabled,
+                    '']
         else:
-            return [dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
-                    dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]
+            return [button_connect_disabled,
+                    button_disconnect,
+                    '']
 
     else:
         button_id = ctx.triggered[0]['prop_id'].split('.')[0]
@@ -115,19 +171,32 @@ def on_connection_button_click(n_connect, n_disconnect):
             trader.close()
             print('Closed ... ')
             trader = None
-            return [dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
-                    dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]
+            return [button_connect,
+                    button_disconnect_disabled,
+                    '']
         else:
             try:
                 print('Connecting ... ')
                 trader = kragle.trader.FxcmTrader()
                 print('Connected!')
-                return [dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1"),
-                        dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")]
+                return [button_connect_disabled,
+                        button_disconnect,
+                        '']
             except Exception as e:
                 print(e)
-                return [dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1"),
-                        dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")]
+                return [button_connect,
+                        button_disconnect_disabled,
+                        '']
+
+
+@app.callback([Output('chart-live', 'children')],
+              Input('chart-live-interval', 'n_intervals')
+              )
+def update_chart_live(n):
+    if trader is not None:
+        return build_candle_chart()
+    else:
+        return ['']
 
 
 @app.callback([Output('tab_accounts', 'children'),
@@ -139,7 +208,6 @@ def on_connection_button_click(n_connect, n_disconnect):
                Output('tab_orders', 'children'),
                Output('tab_summary', 'children'),
                Output('tab_offers', 'children'),
-               Output('chart-live', 'children'),
                Output('interval-counter-div', 'children')],
               Input('interval-subscription', 'n_intervals')
               )
@@ -155,10 +223,10 @@ def update_subscription(n):
         r7 = dbc.Table.from_dataframe(trader.orders, striped=True, bordered=True, hover=True, size='sm')
         r8 = dbc.Table.from_dataframe(trader.summary, striped=True, bordered=True, hover=True, size='sm')
         r9 = dbc.Table.from_dataframe(trader.offers, striped=True, bordered=True, hover=True, size='sm')
-        r10 = build_candle_chart()
-        return [r1, r2, r3, r4, r5, r6, r7, r8, r9, r10, n]
+
+        return [r1, r2, r3, r4, r5, r6, r7, r8, r9, n]
     else:
-        return ['', '', '', '', '', '', '', '', '', '', n]
+        return ['', '', '', '', '', '', '', '', '', n]
 
 
 def build_candle_chart():
