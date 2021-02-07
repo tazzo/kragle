@@ -17,8 +17,8 @@ def render_trading_page():
                 dbc.Col(build_trader_box(), className=class_col, width=12),
             ]),
             dbc.Row([
-                dbc.Col(build_card(),
-                        className=class_col, md=6, xl=4),
+                dbc.Col(build_chart_card(), className=class_col, md=6, xl=4),
+                dbc.Col(build_order_card(), className=class_col, md=6, xl=4),
                 dbc.Col(build_counter_card(), className=class_col, md=6, xl=4),
             ]),
         ],
@@ -54,7 +54,7 @@ def build_trader_box():
                 ),
                 dbc.Col(
                     html1.Div(dbc.Button("Connect", id="connect-button", className="mx-1"),
-                              id='connection-div'
+                              id='connection-div',
                               ), width=1
                 ),
                 dbc.Col(
@@ -87,21 +87,45 @@ def build_trader_box():
     ], className='shadow rounded mb-3 h-100', )
 
 
-def build_card():
+def build_order_card():
     return dbc.Card([
-        dbc.CardHeader(html.H4('Chart', className="font-weight-bold")),
+        dbc.CardHeader(html.H4('Order', className="font-weight-bold")),
         dbc.CardBody([
             dbc.Row([
                 dbc.Col(
-                    dbc.InputGroup(
-                        [
-                            dbc.InputGroupAddon("hours", addon_type="prepend"),
-                            dbc.Input(placeholder="1", type="number"),
-                        ],
-                        className="mb-3 w-50   ",
-                    ),
+                    dbc.Form([
+                        dbc.FormGroup(
+                            [
+                                dbc.Label("Order type"),
+                                dbc.RadioItems(
+                                    options=[
+                                        {"label": "Buy", "value": 'buy'},
+                                        {"label": "Sell", "value": 'sell'},
+                                    ],
+                                    value='buy',
+                                    id="order-type-input",
+                                    inline=True,
+                                ),
+                            ],
+                            className="mx-3",
+                        ),
+                    ])
                 ),
             ]),
+        ]),
+        dcc.Interval(
+            id='order-interval',
+            interval=1 * 1000,  # in milliseconds
+            n_intervals=0
+        ),
+        dbc.CardFooter(['Footer', html.Div(id='order-footer')])
+    ], className=class_card,  outline=True)
+
+
+def build_chart_card():
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Chart', className="font-weight-bold")),
+        dbc.CardBody([
             dbc.Row([
                 dbc.Col(
                     dbc.InputGroup(
@@ -113,7 +137,16 @@ def build_card():
                                 id="chart-period-input",
                             ),
                         ],
-                        className="mb-3 w-50",
+                        className="mb-3",
+                    ),
+                ),
+                dbc.Col(
+                    dbc.InputGroup(
+                        [
+                            dbc.InputGroupAddon("hours", addon_type="prepend"),
+                            dbc.Input(placeholder="1", type="number"),
+                        ],
+                        className="mb-3",
                     ),
                 ),
             ]),
@@ -128,7 +161,7 @@ def build_card():
             interval=2 * 1000,  # in milliseconds
             n_intervals=0
         ),
-        dbc.CardFooter('Footer')
+        dbc.CardFooter(['Footer', html.Div(id='chart-footer')])
     ], className=class_card, outline=True)
 
 
@@ -189,14 +222,15 @@ def on_connection_button_click(n_connect, n_disconnect):
                         '']
 
 
-@app.callback([Output('chart-live', 'children')],
+@app.callback([Output('chart-live', 'children'),
+               Output('chart-footer', 'children')],
               Input('chart-live-interval', 'n_intervals')
               )
 def update_chart_live(n):
     if trader is not None:
         return build_candle_chart()
     else:
-        return ['']
+        return ['', n]
 
 
 @app.callback([Output('tab_accounts', 'children'),

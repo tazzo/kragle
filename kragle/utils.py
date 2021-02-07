@@ -49,7 +49,7 @@ def dot_names_to_dict(name_list):
     return res
 
 
-def dataframe_read_json(path):
+def dataframe_from_json(path):
     """
     Pandas read_json with orient='records'
 
