@@ -50,31 +50,27 @@ def build_trader_box():
             dbc.Row([
                 dbc.Col(
                     html.H2('FXCM Trader', className="font-weight-bold"),
-                    width=3
+                    lg=3, sm=6
                 ),
                 dbc.Col(
-                    html1.Div(dbc.Button("Connect", id="connect-button", className="mx-1"),
-                              id='connection-div',
-                              ), width=1
-                ),
-                dbc.Col(
-                    html1.Div(dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1"),
-                              id='disconnection-div'
-                              ), width=1
+                    html1.Div(dbc.Button("Connect", id="connect-button", className="ml-1"),
+                              id='connection-div')
                 ),
                 dbc.Col(
                     dcc.Loading(
                         id="loading-connection",
                         type="dot",
                         children=html.Div(id="loading-connection-output", className='mt-3')
-                    ), width=1,
+                    ),
                 ),
-            ]),
-            dcc.Interval(
-                id='interval-subscription',
-                interval=1 * 1000,  # in milliseconds
-                n_intervals=0
-            ),
+                dbc.Col(
+                    dcc.Interval(
+                        id='interval-subscription',
+                        interval=1 * 1000,  # in milliseconds
+                        n_intervals=0
+                    ), lg=7, sm=5
+                ),
+            ], justify="start"),
         ]),
         dbc.CardBody([
             dbc.Row([
@@ -84,7 +80,7 @@ def build_trader_box():
                 ),
             ]),
         ])
-    ], className='shadow rounded mb-3 h-100', )
+    ], className='shadow-1-strong rounded mb-3 h-100', )
 
 
 def build_order_card():
@@ -119,7 +115,7 @@ def build_order_card():
             n_intervals=0
         ),
         dbc.CardFooter(['Footer', html.Div(id='order-footer')])
-    ], className=class_card,  outline=True)
+    ], className=class_card, outline=True)
 
 
 def build_chart_card():
@@ -174,52 +170,34 @@ def build_counter_card():
 
 
 @app.callback(
-    [Output("connection-div", "children"),
-     Output("disconnection-div", "children"),
+    [Output("connect-button", "children"),
      Output("loading-connection-output", "children")],
-    [Input("connect-button", "n_clicks"),
-     Input("disconnect-button", "n_clicks")]
+    [Input("connect-button", "n_clicks")]
 )
-def on_connection_button_click(n_connect, n_disconnect):
+def on_connection_button_click(n_connect):
     ctx = dash.callback_context
     global trader
-    button_connect = dbc.Button("Connect", id="connect-button", disabled=False, className="mx-1")
-    button_connect_disabled = dbc.Button("Connect", id="connect-button", disabled=True, className="mx-1")
-    button_disconnect = dbc.Button("Disconnect", id="disconnect-button", disabled=False, className="mx-1")
-    button_disconnect_disabled = dbc.Button("Disconnect", id="disconnect-button", disabled=True, className="mx-1")
+
     if not ctx.triggered:
         if trader is None:
-            return [button_connect,
-                    button_disconnect_disabled,
-                    '']
+            return ['Connect', '']
         else:
-            return [button_connect_disabled,
-                    button_disconnect,
-                    '']
+            return ['Disconnect', '']
 
+    elif trader is not None:
+        print('Closing ... ')
+        trader.close()
+        print('Closed ... ')
+        trader = None
+        return ['Connect', '']
     else:
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        if button_id == 'disconnect-button':
-            print('Closing ... ')
-            trader.close()
-            print('Closed ... ')
-            trader = None
-            return [button_connect,
-                    button_disconnect_disabled,
-                    '']
-        else:
-            try:
-                print('Connecting ... ')
-                trader = kragle.trader.FxcmTrader()
-                print('Connected!')
-                return [button_connect_disabled,
-                        button_disconnect,
-                        '']
-            except Exception as e:
-                print(e)
-                return [button_connect,
-                        button_disconnect_disabled,
-                        '']
+        try:
+            print('Connecting ... ')
+            trader = kragle.trader.FxcmTrader()
+            print('Connected!')
+        except Exception as e:
+            print(e)
+        return ['Disconnect', '']
 
 
 @app.callback([Output('chart-live', 'children'),
