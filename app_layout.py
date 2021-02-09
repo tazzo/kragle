@@ -27,19 +27,23 @@ def render_content():
 
 
 navbar = dbc.Navbar([
-    dbc.Row(
+    dbc.Row([
         dbc.Col(
             html.A([
-                dbc.NavbarBrand("KRAGLE", className="ml-2")
-            ], href="/", ),
+                html.I(className='fas fa-brain'),
+            ], href="/", ), width={"size": 1, "offset": 1},
         ),
-    ),
+        dbc.Col(
+            html.A([
+                dbc.NavbarBrand("KRAGLE")
+            ], href="/", ), width={"size": 1, "offset": 1},
+        ),
+    ]),
     dbc.NavbarToggler(html.I(className='fas fa-bars'), id="navbar-toggler", ),
-    dbc.Collapse(
-        dbc.Row([
-            dbc.Col(dbc.NavItem(dbc.NavLink("Trading", href="/trading"))),
-            dbc.Col(dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard"))),
-        ], no_gutters=True, ),
+    dbc.Collapse(html.Ul([
+            html.Li(dbc.NavLink("Trading", href="/trading" ), className='nav-item'),
+            html.Li(dbc.NavLink("Dashboard", href="/dashboard"), className='nav-item'),
+        ], className='navbar-nav me-auto mb-2 mb-lg-0'),
         id="navbar-collapse", navbar=True)
 ], color="warning", dark=True, )
 
