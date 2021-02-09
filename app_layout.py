@@ -31,19 +31,19 @@ navbar = dbc.Navbar([
         dbc.Col(
             html.A([
                 html.I(className='fas fa-brain'),
-            ], href="/", ), width={"size": 1, "offset": 1},
+            ], href="/", className='navbar-brand mt-sm-2 mt-1'), width={"size": 1, "offset": 1},
         ),
         dbc.Col(
             html.A([
-                dbc.NavbarBrand("KRAGLE")
+                dbc.NavbarBrand(html.H2("KRAGLE"))
             ], href="/", ), width={"size": 1, "offset": 1},
         ),
     ]),
     dbc.NavbarToggler(html.I(className='fas fa-bars'), id="navbar-toggler", ),
     dbc.Collapse(html.Ul([
-            html.Li(dbc.NavLink("Trading", href="/trading" ), className='nav-item'),
-            html.Li(dbc.NavLink("Dashboard", href="/dashboard"), className='nav-item'),
-        ], className='navbar-nav me-auto mb-2 mb-lg-0'),
+        html.Li(dbc.NavLink("Trading", href="/trading"), className='nav-item'),
+        html.Li(dbc.NavLink("Dashboard", href="/dashboard"), className='nav-item'),
+    ], className='navbar-nav mx-3  mb-lg-0'),
         id="navbar-collapse", navbar=True)
 ], color="warning", dark=True, )
 
