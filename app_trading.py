@@ -1,7 +1,9 @@
 import dash_html_components as html1
-
+import dash_table
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
+
+import pandas as pd
 
 import kragle.trader
 import kragle.utils
@@ -50,10 +52,10 @@ def build_trader_box():
             dbc.Row([
                 dbc.Col(
                     html.H2('FXCM Trader', className="font-weight-bold"),
-                    lg=3, sm=6
+                    lg=3, sm=4, xs=6
                 ),
                 dbc.Col(
-                    html1.Div(dbc.Button("Connect", id="connect-button", className="ml-1"),
+                    html1.Div(dbc.Button("Connect", id="connect-button", className="ml-1", color='primary'),
                               id='connection-div')
                 ),
                 dbc.Col(
@@ -206,7 +208,7 @@ def on_connection_button_click(n_connect):
               )
 def update_chart_live(n):
     if trader is not None:
-        return build_candle_chart()
+        return [build_candle_chart(), n]
     else:
         return ['', n]
 
@@ -225,20 +227,21 @@ def update_chart_live(n):
               )
 def update_subscription(n):
     if trader is not None:
-        r1 = dbc.Table.from_dataframe(trader.accounts, striped=True, bordered=True, hover=True, size='sm')
-        r2 = dbc.Table.from_dataframe(trader.accounts_summary, striped=True, bordered=True, hover=True, size='sm')
-        r3 = dbc.Table.from_dataframe(trader.open_positions, striped=True, bordered=True, hover=True, size='sm')
-        r4 = dbc.Table.from_dataframe(trader.open_positions_summary, striped=True, bordered=True, hover=True, size='sm')
-        r5 = dbc.Table.from_dataframe(trader.closed_positions, striped=True, bordered=True, hover=True, size='sm')
-        r6 = dbc.Table.from_dataframe(trader.closed_positions_summary, striped=True, bordered=True, hover=True,
-                                      size='sm')
-        r7 = dbc.Table.from_dataframe(trader.orders, striped=True, bordered=True, hover=True, size='sm')
-        r8 = dbc.Table.from_dataframe(trader.summary, striped=True, bordered=True, hover=True, size='sm')
-        r9 = dbc.Table.from_dataframe(trader.offers, striped=True, bordered=True, hover=True, size='sm')
+        r1 = table_from_dataframe(trader.accounts)
+        r2 = table_from_dataframe(trader.accounts_summary)
+        r3 = table_from_dataframe(trader.open_positions)
+        r4 = table_from_dataframe(trader.open_positions_summary)
+        r5 = table_from_dataframe(trader.closed_positions)
+        r6 = table_from_dataframe(trader.closed_positions_summary)
+        r7 = table_from_dataframe(trader.orders)
+        r8 = table_from_dataframe(trader.summary)
+        t = table_from_dataframe(trader.offers)
+        r9 = table_from_dataframe(trader.offers)
 
         return [r1, r2, r3, r4, r5, r6, r7, r8, r9, n]
     else:
-        return ['', '', '', '', '', '', '', '', '', n]
+        tmp = table_from_dataframe(pd.DataFrame())
+        return [tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp, tmp, n]
 
 
 def build_candle_chart():
@@ -250,3 +253,12 @@ def build_candle_chart():
         close=trader.candles['bidclose']
     ))
     return dcc.Graph(figure=fig)
+
+
+def table_from_dataframe(df):
+    return dash_table.DataTable(
+        data=df.to_dict('records'),
+        columns=[{'id': c, 'name': c} for c in df.columns],
+        style_table={'height': '200px', 'overflowY': 'auto'}
+
+    )

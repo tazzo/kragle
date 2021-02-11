@@ -30,7 +30,7 @@ navbar = dbc.Navbar([
     dbc.Row([
         dbc.Col(
             html.A([
-                html.I(className='fas fa-brain'),
+                html.I(className='fas fa-skull-crossbones'),
             ], href="/", className='navbar-brand mt-sm-2 mt-1'), width={"size": 1, "offset": 1},
         ),
         dbc.Col(
