@@ -2,14 +2,31 @@ import datetime as dt
 import math
 import random
 
+import dash_table
 import pandas as pd
+import  logging
 
+logger = logging.getLogger('kragle')
 instruments = ['USD/SEK',
                'USD/NOK', 'USD/MXN', 'USD/ZAR', 'USD/HKD', 'USD/TRY',
                'USD/ILS', 'USD/CNH', 'XAU/USD',
                'XAG/USD', 'BTC/USD', 'BCH/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD']
 
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
+
+period_to_minutes = {
+    'm1': 1,
+    'm5': 5,
+    'm15': 15,
+    'm30': 30,
+    'H1': 60,
+    'H2': 120,
+    'H3': 180,
+    'H4': 240,
+    'H6': 360,
+    'H8': 480,
+    'D1': 1440
+}
 
 
 # TODO: maybe remove this function
@@ -71,7 +88,7 @@ def dataset_to_dataframe_dict(ds):
 
 def prune_and_index_db(db):
     for coll_name in db.list_collection_names():
-        print('Prune {}'.format(coll_name))
+        logger.info('Prune {}'.format(coll_name))
         l = list(db[coll_name]
             .aggregate([
             {"$group": {'_id': {"date": '$date'}, "count": {"$sum": 1}}},
@@ -111,7 +128,7 @@ def calc_mean_stddev_on_m1(db):
     d = dot_names_to_dict(db.list_collection_names())
     res = {}
     for instrument in list(d):
-        print(instrument)
+        logger.info(instrument)
         res[instrument] = {}
         period = 'm1'
         b_calc = MeanStdDevCalculator()
@@ -125,3 +142,12 @@ def calc_mean_stddev_on_m1(db):
         res[instrument]['tickqty-mean'] = t_calc.get_mean()
         res[instrument]['tickqty-stddev'] = t_calc.get_stddev()
     return res
+
+
+def table_from_dataframe(df):
+    return dash_table.DataTable(
+        data=df.to_dict('records'),
+        columns=[{'id': c, 'name': c} for c in df.columns],
+        style_table={'height': '200px', 'overflow': 'auto'}
+
+    )

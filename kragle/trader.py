@@ -23,10 +23,12 @@ class FxcmTrader:
         self.summary = pd.DataFrame()
         self.offers = pd.DataFrame()
         self.candles = pd.DataFrame()
+        self.candles_number = 100
+        self.candles_period = 'm1'
+        self.instrument = instrument
 
         self.con = fxcmpy.fxcmpy(config_file='fxcm.cfg')
         # self.con.subscribe_market_data(instrument)
-        self.instrument = instrument
         self._loop = True
         th = threading.Thread(target=self.loop, name='loop', daemon=True)
         self.logger.info('starting loop thread')
@@ -95,5 +97,5 @@ class FxcmTrader:
         self.orders = self.con.get_orders()
         self.summary = self.con.get_summary()
         self.offers = self.con.get_offers()
-        self.candles = self.con.get_candles('EUR/USD', period='m1')
+        self.candles = self.con.get_candles(self.instrument, period=self.candles_period, number=self.candles_number)
 

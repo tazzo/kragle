@@ -12,7 +12,7 @@ app = dash.Dash(__name__, meta_tags=[
 app.config["suppress_callback_exceptions"] = True
 
 class_box = 'shadow  p-3 rounded mb-3 border'
-class_card = 'shadow-1-strong rounded my-3'
+class_card = 'shadow rounded my-3'
 class_col = ""
 
 

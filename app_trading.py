@@ -1,6 +1,4 @@
 import dash_html_components as html1
-import dash_table
-from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 
 import pandas as pd
@@ -8,7 +6,11 @@ import pandas as pd
 import kragle.trader
 import kragle.utils
 from app_layout import *
+from kragle.utils import table_from_dataframe
 
+import logging
+
+logger = logging.getLogger('kragle')
 trader = None
 
 
@@ -51,28 +53,31 @@ def build_trader_box():
         dbc.CardHeader([
             dbc.Row([
                 dbc.Col(
-                    html.H2('FXCM Trader', className="font-weight-bold"),
-                    lg=3, sm=4, xs=6
+                    html.H3('FXCM Trader', className="font-weight-bold "),
+                    lg=3, sm=5, xs=6
                 ),
+
                 dbc.Col(
-                    html1.Div(dbc.Button("Connect", id="connect-button", className="ml-1", color='primary'),
-                              id='connection-div')
-                ),
+                    dbc.Button("Connect", id="connect-button", className="ml-1 shadow", color='primary'), width=5, sm=4, md=3, lg=2, xl=1,),
                 dbc.Col(
                     dcc.Loading(
                         id="loading-connection",
                         type="dot",
                         children=html.Div(id="loading-connection-output", className='mt-3')
-                    ),
+                    ), width=1
                 ),
+
+
+            ], justify="start"),
+            dbc.Row([
                 dbc.Col(
                     dcc.Interval(
                         id='interval-subscription',
                         interval=1 * 1000,  # in milliseconds
                         n_intervals=0
-                    ), lg=7, sm=5
-                ),
-            ], justify="start"),
+                    )
+                )
+            ], )
         ]),
         dbc.CardBody([
             dbc.Row([
@@ -82,19 +87,26 @@ def build_trader_box():
                 ),
             ]),
         ])
-    ], className='shadow-1-strong rounded mb-3 h-100', )
+    ], className=class_card + 'h-100', )
 
 
+# open_trade(symbol, is_buy, amount, time_in_force, order_type, rate=0, is_in_pips=True, limit=None, at_market=0, stop=None, trailing_step=None, account_id=None)
 def build_order_card():
     return dbc.Card([
         dbc.CardHeader(html.H4('Order', className="font-weight-bold")),
         dbc.CardBody([
-            dbc.Row([
-                dbc.Col(
-                    dbc.Form([
-                        dbc.FormGroup(
-                            [
-                                dbc.Label("Order type"),
+            dbc.Form([
+                dbc.FormGroup(
+                    [
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.Label("Symbol"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Is buy"),
+                            ], width=12),
+                            dbc.Col([
+                                html.H6("Order type"),
                                 dbc.RadioItems(
                                     options=[
                                         {"label": "Buy", "value": 'buy'},
@@ -104,11 +116,39 @@ def build_order_card():
                                     id="order-type-input",
                                     inline=True,
                                 ),
-                            ],
-                            className="mx-3",
-                        ),
-                    ])
-                ),
+                            ], width=12, className='border'),
+                            dbc.Col([
+                                dbc.Label("Amount"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Time in force"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Order type"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Rate"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Is in pips"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Limit"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("At market"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Stop"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Trailing step"),
+                            ], width=12),
+                            dbc.Col([
+                                dbc.Label("Account id"),
+                            ], width=12),
+                        ])
+                    ]),
             ]),
         ]),
         dcc.Interval(
@@ -141,8 +181,8 @@ def build_chart_card():
                 dbc.Col(
                     dbc.InputGroup(
                         [
-                            dbc.InputGroupAddon("hours", addon_type="prepend"),
-                            dbc.Input(placeholder="1", type="number"),
+                            dbc.InputGroupAddon("number", addon_type="prepend"),
+                            dbc.Input(placeholder="100", type="number", id="chart-n-input", value='100'),
                         ],
                         className="mb-3",
                     ),
@@ -202,15 +242,32 @@ def on_connection_button_click(n_connect):
         return ['Disconnect', '']
 
 
+def get_battery(n):
+    battery_loop = ['fas fa-battery-empty', 'fas fa-battery-quarter', 'fas fa-battery-half',
+                    'fas fa-battery-three-quarters', 'fas fa-battery-full', ]
+    return battery_loop[n % 5]
+
+
 @app.callback([Output('chart-live', 'children'),
                Output('chart-footer', 'children')],
-              Input('chart-live-interval', 'n_intervals')
+              Input('chart-live-interval', 'n_intervals'),
+              [State('chart-period-input', 'value'),
+               State('chart-n-input', 'value')]
               )
-def update_chart_live(n):
+def update_chart_live(n, period, n_candles):
     if trader is not None:
-        return [build_candle_chart(), n]
+        global battery
+        nn = 100
+        try:
+            nn = int(n_candles)
+        except:
+            pass
+        logger.info('Chart live period:[{}] number of candles:[{}]'.format(period, n_candles))
+        trader.candles_number = nn
+        trader.candles_period = period
+        return [build_candle_chart(), html.I(className=get_battery(n))]
     else:
-        return ['', n]
+        return ['', html.I(className=get_battery(n))]
 
 
 @app.callback([Output('tab_accounts', 'children'),
@@ -253,12 +310,3 @@ def build_candle_chart():
         close=trader.candles['bidclose']
     ))
     return dcc.Graph(figure=fig)
-
-
-def table_from_dataframe(df):
-    return dash_table.DataTable(
-        data=df.to_dict('records'),
-        columns=[{'id': c, 'name': c} for c in df.columns],
-        style_table={'height': '200px', 'overflowY': 'auto'}
-
-    )
