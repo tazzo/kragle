@@ -4,15 +4,17 @@ import random
 
 import dash_table
 import pandas as pd
-import  logging
+import logging
 
 logger = logging.getLogger('kragle')
-instruments = ['USD/SEK',
+instruments = ['USD/SEK', 'EUR/USD',
                'USD/NOK', 'USD/MXN', 'USD/ZAR', 'USD/HKD', 'USD/TRY',
                'USD/ILS', 'USD/CNH', 'XAU/USD',
                'XAG/USD', 'BTC/USD', 'BCH/USD', 'ETH/USD', 'LTC/USD', 'XRP/USD']
 
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
+
+time_in_force = ['IOC', 'GTC', 'FOK', 'DAY', 'GTD']
 
 period_to_minutes = {
     'm1': 1,
