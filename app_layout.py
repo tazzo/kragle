@@ -16,36 +16,38 @@ class_card = 'shadow rounded my-3'
 class_col = ""
 
 
-def render_top():
-    return navbar
-
-
 def render_content():
     return html.Div(children=[render_top(),
                               dcc.Location(id='url', refresh=False),
                               html.Div(id='page-content')])
 
 
-navbar = dbc.Navbar([
-    dbc.Row([
-        dbc.Col(
-            html.A([
-                html.I(className='fas fa-skull-crossbones'),
-            ], href="/", className='navbar-brand mt-sm-2 mt-1'), width={"size": 1, "offset": 1},
-        ),
-        dbc.Col(
-            html.A([
-                dbc.NavbarBrand(html.H2("KRAGLE"))
-            ], href="/", ), width={"size": 1, "offset": 1},
-        ),
-    ]),
-    dbc.NavbarToggler(html.I(className='fas fa-bars'), id="navbar-toggler", ),
-    dbc.Collapse(html.Ul([
-        html.Li(dbc.NavLink("Trading", href="/trading"), className='nav-item'),
-        html.Li(dbc.NavLink("Dashboard", href="/dashboard"), className='nav-item'),
-    ], className='navbar-nav mx-3  mb-lg-0'),
-        id="navbar-collapse", navbar=True)
-], color="warning", dark=True, )
+kragle_nav = dbc.Nav(
+    [
+        dbc.NavItem(dbc.NavLink("Trading",  href="/trading")),
+        dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard")),
+    ], navbar=True, className='ml-5'
+)
+
+
+def render_top():
+    return dbc.Navbar([
+        dbc.Row([
+            dbc.Col(
+                html.A([
+                    html.I(className='fas fa-skull-crossbones'),
+                ], href="/", className='navbar-brand mt-sm-2 mt-1'), width={"size": 1, "offset": 1},
+            ),
+            dbc.Col(
+                html.A([
+                    dbc.NavbarBrand(html.H2("KRAGLE"))
+                ], href="/", ), width={"size": 1, "offset": 1},
+            ),
+        ]),
+        dbc.NavbarToggler(id="navbar-toggler", ),
+        dbc.Collapse(kragle_nav,
+                     id="navbar-collapse", navbar=True)
+    ], color="warning", dark=False, )
 
 
 # add callback for toggling the collapse on small screens

@@ -175,7 +175,7 @@ def build_chart_card():
                                 id="chart-period-input",
                             ),
                         ],
-                        className="mb-3",
+                        className="mb-3 shadow-sm",
                     ),
                 ),
                 dbc.Col(
@@ -184,7 +184,7 @@ def build_chart_card():
                             dbc.InputGroupAddon("number", addon_type="prepend"),
                             dbc.Input(placeholder="100", type="number", id="chart-n-input", value='100'),
                         ],
-                        className="mb-3",
+                        className="mb-3 shadow-sm",
                     ),
                 ),
             ]),
