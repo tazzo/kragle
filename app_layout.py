@@ -35,12 +35,12 @@ def render_top():
         dbc.Row([
             dbc.Col(
                 html.A([
-                    html.I(className='fas fa-skull-crossbones'),
-                ], href="/", className='navbar-brand mt-sm-2 mt-1'), width={"size": 1, "offset": 1},
+                    dbc.NavbarBrand(html.I(className='fas fa-skull')),
+                ], href="/"), width={"size": 1, "offset": 1},
             ),
             dbc.Col(
                 html.A([
-                    dbc.NavbarBrand(html.H2("KRAGLE"))
+                    dbc.NavbarBrand(html.H4("KRAGLE"))
                 ], href="/", ), width={"size": 1, "offset": 1},
             ),
         ]),
