@@ -105,71 +105,81 @@ def build_order_card():
                                     options=[{"label": v, "value": v} for v in kragle.utils.instruments],
                                     value='EUR/USD',
                                     id="order-instrument-input",
+                                    disabled=True,
+                                    className=' shadow'
                                 ),
                             ],
                             className="mb-3 w-50",
                         ),
                     ], width=12),
                     dbc.Col([
-                        dbc.FormGroup(
-                            [
-                                dbc.Label("Amount €", size='sm'),
-                                dbc.Input(
-                                    value=1,
-                                    type="number",
-                                    id="order-amount-input",
-                                ),
-                            ],
-                            className="mb-3",
-                        ),
-                    ], width=6, ),
-                    dbc.Col([
-                        dbc.FormGroup(
-                            [
-                                dbc.Label("Buy/Sell", size='sm'),
-                                dbc.RadioItems(
-                                    options=[
-                                        {"label": "Buy", "value": True},
-                                        {"label": "Sell", "value": False},
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.FormGroup(
+                                    [
+                                        dbc.Label("Amount €", size='sm'),
+                                        dbc.Input(
+                                            value=1,
+                                            type="number",
+                                            id="order-amount-input",
+                                        ),
                                     ],
-                                    value=True,
-                                    id="order-isbuy-input",
-                                    inline=True,
+                                    className="mb-3",
                                 ),
-                            ]
-                        )
+                            ], width=6, ),
+                            dbc.Col([
+                                dbc.FormGroup(
+                                    [
+                                        dbc.Label("Buy/Sell", size='sm'),
+                                        dbc.RadioItems(
+                                            options=[
+                                                {"label": "Buy", "value": True},
+                                                {"label": "Sell", "value": False},
+                                            ],
+                                            value=True,
+                                            id="order-isbuy-input",
+                                            inline=True,
+                                        ),
+                                    ]
+                                )
 
-                    ], width=6, ),
-
+                            ], width=6, ),
+                        ], className='border mb-2 shadow-sm'),
+                    ], width=12),
                     dbc.Col([
-                        dbc.FormGroup(
-                            [
-                                dbc.Label("Time in force"),  # .
-                                dbc.Select(
-                                    options=[{"label": v, "value": v} for v in kragle.utils.time_in_force],
-                                    value='GTD',
-                                    id="order-timeinforce-input",
-                                ),
-                            ],
-                            className="mb-3 w-50",
-                        ),
-                    ], width=6),
-                    dbc.Col([
-                        dbc.FormGroup(
-                            [
-                                dbc.Label("Order type"),
-                                dbc.RadioItems(
-                                    options=[
-                                        {"label": "AtMarket", "value": True},
-                                        {"label": "MarketRange", "value": False},
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.FormGroup(
+                                    [
+                                        dbc.Label("Time in force"),  # .
+                                        dbc.Select(
+                                            options=[{"label": v, "value": v} for v in kragle.utils.time_in_force],
+                                            value='GTD',
+                                            id="order-timeinforce-input",
+                                            disabled=True,
+                                        ),
                                     ],
-                                    value=True,
-                                    id="order-type-input",
-                                    inline=True,
+                                    className="mb-3 w-50",
                                 ),
-                            ]
-                        )
-                    ], width=6),
+                            ], width=6),
+                            dbc.Col([
+                                dbc.FormGroup(
+                                    [
+                                        dbc.Label("Order type"),
+                                        dbc.RadioItems(
+                                            options=[
+                                                {"label": "AtMarket", "value": True},
+                                                {"label": "MarketRange", "value": False, 'disabled': True},
+                                            ],
+                                            value=True,
+                                            id="order-type-input",
+                                            inline=True,
+                                        ),
+                                    ]
+                                )
+                            ], width=6),
+                        ], className='border mb-2 shadow-sm'),
+                    ], width=12),
                     dbc.Col([
                         dbc.FormGroup(
                             [
@@ -178,6 +188,7 @@ def build_order_card():
                                     value=0,
                                     type="number",
                                     id="order-rate-input",
+                                    disabled=True
                                 ),
                             ],
                             className="mb-3",
@@ -189,24 +200,58 @@ def build_order_card():
                                 dbc.Label("Is in pips"),
                                 dbc.Checklist(
                                     options=[
-                                        {"label": "", "value": True},
+                                        {"label": "", "value": True, 'disabled': True},
                                     ],
                                     value=[True],
                                     id="order-isinpips-input",
                                     inline=True,
                                     switch=True,
+
                                 ),
                             ]
                         )
                     ], width=6),
                     dbc.Col([
+                        dbc.Row([
+                            dbc.Col([
+                                dbc.FormGroup(
+                                    [
+                                        dbc.Label("Limit"),
+                                        dbc.Input(
+                                            value=15,
+                                            type="number",
+                                            id="order-limit-input",
+                                            className='shadow',
+                                        ),
+                                    ],
+                                    className="mb-3",
+                                ),
+                            ], width=6),
+                            dbc.Col([
+                                dbc.FormGroup(
+                                    [
+                                        dbc.Label("Stop"),
+                                        dbc.Input(
+                                            value=15,
+                                            type="number",
+                                            id="order-stop-input",
+                                            className='shadow',
+                                        ),
+                                    ],
+                                    className="mb-3",
+                                ),
+                            ], width=6),
+                        ], className='border mb-2 shadow-sm'),
+                    ], width=12),
+                    dbc.Col([
                         dbc.FormGroup(
                             [
-                                dbc.Label("Limit"),
+                                dbc.Label("At market"),
                                 dbc.Input(
-                                    value=15,
+                                    value=0,
                                     type="number",
-                                    id="order-limit-input",
+                                    id="order-atmarket-input",
+                                    disabled=True
                                 ),
                             ],
                             className="mb-3",
@@ -215,24 +260,28 @@ def build_order_card():
                     dbc.Col([
                         dbc.FormGroup(
                             [
-                                dbc.Label("Stop"),
+                                dbc.Label("Trailing step"),
                                 dbc.Input(
-                                    value=15,
-                                    type="number",
-                                    id="order-stop-input",
+                                    value=None,
+                                    id="order-trailingstep-input",
+                                    disabled=True
                                 ),
                             ],
                             className="mb-3",
                         ),
                     ], width=6),
                     dbc.Col([
-                        dbc.Label("At market"),
-                    ], width=12),
-                    dbc.Col([
-                        dbc.Label("Trailing step"),
-                    ], width=12),
-                    dbc.Col([
-                        dbc.Label("Account id"),
+                        dbc.FormGroup(
+                            [
+                                dbc.Label("Account id"),
+                                dbc.Input(
+                                    value='TO DO',
+                                    id="order-account-input",
+                                    disabled=True
+                                ),
+                            ],
+                            className="mb-3",
+                        ),
                     ], width=12),
                     dbc.Col([
                         dbc.Button("Open trade", id="order-open-trade-button", className="ml-1 ", color='danger')
