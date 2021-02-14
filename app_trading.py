@@ -379,6 +379,7 @@ def build_counter_card():
 )
 def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips, stop, limit, rate, type, timeinforce, is_open):
     ctx = dash.callback_context
+    if n is None: n = 0
     if not ctx.triggered:
         return [html.I(className=get_battery(0)), is_open]
     else:
@@ -395,6 +396,7 @@ def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips,
         elif button_id == 'order-open-trade-confirm-button':
             logger.info('Open trade confirmed ')
             return [html.I(className=get_battery(n)), False]
+    return [html.I(className=get_battery(n)), False]
 
 
 @app.callback(
