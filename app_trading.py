@@ -154,7 +154,7 @@ def build_order_card():
                                         dbc.Label("Time in force"),  # .
                                         dbc.Select(
                                             options=[{"label": v, "value": v} for v in kragle.utils.time_in_force],
-                                            value='GTD',
+                                            value='GTC',
                                             id="order-timeinforce-input",
                                             disabled=True,
                                         ),
@@ -168,10 +168,10 @@ def build_order_card():
                                         dbc.Label("Order type"),
                                         dbc.RadioItems(
                                             options=[
-                                                {"label": "AtMarket", "value": True},
-                                                {"label": "MarketRange", "value": False, 'disabled': True},
+                                                {"label": "AtMarket", "value": "AtMarket"},
+                                                {"label": "MarketRange", "value": "MarketRange", 'disabled': True},
                                             ],
-                                            value=True,
+                                            value="AtMarket",
                                             id="order-type-input",
                                             inline=True,
                                         ),
@@ -231,7 +231,7 @@ def build_order_card():
                                     [
                                         dbc.Label("Stop"),
                                         dbc.Input(
-                                            value=15,
+                                            value=-15,
                                             type="number",
                                             id="order-stop-input",
                                         ),
@@ -287,7 +287,8 @@ def build_order_card():
                             [
                                 dbc.PopoverHeader(["r u sure ?"]),
                                 dbc.PopoverBody([
-                                    dbc.Button('Cancel', id="order-open-trade-cancel-button", color='light', className='ml-2', ),
+                                    dbc.Button('Cancel', id="order-open-trade-cancel-button", color='light',
+                                               className='ml-2', ),
                                     dbc.Button("Confirm", id="order-open-trade-confirm-button", className="ml-1 ",
                                                color='danger'),
                                 ]),
@@ -377,7 +378,8 @@ def build_counter_card():
      Input("order-timeinforce-input", "value"), ],
     [State("order-popover", "is_open")]
 )
-def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips, stop, limit, rate, type, timeinforce, is_open):
+def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips, stop, limit, rate, type, timeinforce,
+                    is_open):
     ctx = dash.callback_context
     if n is None: n = 0
     if not ctx.triggered:
@@ -395,6 +397,15 @@ def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips,
             return [html.I(className=get_battery(n)), False]
         elif button_id == 'order-open-trade-confirm-button':
             logger.info('Open trade confirmed ')
+            if trader is not None:
+                try:
+                    trader.con.open_trade(symbol=instrument, is_buy=isbuy, is_in_pips=isinpips[0],
+                                          amount=amount, time_in_force=timeinforce,
+                                          order_type=type, limit=limit, stop=stop)
+                except Exception:
+                    logger.error("Fatal error on open_trade: ", exc_info=True)
+            else:
+                logger.warning('Trying to open_traade without connection')
             return [html.I(className=get_battery(n)), False]
     return [html.I(className=get_battery(n)), False]
 

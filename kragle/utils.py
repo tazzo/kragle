@@ -14,7 +14,7 @@ instruments = ['USD/SEK', 'EUR/USD',
 
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
-time_in_force = ['IOC', 'GTC', 'FOK', 'DAY', 'GTD']
+time_in_force = ['IOC', 'GTC', 'FOK', 'DAY']
 
 period_to_minutes = {
     'm1': 1,
