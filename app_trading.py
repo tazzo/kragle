@@ -1,4 +1,3 @@
-import dash_html_components as html1
 import plotly.graph_objects as go
 
 import pandas as pd
@@ -9,6 +8,8 @@ from app_layout import *
 from kragle.utils import table_from_dataframe
 
 import logging
+
+from kragle.utils import get_fired_input_id
 
 logger = logging.getLogger('kragle')
 trader = None
@@ -106,7 +107,6 @@ def build_order_card():
                                     value='EUR/USD',
                                     id="order-instrument-input",
                                     disabled=True,
-                                    className=' shadow'
                                 ),
                             ],
                             className="mb-3 w-50",
@@ -221,7 +221,6 @@ def build_order_card():
                                             value=15,
                                             type="number",
                                             id="order-limit-input",
-                                            className='shadow',
                                         ),
                                     ],
                                     className="mb-3",
@@ -235,7 +234,6 @@ def build_order_card():
                                             value=15,
                                             type="number",
                                             id="order-stop-input",
-                                            className='shadow',
                                         ),
                                     ],
                                     className="mb-3",
@@ -284,7 +282,20 @@ def build_order_card():
                         ),
                     ], width=12),
                     dbc.Col([
-                        dbc.Button("Open trade", id="order-open-trade-button", className="ml-1 ", color='danger')
+                        dbc.Button("Open trade", id="order-open-trade-button", className="ml-1 ", color='danger'),
+                        dbc.Popover(
+                            [
+                                dbc.PopoverHeader(["r u sure ?"]),
+                                dbc.PopoverBody([
+                                    dbc.Button('Cancel', id="order-open-trade-cancel-button", color='light', className='ml-2', ),
+                                    dbc.Button("Confirm", id="order-open-trade-confirm-button", className="ml-1 ",
+                                               color='danger'),
+                                ]),
+                            ],
+                            id="order-popover",
+                            is_open=False,
+                            target="order-open-trade-button",
+                        ),
                     ], width=12)
                 ])
             ]),
@@ -294,7 +305,7 @@ def build_order_card():
             interval=1 * 1000,  # in milliseconds
             n_intervals=0
         ),
-        dbc.CardFooter([ html.Div(id='order-footer')])
+        dbc.CardFooter([html.Div(id='order-footer')])
     ], className=class_card, outline=True)
 
 
@@ -337,7 +348,7 @@ def build_chart_card():
             interval=2 * 1000,  # in milliseconds
             n_intervals=0
         ),
-        dbc.CardFooter([ html.Div(id='chart-footer')])
+        dbc.CardFooter([html.Div(id='chart-footer')])
     ], className=class_card, outline=True)
 
 
@@ -350,8 +361,11 @@ def build_counter_card():
 
 
 @app.callback(
-    [Output("order-footer", "children")],
+    [Output("order-footer", "children"),
+     Output("order-popover", "is_open"), ],
     [Input("order-open-trade-button", "n_clicks"),
+     Input("order-open-trade-cancel-button", "n_clicks"),
+     Input("order-open-trade-confirm-button", "n_clicks"),
      Input("order-instrument-input", "value"),
      Input("order-amount-input", "value"),
      Input("order-isbuy-input", "value"),
@@ -360,23 +374,27 @@ def build_counter_card():
      Input("order-limit-input", "value"),
      Input("order-rate-input", "value"),
      Input("order-type-input", "value"),
-     Input("order-timeinforce-input", "value"),]
+     Input("order-timeinforce-input", "value"), ],
+    [State("order-popover", "is_open")]
 )
-def on_order_change(n, instrument, amount, isbuy, isinpips, stop, limit, rate, type, timeinforce):
-    if n is not None:
-        logger.info('open trade button clicked')
-        logger.info('n {}'.format(n))
-        logger.info('instrument {}'.format(instrument))
-        logger.info('amount {}'.format(amount))
-        logger.info('isbuy {}'.format(isbuy))
-        logger.info('isinpips {}'.format(isinpips))
-        logger.info('stop {}'.format(stop))
-        logger.info('limit {}'.format(limit))
-        logger.info('rate {}'.format(rate))
-        logger.info('type {}'.format(type))
-        logger.info('timeinforce {}'.format(timeinforce))
-        return [html.I(className=get_battery(n))]
-    return [html.I(className=get_battery(0))]
+def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips, stop, limit, rate, type, timeinforce, is_open):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return [html.I(className=get_battery(0)), is_open]
+    else:
+        button_id = get_fired_input_id(ctx)
+        logger.info(
+            'Open trade n:{} instrument:{} amount:{} isbuy:{} isinpips:{} stop:{} limit:{} rate:{} type:{} timeinforce:{} '
+                .format(n, instrument, amount, isbuy, isinpips, stop, limit, rate, type, timeinforce))
+        if button_id == 'order-open-trade-button':
+            logger.info('Open trade button ')
+            return [html.I(className=get_battery(n)), True]
+        elif button_id == 'order-open-trade-cancel-button':
+            logger.info('Open trade cancelled ')
+            return [html.I(className=get_battery(n)), False]
+        elif button_id == 'order-open-trade-confirm-button':
+            logger.info('Open trade confirmed ')
+            return [html.I(className=get_battery(n)), False]
 
 
 @app.callback(

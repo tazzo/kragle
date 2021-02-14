@@ -153,3 +153,8 @@ def table_from_dataframe(df):
         style_table={'height': '200px', 'overflow': 'auto'}
 
     )
+
+
+def get_fired_input_id(ctx):
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    return button_id
