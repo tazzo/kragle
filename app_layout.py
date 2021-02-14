@@ -22,14 +22,6 @@ def render_content():
                               html.Div(id='page-content')])
 
 
-kragle_nav = dbc.Nav(
-    [
-        dbc.NavItem(dbc.NavLink("Trading",  href="/trading")),
-        dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard")),
-    ], navbar=True, className='ml-5'
-)
-
-
 def render_top():
     return dbc.Navbar([
         dbc.Row([
@@ -45,8 +37,11 @@ def render_top():
             ),
         ]),
         dbc.NavbarToggler(id="navbar-toggler", ),
-        dbc.Collapse(kragle_nav,
-                     id="navbar-collapse", navbar=True)
+        dbc.Collapse(dbc.Nav([
+            dbc.NavItem(dbc.NavLink("Trading", href="/trading")),
+            dbc.NavItem(dbc.NavLink("Dashboard", href="/dashboard")),
+        ], navbar=True, className='ml-5'),
+            id="navbar-collapse", navbar=True)
     ], color="warning", dark=False, )
 
 
