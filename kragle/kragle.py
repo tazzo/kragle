@@ -7,13 +7,16 @@ import kragle.utils as kutils
 
 
 class Manager:
-    def __init__(self, config_file='fxcm.cfg', dbname='krangle'):
+    def __init__(self, config_file='fxcm.cfg', dbname='tmp'):
 
         client = MongoClient('localhost', 27017)
         self.db = client[dbname]
 
     def init_fxcm(self):
         self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
+
+    def close_fxcm(self):
+        self.fxcon.close()
 
     def fetch_candles(self, instrument, start, end, period='m1'):
         delta = 600
@@ -93,17 +96,4 @@ class Manager:
                 tmp['date'] = dt.datetime.fromtimestamp(tmp['date'] / 1e3)
         self.db[instrument][period].insert_many(df_json_list)
 
-    def m1(self, start, end):
-        loop = True
-        res = []
-        tmpdate = start
-        while loop:
-            res.append({'date': tmpdate})
-            tmpdate = tmpdate + dt.timedelta(minutes=1)
 
-            if tmpdate.weekday() == 4:
-                if (tmpdate.hour == 22) & (tmpdate.minute == 59):
-                    tmpdate = tmpdate + dt.timedelta(days=2)
-                    tmpdate.replace(hour=20)
-            if tmpdate > end: loop = False
-        return pd.DataFrame(res)
