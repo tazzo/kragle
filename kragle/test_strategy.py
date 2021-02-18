@@ -2,8 +2,8 @@ import datetime as dt
 import pytest
 from kragle.db import KragleDB
 import kragle.utils as kutils
-from kragle.strategy import AgentTester, BuyStrategy, SellStrategy
-import kragle
+from kragle.strategy import AgentTester, BuyStrategy, SellStrategy, PIP
+
 
 def __test_db_setup(db, periods, filename):
     kdb = KragleDB(db)
@@ -37,10 +37,10 @@ def _test_agent_tester(kdb):
     end = dt.datetime(2018, 11, 27, 15, 47)
     at = AgentTester(kdb, BuyStrategy())
     at.test_strategy('EUR/USD', start, end)
-    assert at.wallet == 1.13063 - 1.13188 - 2 * kragle.PIP
+    assert at.wallet == 1.13063 - 1.13188 - 2 * PIP
     #Sell strategy
     start = dt.datetime(2018, 11, 27, 13, 0)
     end = dt.datetime(2018, 11, 27, 14, 6)
     at = AgentTester(kdb, SellStrategy())
     at.test_strategy('EUR/USD', start, end)
-    assert at.wallet == -1.13289 + 1.13188 - 2 * kragle.PIP
+    assert at.wallet == -1.13289 + 1.13188 - 2 * PIP

@@ -1,15 +1,10 @@
 import datetime as dt
 import math
 import random
-import json
 
-from pymongo import MongoClient
 import dash_table
 import pandas as pd
 import logging
-import fxcmpy
-
-from kragle.db import KragleDB
 
 logger = logging.getLogger('kragle')
 instruments = ['USD/SEK', 'EUR/USD',
@@ -165,51 +160,3 @@ def get_fired_input_id(ctx):
     return button_id
 
 
-def fetch_candles(start, end, kdb, fxcon, instrument='EUR/USD', period='m1'):
-    delta = 600
-    if period == 'm1':
-        delta = 7
-    elif period == 'm5':
-        delta = 30
-    elif period == 'm15':
-        delta = 90
-    elif period == 'm30':
-        delta = 150
-    elif period == 'H1':
-        delta = 300
-    tmpstart = start
-    tmpend = tmpstart + dt.timedelta(delta)
-    if tmpend > end:
-        tmpend = end
-    loop = True
-    while loop:
-        df = fxcon.get_candles(instrument, period=period, start=tmpstart, end=tmpend, with_index=False)
-        print('instrument: ' + instrument + ' period: ' + period + ' delta: ' + str(delta) + ' from: ' + str(
-            tmpstart) + ' to:' + str(tmpend) + ' n: ' + str(df.size))
-        # if df.size > 0:
-        #     df_json = df.T.to_json()
-        #     df_json_list = json.loads(df_json).values()
-        #     l = list(df_json_list)
-        #     for tmp in l:
-        #         tmp['date'] = dt.datetime.fromtimestamp(tmp['date'] / 1e3)
-        #     db[instrument][period].insert_many(df_json_list)
-        kdb.fetch_dataframe(df, instrument, period)
-
-        if tmpend == end:
-            loop = False
-        else:
-            tmpstart = tmpstart + dt.timedelta(delta)
-            tmpend = tmpstart + dt.timedelta(delta)
-            if tmpend > end:
-                tmpend = end
-        print('enf loop')
-
-
-
-def fetch_instrument(start, end, instrument='EUR/USD', config_file='fxcm.cfg', dbname='tmp'):
-    kdb = KragleDB('tmp')
-    fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
-    for p in periods:
-        print('Fetching ' + instrument + ' period ' + p)
-        fetch_candles(start, end, kdb, fxcon, instrument=instrument, period=p)
-    fxcon.close()
