@@ -6,5 +6,6 @@ __pycache__
 .idea
 .pytest_cache
 node_modules
+Pipfile.lock
 /package-lock.json
 /log/kragle.log
