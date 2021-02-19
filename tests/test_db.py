@@ -1,14 +1,17 @@
 import datetime as dt
 import pytest
+
 from kragle.db import KragleDB
 import kragle.utils as kutils
+
+
 
 
 def __test_db_setup(db, periods, filename):
     kdb = KragleDB(db)
     kdb.client.drop_database(kdb.dbname)
     for period in periods:
-        df = kutils.dataframe_from_json(r'kragle/test_data/' + period + filename + '.json')
+        df = kutils.dataframe_from_json(r'tests/test_data/' + period + filename + '.json')
         kdb.fetch_dataframe(df, 'EUR/USD', period)
     return kdb
 

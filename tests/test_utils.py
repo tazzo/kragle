@@ -1,7 +1,6 @@
 import datetime as dt
 import pandas as pd
 import kragle.utils as kutils
-import numpy as np
 
 
 def test_random_date():

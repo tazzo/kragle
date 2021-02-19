@@ -405,7 +405,7 @@ def on_order_change(n, n_cancel, n_confirm, instrument, amount, isbuy, isinpips,
                 except Exception:
                     logger.error("Fatal error on open_trade: ", exc_info=True)
             else:
-                logger.warning('Trying to open_traade without connection')
+                logger.warning('Trying to open_trade without connection')
             return [html.I(className=get_battery(n)), False]
     return [html.I(className=get_battery(n)), False]
 

@@ -83,7 +83,6 @@ class KragleDB:
         for record in df.to_dict("records"):
             self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
-
     def dataframe_to_json(self, df, path):
         """
         Write the dataframe to a file (specified with path) in 'records' format
@@ -112,12 +111,12 @@ class KragleDB:
             {'date': {'$gte': date_start, '$lte': date_end}},
             {'date': 1, '_id': 0}
         ))
-        if len(base_date_list) < n :
+        if len(base_date_list) < n:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
 
     def create_train_value(self, instrument, periods, history_len, m1date):
-        #TODO: fix y
+        # TODO: fix y
         val = {'date': m1date, 'x': {}, 'y': random.random()}
         for period in periods:
             l = self.get_history_bidopen(instrument, period, history_len, m1date)
@@ -181,5 +180,3 @@ class KragleDB:
                 {'_id': id},
                 {'$set': {"future": future}},
                 upsert=False)
-
-
