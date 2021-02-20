@@ -29,7 +29,7 @@ class FxcmTrader:
 
         self.con = fxcmpy.fxcmpy(config_file='fxcm.cfg')
         # self.con.subscribe_market_data(instrument)
-        self._loop =  True
+        self._loop = True
         th = threading.Thread(target=self.loop, name='loop', daemon=True)
         self.logger.info('starting loop thread')
         th.start()
@@ -98,4 +98,3 @@ class FxcmTrader:
         self.summary = self.con.get_summary()
         self.offers = self.con.get_offers()
         self.candles = self.con.get_candles(self.instrument, period=self.candles_period, number=self.candles_number)
-
