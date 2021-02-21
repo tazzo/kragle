@@ -23,48 +23,27 @@ def render_dashboard_page():
         children=[
             dbc.Row(
                 children=[
-                    dbc.Col(build_agent_box(), className=class_col, md=6, xl=4),
-                    dbc.Col(build_dataset_manager(), className=class_col, md=6, xl=4),
-                    dbc.Col(build_explorer(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_agent_card(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_dataset_manager_card(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_explorer_card(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_fourier_card(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_random_card(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_chaos_card(), className=class_col, md=6, xl=4),
 
-                    dbc.Col(
-                        className=class_col, lg=6, xl=4,
-                        children=html.Div(
-                            className=class_box,
-                            children=[
-                                build_fourier()
-                            ],
-                        ),
-                    ),
-                    dbc.Col(
-                        className=class_col, lg=6, xl=4,
-                        children=html.Div(
-                            className=class_box,
-                            children=[
-                                build_random()
-                            ],
-                        ),
-                    ),
-                    dbc.Col(
-                        className=class_col, lg=6, xl=4,
-                        children=html.Div(
-                            className=class_box,
-                            children=[
-                                html.Div([
-                                    dcc.Graph(
-                                        figure=build_chaos_chart('xyz')
-                                    ),
-                                ], className='space-y-1'),
-                            ],
-                        ),
-                    ),
                 ],
             ),
         ]
     )
 
 
-def build_agent_box():
+def build_chaos_card():
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Chaos chart', className="font-weight-bold")),
+        dbc.CardBody([dcc.Graph(figure=build_chaos_chart('xyz'))])
+    ])
+
+
+def build_agent_card():
     return dbc.Card([
         dbc.CardHeader(html.H4('Agent Tester', className="font-weight-bold")),
         dbc.CardBody([
@@ -130,7 +109,7 @@ def build_agent_box():
     ], className=class_card, outline=True)
 
 
-def build_dataset_manager():
+def build_dataset_manager_card():
     return dbc.Card([
         dbc.CardHeader(html.H4('Datasets manager', className="font-weight-bold")),
         dbc.CardBody([
@@ -199,17 +178,17 @@ def build_dataset_manager():
     ], className=class_card, outline=True)
 
 
-def build_explorer():
+def build_explorer_card():
     return dbc.Card([
         dbc.CardHeader(html.H4('Data explorer', className="font-weight-bold")),
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
-                        html.Button(
-                            'Refresh DB names',
-                            id='button-explorer-dbnames-refresh',
-                            className='btn btn-primary'
-                        ),
+                    html.Button(
+                        'Refresh DB names',
+                        id='button-explorer-dbnames-refresh',
+                        className='btn btn-primary'
+                    ),
                 ]),
             ]),
             dbc.Row([
@@ -333,154 +312,158 @@ def build_explorer():
     ], className=class_card, outline=True)
 
 
-def build_fourier():
-    return html.Div([
-        html.H1('Fourier synthetic data generator'),
-        dbc.Row([
-            dbc.Col([
-                html.P('Number of values', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-fourier-number',
-                    placeholder='1000',
-                    type='text',
-                    value='1000'
-                )
-            ], width='auto'),
-            dbc.Col([
-                html.P('Delta', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-fourier-delta',
-                    placeholder='0.003',
-                    type='text',
-                    value='0.003'
-                )
-            ], width='auto'),
-            dbc.Col([
-                html.P('Noise factor', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-fourier-noise-factor',
-                    placeholder='0.5',
-                    type='text',
-                    value='0.5'
-                )
-            ], width='auto'),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('An', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-fourier-an',
-                    placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
-                    type='text',
-                    value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
-                    className='w-100',
-                )
-            ], width=12),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('Bn', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-fourier-bn',
-                    placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
-                    type='text',
-                    value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
-                    className='w-100',
-                )
+def build_fourier_card():
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Fourier synthetic data generator', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.P('Number of values', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-fourier-number',
+                        placeholder='1000',
+                        type='text',
+                        value='1000'
+                    )
+                ], width='auto'),
+                dbc.Col([
+                    html.P('Delta', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-fourier-delta',
+                        placeholder='0.003',
+                        type='text',
+                        value='0.003'
+                    )
+                ], width='auto'),
+                dbc.Col([
+                    html.P('Noise factor', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-fourier-noise-factor',
+                        placeholder='0.5',
+                        type='text',
+                        value='0.5'
+                    )
+                ], width='auto'),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    html.P('An', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-fourier-an',
+                        placeholder='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
+                        type='text',
+                        value='8.3, -0.27, 0.075, -0.11, 0, -0.053, -0.13, -0.14658, 0, 0.082, 0.054',
+                        className='w-100',
+                    )
+                ], width=12),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    html.P('Bn', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-fourier-bn',
+                        placeholder='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
+                        type='text',
+                        value='0, -1.2, -1.75, 0.47, 0.45, 0.15, -0.58, 0.039, 0.063, -0.0059, -0.35',
+                        className='w-100',
+                    )
+                ]),
+            ]),
+            html.Span('Instrument name', className='font-weight-bold'),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Input(
+                        id='input-fourier-instrument-name',
+                        placeholder='fourier_01',
+                        type='text',
+                        value='fourier_01',
+                    ),
+                    html.Button(
+                        'Save values',
+                        id='button-fourier-save',
+                        className='btn btn-primary'
+                    ),
+                    html.P(id='button-fourier-label'),
+                    dcc.Loading(
+                        id="loading-fourier-save",
+                        type="dot",
+                        children=html.Div(id="loading-fourier-output")
+                    ),
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Graph(
+                        id='fourier-chart',
+                    ),
+                ]),
             ]),
         ]),
-        html.Span('Instrument name', className='font-weight-bold'),
-        dbc.Row([
-            dbc.Col([
-                dcc.Input(
-                    id='input-fourier-instrument-name',
-                    placeholder='fourier_01',
-                    type='text',
-                    value='fourier_01',
-                ),
-                html.Button(
-                    'Save values',
-                    id='button-fourier-save',
-                    className='btn btn-primary'
-                ),
-                html.P(id='button-fourier-label'),
-                dcc.Loading(
-                    id="loading-fourier-save",
-                    type="dot",
-                    children=html.Div(id="loading-fourier-output")
-                ),
-            ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id='fourier-chart',
-                ),
-            ]),
-        ]),
-    ], className='space-y-1')
+    ], className=class_card, outline=True)
 
 
-def build_random():
-    return html.Div([
-        html.H1('Random synthetic data generator'),
-        dbc.Row([
-            dbc.Col([
-                html.P('Number of values', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-random-number',
-                    placeholder='1000',
-                    type='text',
-                    value='1000'
-                )
+def build_random_card():
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Random synthetic data generator', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.P('Number of values', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-random-number',
+                        placeholder='1000',
+                        type='text',
+                        value='1000'
+                    )
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    html.P('Dimensions', className='font-weight-bold'),
+                    dcc.Input(
+                        id='input-random-dim',
+                        placeholder='3',
+                        type='text',
+                        value='3'
+                    )
+                ]),
+            ]),
+            html.Span('Instrument name', className='font-weight-bold'),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Input(
+                        id='input-random-instrument-name',
+                        placeholder='random_',
+                        type='text',
+                        value='random_',
+                    ),
+                    html.Button(
+                        'Save values',
+                        id='button-random-save',
+                        className='btn btn-primary'
+                    ),
+                    html.P(id='button-random-label'),
+                    dcc.Loading(
+                        id="loading-random",
+                        type="dot",
+                        children=html.Div(id="loading-random-output")
+                    ),
+                    dcc.Loading(
+                        id="loading-random-2",
+                        type="dot",
+                        children=html.Div(id="loading-random-output-2")
+                    ),
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Graph(
+                        id='random-chart',
+                    )
+                ]),
             ]),
         ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('Dimensions', className='font-weight-bold'),
-                dcc.Input(
-                    id='input-random-dim',
-                    placeholder='3',
-                    type='text',
-                    value='3'
-                )
-            ]),
-        ]),
-        html.Span('Instrument name', className='font-weight-bold'),
-        dbc.Row([
-            dbc.Col([
-                dcc.Input(
-                    id='input-random-instrument-name',
-                    placeholder='random_',
-                    type='text',
-                    value='random_',
-                ),
-                html.Button(
-                    'Save values',
-                    id='button-random-save',
-                    className='btn btn-primary'
-                ),
-                html.P(id='button-random-label'),
-                dcc.Loading(
-                    id="loading-random",
-                    type="dot",
-                    children=html.Div(id="loading-random-output")
-                ),
-                dcc.Loading(
-                    id="loading-random-2",
-                    type="dot",
-                    children=html.Div(id="loading-random-output-2")
-                ),
-            ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id='random-chart',
-                )
-            ]),
-        ]),
-    ], className='space-y-1')
+    ], className=class_card, outline=True)
 
 
 def build_chaos_chart(axis):
@@ -746,14 +729,14 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
 )
 def button_insert_future(n_clicks, date_start, date_end, instrument, period, distance, window):
     try:
-        print('date_start [{}], date_end [{}], instrument [{}], period [{}], distance [{}], window [{}]'.format(date_start, date_end, instrument, period, distance, window))
+        print('date_start [{}], date_end [{}], instrument [{}], period [{}], distance [{}], window [{}]'.format(
+            date_start, date_end, instrument, period, distance, window))
         date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
         date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
         kdb.insert_future(instrument, period, date_start, date_end, 'bidopen', distance, window)
     except:
         pass
     return ['']
-
 
 
 @app.callback(
