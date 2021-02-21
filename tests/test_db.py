@@ -153,7 +153,6 @@ def test_insert_future(kdb_future):
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=55))
     assert val['future'] == Action.HOLD.value
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=60))
-    print('------->>>>>>>>>>>>{}<<<'.format(val))
     assert val['future'] == Action.SELL.value
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=65))
     assert val['future'] == Action.SELL.value
@@ -218,3 +217,10 @@ def test_futuretool3():
     assert res[0][1] == Action.HOLD
     assert res[1][1] == Action.SELL
     assert res[2][1] == Action.SELL
+
+
+def test_duplicate_db(kdb):
+    duplicate = kdb.duplicate_db('kragle_test_duplicate')
+    assert len(duplicate.get_instruments()) == 1
+    assert 'EUR/USD' in duplicate.get_instruments()
+    duplicate.client.drop_database(duplicate.dbname)

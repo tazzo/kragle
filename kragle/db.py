@@ -9,6 +9,7 @@ import kragle.utils as kutils
 
 from kragle.utils import PIP
 
+
 def get_db_names():
     client = MongoClient('localhost', 27017)
     l = client.list_database_names()
@@ -156,7 +157,7 @@ class KragleDB:
             {'$project': {'date': 1, '_id': 0}},
         ]))
 
-    def insert_future(self, instrument, period, date_start, date_end, field='bidopen', futurelen=50, limit=15*PIP):
+    def insert_future(self, instrument, period, date_start, date_end, field='bidopen', futurelen=50, limit=15 * PIP):
         """[summary]
 
         Args:
@@ -181,6 +182,20 @@ class KragleDB:
                     {'$set': {"future": future.value}},
                     upsert=False)
 
+    def duplicate_db(self,
+                     dbname,
+                     instrument='EUR/USD',
+                     periods=['m1', 'm5', 'm30', 'H2', 'H8'],
+                     fields=['date', 'bidopen', 'tickqty', 'future']):  # date field must be present
+        newdb = self.client[dbname]
+        filter_fields = {'_id': 0, 'date': 1}
+        for field in fields:
+            filter_fields[field] = 1
+        for period in periods:
+            values = self.db[instrument][period].find({}, filter_fields)
+            for value in values:
+                newdb[instrument][period].insert( value)
+        return KragleDB(dbname)
 
 
 class FutureTool:
