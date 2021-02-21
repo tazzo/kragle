@@ -36,13 +36,6 @@ def render_dashboard_page():
     )
 
 
-def build_chaos_card():
-    return dbc.Card([
-        dbc.CardHeader(html.H4('Chaos chart', className="font-weight-bold")),
-        dbc.CardBody([dcc.Graph(figure=build_chaos_chart('xyz'))])
-    ])
-
-
 def build_agent_card():
     return dbc.Card([
         dbc.CardHeader(html.H4('Agent Tester', className="font-weight-bold")),
@@ -244,21 +237,21 @@ def build_explorer_card():
             ]),
             dbc.Row([
                 dbc.Col([
-                    html.P('Distance', className='font-weight-bold'),
+                    html.P('Future length', className='font-weight-bold'),
                     dcc.Input(
                         id='distance-insert-future',
-                        placeholder='60',
+                        placeholder=50,
                         type='text',
-                        value='60'
+                        value=50
                     ),
                 ]),
                 dbc.Col([
-                    html.P('Window', className='font-weight-bold'),
+                    html.P('Limit', className='font-weight-bold'),
                     dcc.Input(
                         id='window-insert-future',
-                        placeholder='10',
+                        placeholder='0.0015',
                         type='text',
-                        value='10'
+                        value=0.0015
                     ),
                 ]),
             ], className='flex space-x-2'),
@@ -469,6 +462,13 @@ def build_random_card():
 def build_chaos_chart(axis):
     dftmp = pd.DataFrame(kragle.synthetic.attractor(20000, 0.01))
     return px.line(dftmp, x="i", y=axis, title='Attractor ')
+
+
+def build_chaos_card():
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Chaos chart', className="font-weight-bold")),
+        dbc.CardBody([dcc.Graph(figure=build_chaos_chart('xyz'))])
+    ], className=class_card, outline=True)
 
 
 @app.callback(
@@ -729,8 +729,6 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
 )
 def button_insert_future(n_clicks, date_start, date_end, instrument, period, distance, window):
     try:
-        print('date_start [{}], date_end [{}], instrument [{}], period [{}], distance [{}], window [{}]'.format(
-            date_start, date_end, instrument, period, distance, window))
         date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
         date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
         kdb.insert_future(instrument, period, date_start, date_end, 'bidopen', distance, window)
