@@ -1,11 +1,13 @@
 import random
 import datetime as dt
 import logging
+from collections import deque
 
 import pandas as pd
 from pymongo import MongoClient
 import kragle.utils as kutils
 
+from kragle.utils import PIP
 
 def get_db_names():
     client = MongoClient('localhost', 27017)
@@ -154,29 +156,60 @@ class KragleDB:
             {'$project': {'date': 1, '_id': 0}},
         ]))
 
-    def insert_future(self, instrument, period, start, end, field='bidopen', d=12, r=2):
+    def insert_future(self, instrument, period, date_start, date_end, field='bidopen', futurelen=50, limit=15*PIP):
         """[summary]
 
         Args:
             instrument ([type]): [description]
             period ([type]): [description]
-            start ([type]): [description]
-            end ([type]): [description]
-            d (int, optional): [description]. Defaults to 12.
-            r (int, optional): [description]. Defaults to 2.
+            date_start ([type]): [description]
+            date_end ([type]): [description]
+            futurelen (int, optional): [description]. Defaults to 50.
+            limit (int, optional): [description]. Defaults to 15 PIP.
         """
-        df = self.get_instrument(instrument, period, start, end)
-        self._insert_future(df, instrument, period, d=d, r=r)
+        values = self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$gte': date_start, '$lte': date_end}}},
+            {'$sort': {'date': 1}},
+        ])
+        ft = FutureTool(field=field, futurelen=futurelen, limit=limit)
+        for value in values:
+            oldvalue_future = ft.calc(value)
+            if oldvalue_future is not None:
+                oldvalue, future = oldvalue_future
+                self.db[instrument][period].update_one(
+                    {'_id': oldvalue['_id']},
+                    {'$set': {"future": future.value}},
+                    upsert=False)
 
-    def _insert_future(self, df, instrument, period, field='bidopen', d=12, r=2):
-        gap = d - r
-        win = r * 2 + 1
-        for r in range(df.shape[0] - d - r):
-            tmp = df.loc[[(i + r + gap) for i in range(win)], field]
-            start = df.loc[r, field]
-            future = round((tmp.mean() - start), 4)
-            id = df.loc[r, '_id']
-            self.db[instrument][period].update_one(
-                {'_id': id},
-                {'$set': {"future": future}},
-                upsert=False)
+
+
+class FutureTool:
+    """
+
+    """
+
+    def __init__(self, field='bidopen', futurelen=50, limit=15):
+        self.field = field
+        self.futurelen = futurelen
+        self.limit = limit
+        self.deque = deque()
+
+    def calc(self, value):
+        self.deque.append(value)
+        ret = None
+        if len(self.deque) > self.futurelen:
+            ret = self._calc()
+        return ret
+
+    def _calc(self):
+        action = kutils.Action.HOLD
+        value = self.deque.popleft()
+        f = value[self.field]
+        for v in self.deque:
+            if (v[self.field] - f) >= self.limit:
+                action = kutils.Action.BUY
+                break
+            if (v[self.field] - f) <= (-1 * self.limit):
+                action = kutils.Action.SELL
+                break
+        return value, action

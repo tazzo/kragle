@@ -2,7 +2,8 @@ import datetime as dt
 import pytest
 from kragle.db import KragleDB
 import kragle.utils as kutils
-from kragle.strategy import AgentTester, BuyStrategy, SellStrategy, PIP
+from kragle.strategy import AgentTester, BuyStrategy, SellStrategy
+from kragle.utils import PIP
 
 
 def __test_db_setup(db, periods, filename):

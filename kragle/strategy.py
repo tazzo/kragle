@@ -1,17 +1,10 @@
-import datetime as dt
 import random
 import pandas as pd
 import logging
-import math
-from enum import Enum
 
-PIP = .0001
+from kragle.utils import PIP, Action
 
-
-class Action(Enum):
-    BUY = 1
-    SELL = -1
-    HOLD = 0
+logger = logging.getLogger('kragle')
 
 
 class Strategy:

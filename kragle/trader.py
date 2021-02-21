@@ -5,6 +5,7 @@ import logging
 
 import pandas as pd
 import kragle.strategy
+import utils
 
 
 class FxcmTrader:
@@ -55,11 +56,11 @@ class FxcmTrader:
                     self.logger.info('Order and time check passed, trying strategy')
                     if self.strategy is not None:
                         a = self.strategy.action(pd.DataFrame())
-                        if a == kragle.strategy.Action.HOLD:
+                        if a == utils.Action.HOLD:
                             pass
-                        elif a == kragle.strategy.Action.SELL:
+                        elif a == utils.Action.SELL:
                             self.sellOrder()
-                        elif a == kragle.strategy.Action.BUY:
+                        elif a == utils.Action.BUY:
                             self.buyOrder()
                         else:
                             self.logger.error(

@@ -1,6 +1,7 @@
 import datetime as dt
 import math
 import random
+from enum import Enum
 
 import dash_table
 import pandas as pd
@@ -29,6 +30,15 @@ period_to_minutes = {
     'H8': 480,
     'D1': 1440
 }
+
+# EUR/USD pip
+PIP = .0001
+
+
+class Action(Enum):
+    BUY = 1
+    SELL = -1
+    HOLD = 0
 
 
 # TODO: maybe remove this function
@@ -158,5 +168,3 @@ def table_from_dataframe(df):
 def get_fired_input_id(ctx):
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
     return button_id
-
-

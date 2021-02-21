@@ -1,6 +1,6 @@
 [
   {"date":"2018-11-23T21:30:00.000Z","bidopen":0,"tickqty":0},
-  {"date":"2018-11-23T21:35:00.000Z","bidopen":1,"tickqty":1},
+  {"date":"2018-11-23T21:35:00.000Z","bidopen":2,"tickqty":1},
   {"date":"2018-11-23T21:40:00.000Z","bidopen":2,"tickqty":2},
   {"date":"2018-11-23T21:45:00.000Z","bidopen":4,"tickqty":3},
   {"date":"2018-11-23T21:50:00.000Z","bidopen":9,"tickqty":4},

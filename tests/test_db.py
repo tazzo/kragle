@@ -1,10 +1,9 @@
 import datetime as dt
 import pytest
 
-from kragle.db import KragleDB
+from kragle.db import KragleDB, FutureTool
 import kragle.utils as kutils
-
-
+from kragle.utils import Action
 
 
 def __test_db_setup(db, periods, filename):
@@ -128,25 +127,94 @@ def test_create_train_value_hour(kdb):
 def test_insert_future(kdb_future):
     start_date = dt.datetime(2018, 11, 23, 21, 30)
     end_date = dt.datetime(2018, 11, 23, 23, 10)
-    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=12, r=2)
+    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', futurelen=4, limit=15)
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
-    assert val['future'] == (13 + 14 + 15 + 16 + 17) / 5
+    assert val['future'] == Action.HOLD.value
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
-    assert val['future'] == (14 + 15 + 16 + 17 + 0) / 5 - val['bidopen']
+    assert val['future'] == Action.HOLD.value
     val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=10))
-    assert val['future'] == (15 + 16 + 17 + 0 + 0) / 5 - val['bidopen']
-    ##########
-    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=10, r=1)
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
-    assert val['future'] == (9 + 13 + 14) / 3 - val['bidopen']
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
-    assert val['future'] == (13 + 14 + 15) / 3 - val['bidopen']
-    ##########
-    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', d=3, r=1)
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
-    assert val['future'] == (9 + 4 + 2) / 3 - val['bidopen']
+    assert val['future'] == Action.BUY.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=15))
+    assert val['future'] == Action.BUY.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=20))
+    assert val['future'] == Action.BUY.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=25))
+    assert val['future'] == Action.BUY.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=30))
+    assert val['future'] == Action.BUY.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=35))
+    assert val['future'] == Action.SELL.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=40))
+    assert val['future'] == Action.HOLD.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=45))
+    assert val['future'] == Action.HOLD.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=50))
+    assert val['future'] == Action.HOLD.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=55))
+    assert val['future'] == Action.HOLD.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=60))
+    print('------->>>>>>>>>>>>{}<<<'.format(val))
+    assert val['future'] == Action.SELL.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=65))
+    assert val['future'] == Action.SELL.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=70))
+    assert val['future'] == Action.SELL.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=75))
+    assert val['future'] == Action.HOLD.value
+    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=80))
+    assert val['future'] == Action.HOLD.value
 
 
 def test_get_instrument_raise(kdb):
     with pytest.raises(ValueError, match=r".*datetime.*"):
         dataset = kdb.get_instrument('EUR/USD', 'm1', 'start', 'end')
+
+
+def _calc_value_future(fm, l):
+    res = []
+    for v in l:
+        tuple_value_future = fm.calc(v)
+        if tuple_value_future is not None:
+            res.append(tuple_value_future)
+    return res
+
+
+def test_futuretool1():
+    l = [{'bidopen': i} for i in [0, 2, 3, 4, 5, 6, 70, 80, 88, 90]]
+    fm = FutureTool(field='bidopen', futurelen=3, limit=20)
+    res = _calc_value_future(fm, l)
+    assert len(res) == 7
+    assert res[0][1] == Action.HOLD
+    assert res[1][1] == Action.HOLD
+    assert res[2][1] == Action.HOLD
+    assert res[3][1] == Action.BUY
+    assert res[5][1] == Action.BUY
+    assert res[6][1] == Action.BUY
+
+
+def test_futuretool2():
+    l = [{'bidopen': i} for i in [0, 1, 0, -2, 10, -10]]
+    fm = FutureTool(field='bidopen', futurelen=5, limit=4)
+    res = _calc_value_future(fm, l)
+    assert len(res) == 1
+    assert res[0][1] == Action.BUY
+    fm = FutureTool(field='bidopen', futurelen=3, limit=4)
+    res = _calc_value_future(fm, l)
+    assert len(res) == 3
+    assert res[0][1].value == 0
+    assert res[1][1] == Action.BUY
+    assert res[2][1] == Action.BUY
+
+
+def test_futuretool3():
+    l = [{'bidopen': i} for i in [0, 1, 0, -2, -10, 10]]
+    fm = FutureTool(field='bidopen', futurelen=5, limit=4)
+    res = _calc_value_future(fm, l)
+    assert len(res) == 1
+    assert res[0][1] == Action.SELL
+    fm = FutureTool(field='bidopen', futurelen=3, limit=4)
+    res = _calc_value_future(fm, l)
+    assert len(res) == 3
+    assert res[0][1] == Action.HOLD
+    assert res[1][1] == Action.SELL
+    assert res[2][1] == Action.SELL
