@@ -19,7 +19,7 @@ def render_trading_page():
     return dbc.Container(
         [
             dbc.Row([
-                dbc.Col(build_trader_box(), className=class_col, width=12),
+                dbc.Col(build_trader_box(), className=class_col + ' mb-3', width=12),
             ]),
             dbc.Row([
                 dbc.Col(build_chart_card(), className=class_col, md=6, xl=4),

@@ -160,7 +160,7 @@ def table_from_dataframe(df):
     return dash_table.DataTable(
         data=df.to_dict('records'),
         columns=[{'id': c, 'name': c} for c in df.columns],
-        style_table={'height': '200px', 'overflow': 'auto'}
+        style_table={'height': '150px', 'overflow': 'auto'}
 
     )
 

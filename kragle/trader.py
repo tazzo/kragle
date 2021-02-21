@@ -4,8 +4,7 @@ import time
 import logging
 
 import pandas as pd
-import kragle.strategy
-import utils
+import kragle.utils as kutils
 
 
 class FxcmTrader:
@@ -56,11 +55,11 @@ class FxcmTrader:
                     self.logger.info('Order and time check passed, trying strategy')
                     if self.strategy is not None:
                         a = self.strategy.action(pd.DataFrame())
-                        if a == utils.Action.HOLD:
+                        if a == kutils.Action.HOLD:
                             pass
-                        elif a == utils.Action.SELL:
+                        elif a == kutils.Action.SELL:
                             self.sellOrder()
-                        elif a == utils.Action.BUY:
+                        elif a == kutils.Action.BUY:
                             self.buyOrder()
                         else:
                             self.logger.error(

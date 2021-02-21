@@ -23,31 +23,10 @@ def render_dashboard_page():
         children=[
             dbc.Row(
                 children=[
-                    dbc.Col(
-                        className=class_col, lg=6, xl=4,
-                        children=html.Div(
-                            className=class_box,
-                            children=[
-                                build_agent_box()
-                            ],
-                        ),
-                    ),
-                    dbc.Col(
-                        className=class_col, lg=6, xl=4,
-                        children=html.Div(
-                            className=class_box,
-                            children=[
-                                build_dataset_manager()
-                            ],
-                        ),
-                    ),
-                    dbc.Col(
-                        className=class_col, lg=6, xl=4,
-                        children=html.Div(
-                            className=class_box,
-                            children=build_explorer(),
-                        ),
-                    ),
+                    dbc.Col(build_agent_box(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_dataset_manager(), className=class_col, md=6, xl=4),
+                    dbc.Col(build_explorer(), className=class_col, md=6, xl=4),
+
                     dbc.Col(
                         className=class_col, lg=6, xl=4,
                         children=html.Div(
@@ -86,258 +65,272 @@ def render_dashboard_page():
 
 
 def build_agent_box():
-    return html.Div([
-        html.H1('Agent Tester'),
-        dbc.Row([
-            dbc.Col([
-                html.Button(
-                    'Refresh DB names',
-                    id='button-agent-dbnames-refresh',
-                    className='btn btn-primary mr-3'
-                ),
-                html.Button(
-                    'Run',
-                    id='button-agent-run',
-                    className='btn btn-primary'
-                ),
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Agent Tester', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.Button(
+                        'Refresh DB names',
+                        id='button-agent-dbnames-refresh',
+                        className='btn btn-primary mr-3'
+                    ),
+                    html.Button(
+                        'Run',
+                        id='button-agent-run',
+                        className='btn btn-primary'
+                    ),
+                ]),
             ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='agent-dbnames-dropdown',
-                    clearable=False
+            dbc.Row([
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='agent-dbnames-dropdown',
+                        clearable=False
 
-                ),
-            ], width=6),
-            dbc.Col([
-                dcc.Dropdown(
-                    id='agent-instruments-dropdown',
-                    clearable=False
-                ),
-            ], width=6),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('From', className='font-weight-bold'),
-                dcc.Input(
-                    id='agent-input-date-from',
-                    placeholder='2018-11-22 12:00',
-                    type='text',
-                    value='2018-11-22 12:00'
-                )
+                    ),
+                ], width=6),
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='agent-instruments-dropdown',
+                        clearable=False
+                    ),
+                ], width=6),
             ]),
-            dbc.Col([
-                html.P('To', className='font-weight-bold'),
-                dcc.Input(
-                    id='agent-input-date-to',
-                    placeholder='2018-11-22 22:00',
-                    type='text',
-                    value='2018-11-22 22:00',
-                )
+            dbc.Row([
+                dbc.Col([
+                    html.P('From', className='font-weight-bold'),
+                    dcc.Input(
+                        id='agent-input-date-from',
+                        placeholder='2018-11-22 12:00',
+                        type='text',
+                        value='2018-11-22 12:00'
+                    )
+                ]),
+                dbc.Col([
+                    html.P('To', className='font-weight-bold'),
+                    dcc.Input(
+                        id='agent-input-date-to',
+                        placeholder='2018-11-22 22:00',
+                        type='text',
+                        value='2018-11-22 22:00',
+                    )
+                ]),
+            ]),
+
+            dbc.Row([
+                dbc.Col([
+                    dcc.Graph(
+                        id='agent-chart'
+                    )
+                ]),
             ]),
         ]),
 
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id='agent-chart'
-                )
-            ]),
-        ]),
-
-    ], )
+    ], className=class_card, outline=True)
 
 
 def build_dataset_manager():
-    return html.Div([
-        html.H1('Datasets manager'),
-        html.Button(
-            'Refresh',
-            id='button-manager-refresh',
-            className='btn btn-primary'
-        ),
-        dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='dataset-manager-instruments-dropdown',
-                    clearable=False
-                ),
-            ], width=6),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('From', className='font-weight-bold'),
-                dcc.Input(
-                    id='dataset-manager-input-date-from',
-                    placeholder='2018-11-22 12:00',
-                    type='text',
-                    value='2018-11-22 12:00'
-                )
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Datasets manager', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    html.Button(
+                        'Refresh',
+                        id='button-manager-refresh',
+                        className='btn btn-primary'
+                    ),
+                ], width=6),
             ]),
-            dbc.Col([
-                html.P('To', className='font-weight-bold'),
-                dcc.Input(
-                    id='dataset-manager-input-date-to',
-                    placeholder='2018-11-26 12:00',
-                    type='text',
-                    value='2018-11-26 12:00',
-                )
+            dbc.Row([
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='dataset-manager-instruments-dropdown',
+                        clearable=False
+                    ),
+                ], width=6),
             ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.RadioItems(
-                    id='dataset-manager-period',
-                    options=[
-                        {'label': 'm1 ', 'value': 'm1'},
-                        {'label': 'm5 ', 'value': 'm5'},
-                        {'label': 'm15 ', 'value': 'm15'},
-                        {'label': 'H1 ', 'value': 'H1'},
-                    ],
-                    value='m1',
-                    labelStyle={'display': 'inline-block'},
-                    inputClassName="mx-2"
-                ),
+            dbc.Row([
+                dbc.Col([
+                    html.P('From', className='font-weight-bold'),
+                    dcc.Input(
+                        id='dataset-manager-input-date-from',
+                        placeholder='2018-11-22 12:00',
+                        type='text',
+                        value='2018-11-22 12:00'
+                    )
+                ]),
+                dbc.Col([
+                    html.P('To', className='font-weight-bold'),
+                    dcc.Input(
+                        id='dataset-manager-input-date-to',
+                        placeholder='2018-11-26 12:00',
+                        type='text',
+                        value='2018-11-26 12:00',
+                    )
+                ]),
             ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id='dataset-manager-chart'
-                )
+            dbc.Row([
+                dbc.Col([
+                    dcc.RadioItems(
+                        id='dataset-manager-period',
+                        options=[
+                            {'label': 'm1 ', 'value': 'm1'},
+                            {'label': 'm5 ', 'value': 'm5'},
+                            {'label': 'm15 ', 'value': 'm15'},
+                            {'label': 'H1 ', 'value': 'H1'},
+                        ],
+                        value='m1',
+                        labelStyle={'display': 'inline-block'},
+                        inputClassName="mx-2"
+                    ),
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Graph(
+                        id='dataset-manager-chart'
+                    )
+                ]),
             ]),
         ]),
 
-    ], )
+    ], className=class_card, outline=True)
 
 
 def build_explorer():
-    return html.Div([
-        html.H1('Data explorer'),
-        html.Button(
-            'Refresh DB names',
-            id='button-explorer-dbnames-refresh',
-            className='btn btn-primary'
-        ),
-        dbc.Row([
-            dbc.Col([
-                dcc.Dropdown(
-                    id='chart-dbnames-dropdown',
-                    clearable=False
-                ),
+    return dbc.Card([
+        dbc.CardHeader(html.H4('Data explorer', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                        html.Button(
+                            'Refresh DB names',
+                            id='button-explorer-dbnames-refresh',
+                            className='btn btn-primary'
+                        ),
+                ]),
             ]),
-            dbc.Col([
-                dcc.Dropdown(
-                    id='chart-instruments-dropdown',
-                    clearable=False
-                ),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='chart-dbnames-dropdown',
+                        clearable=False
+                    ),
+                ]),
+                dbc.Col([
+                    dcc.Dropdown(
+                        id='chart-instruments-dropdown',
+                        clearable=False
+                    ),
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    html.P('From', className='font-weight-bold'),
+                    dcc.Input(
+                        id='explore-input-date-from',
+                        placeholder='2018-11-22 12:00',
+                        type='text',
+                        value='2018-11-22 12:00'
+                    )
+                ]),
+                dbc.Col([
+                    html.P('To', className='font-weight-bold'),
+                    dcc.Input(
+                        id='explore-input-date-to',
+                        placeholder='2018-11-26 12:00',
+                        type='text',
+                        value='2018-11-26 12:00',
+                    )
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dcc.RadioItems(
+                        id='explore-period',
+                        options=[
+                            {'label': 'm1 ', 'value': 'm1'},
+                            {'label': 'm5 ', 'value': 'm5'},
+                            {'label': 'm15 ', 'value': 'm15'},
+                            {'label': 'm30 ', 'value': 'm30'},
+                            {'label': 'H1 ', 'value': 'H1'},
+                        ],
+                        value='m1',
+                        labelStyle={'display': 'inline-block'},
+                        inputClassName="mx-2"
+                    ),
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    html.P('Distance', className='font-weight-bold'),
+                    dcc.Input(
+                        id='distance-insert-future',
+                        placeholder='60',
+                        type='text',
+                        value='60'
+                    ),
+                ]),
+                dbc.Col([
+                    html.P('Window', className='font-weight-bold'),
+                    dcc.Input(
+                        id='window-insert-future',
+                        placeholder='10',
+                        type='text',
+                        value='10'
+                    ),
+                ]),
+            ], className='flex space-x-2'),
+            dbc.Row([
+                dbc.Col([
+                    html.Button(
+                        'Insert Future',
+                        id='button-insert-future',
+                        className='btn btn-outline-primary'
+                    ),
+                    dcc.Loading(
+                        id="loading-future",
+                        type="dot",
+                        children=html.Div(id="loading-future-output")
+                    ),
+                ]),
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    html.P('Number', className='font-weight-bold'),
+                    dcc.Input(
+                        id='number-create-dataset',
+                        placeholder='10',
+                        type='text',
+                        value='10'
+                    ),
+                ]),
+                dbc.Col([
+                    html.P('History length', className='font-weight-bold'),
+                    dcc.Input(
+                        id='history_len-create-dataset',
+                        placeholder='4',
+                        type='text',
+                        value='4'
+                    ),
+                ]),
+            ]),
+            html.Button(
+                'Create dataset',
+                id='button-create-dataset',
+                className='btn btn-primary'
+            ), html.P(id='label-create-dataset'),
+            dbc.Row([
+                dbc.Col([
+                    dcc.Graph(
+                        id='explore-chart'
+                    )
+                ]),
             ]),
         ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('From', className='font-weight-bold'),
-                dcc.Input(
-                    id='explore-input-date-from',
-                    placeholder='2018-11-22 12:00',
-                    type='text',
-                    value='2018-11-22 12:00'
-                )
-            ]),
-            dbc.Col([
-                html.P('To', className='font-weight-bold'),
-                dcc.Input(
-                    id='explore-input-date-to',
-                    placeholder='2018-11-26 12:00',
-                    type='text',
-                    value='2018-11-26 12:00',
-                )
-            ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                dcc.RadioItems(
-                    id='explore-period',
-                    options=[
-                        {'label': 'm1 ', 'value': 'm1'},
-                        {'label': 'm5 ', 'value': 'm5'},
-                        {'label': 'm15 ', 'value': 'm15'},
-                        {'label': 'm30 ', 'value': 'm30'},
-                        {'label': 'H1 ', 'value': 'H1'},
-                    ],
-                    value='m1',
-                    labelStyle={'display': 'inline-block'},
-                    inputClassName="mx-2"
-                ),
-            ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('Distance', className='font-weight-bold'),
-                dcc.Input(
-                    id='distance-insert-future',
-                    placeholder='60',
-                    type='text',
-                    value='60'
-                ),
-            ]),
-            dbc.Col([
-                html.P('Window', className='font-weight-bold'),
-                dcc.Input(
-                    id='window-insert-future',
-                    placeholder='10',
-                    type='text',
-                    value='10'
-                ),
-            ]),
-        ], className='flex space-x-2'),
-        dbc.Row([
-            dbc.Col([
-                html.Button(
-                    'Insert Future',
-                    id='button-insert-future',
-                    className='btn btn-outline-primary'
-                ),
-                dcc.Loading(
-                    id="loading-future",
-                    type="dot",
-                    children=html.Div(id="loading-future-output")
-                ),
-            ]),
-        ]),
-        dbc.Row([
-            dbc.Col([
-                html.P('Number', className='font-weight-bold'),
-                dcc.Input(
-                    id='number-create-dataset',
-                    placeholder='10',
-                    type='text',
-                    value='10'
-                ),
-            ]),
-            dbc.Col([
-                html.P('History length', className='font-weight-bold'),
-                dcc.Input(
-                    id='history_len-create-dataset',
-                    placeholder='4',
-                    type='text',
-                    value='4'
-                ),
-            ]),
-        ]),
-        html.Button(
-            'Create dataset',
-            id='button-create-dataset',
-            className='btn btn-primary'
-        ), html.P(id='label-create-dataset'),
-        dbc.Row([
-            dbc.Col([
-                dcc.Graph(
-                    id='explore-chart'
-                )
-            ]),
-        ]),
-    ], )
+    ], className=class_card, outline=True)
 
 
 def build_fourier():
@@ -753,12 +746,14 @@ def fourier_chart_figure(number, delta, an_str, bn_str, noise_factor):
 )
 def button_insert_future(n_clicks, date_start, date_end, instrument, period, distance, window):
     try:
+        print('date_start [{}], date_end [{}], instrument [{}], period [{}], distance [{}], window [{}]'.format(date_start, date_end, instrument, period, distance, window))
         date_start = dt.datetime.strptime(date_start, '%Y-%m-%d %H:%M')
         date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
+        kdb.insert_future(instrument, period, date_start, date_end, 'bidopen', distance, window)
     except:
-        return ['']
-    kdb.insert_future(instrument, period, date_start, date_end, distance, window)
+        pass
     return ['']
+
 
 
 @app.callback(
