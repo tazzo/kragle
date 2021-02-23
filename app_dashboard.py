@@ -43,7 +43,7 @@ def build_dbmanager_card():
         dbc.CardBody([
             dbc.Row([
                 dbc.Col([
-                    dbc.Label("Database", html_for="select"),
+                    dbc.Label("Database", className='font-weight-bold'),
                     dbc.Select(
                         id="select-database",
                         options=[
@@ -56,11 +56,11 @@ def build_dbmanager_card():
                     ),
                 ], width=6),
                 dbc.Col([
-                    dbc.Label("Duplicate name", html_for="select"),
+                    dbc.Label("Duplicate name", className='font-weight-bold'),
                     dbc.Input(id="input", placeholder="New DB name", type="text"),
                 ], width=6),
                 dbc.Col([
-                    dbc.Label("Periods"),
+                    dbc.Label("Periods", className='font-weight-bold'),
                     dbc.Checklist(
                         options=[
                             {"label": "m1", "value": 1},
@@ -77,9 +77,9 @@ def build_dbmanager_card():
                         id="duplicate-periods-input",
                         inline=True,
                     ),
-                ], width=12, className='border my-1'),
+                ], width=12, className='border-bottom my-1'),
                 dbc.Col([
-                    dbc.Label("Fields"),
+                    dbc.Label("Fields", className='font-weight-bold'),
                     dbc.Checklist(
                         options=[
                             {"label": "date", "value": "date", 'disabled': True},
@@ -97,7 +97,7 @@ def build_dbmanager_card():
                         id="duplicate-fields-input",
                         inline=True,
                     ),
-                ], width=12, className='border my-1'),
+                ], width=12, className='border-bottom my-1'),
                 dbc.Col([
                     dbc.Button(
                         'Duplicate',
