@@ -23,6 +23,7 @@ def render_dashboard_page():
         children=[
             dbc.Row(
                 children=[
+                    dbc.Col(build_dbmanager_card(), className=class_col, md=6, xl=4),
                     dbc.Col(build_agent_card(), className=class_col, md=6, xl=4),
                     dbc.Col(build_dataset_manager_card(), className=class_col, md=6, xl=4),
                     dbc.Col(build_explorer_card(), className=class_col, md=6, xl=4),
@@ -34,6 +35,81 @@ def render_dashboard_page():
             ),
         ]
     )
+
+
+def build_dbmanager_card():
+    return dbc.Card([
+        dbc.CardHeader(html.H4('DB Manager', className="font-weight-bold")),
+        dbc.CardBody([
+            dbc.Row([
+                dbc.Col([
+                    dbc.Label("Database", html_for="select"),
+                    dbc.Select(
+                        id="select-database",
+                        options=[
+                            {"label": "Option 1", "value": "1"},
+                            {"label": "Option 2", "value": "2"},
+                            {"label": "Disabled option", "value": "3", "disabled": True},
+                        ],
+                        value='1'
+                        ,
+                    ),
+                ], width=6),
+                dbc.Col([
+                    dbc.Label("Duplicate name", html_for="select"),
+                    dbc.Input(id="input", placeholder="New DB name", type="text"),
+                ], width=6),
+                dbc.Col([
+                    dbc.Label("Periods"),
+                    dbc.Checklist(
+                        options=[
+                            {"label": "m1", "value": 1},
+                            {"label": "m5", "value": 2},
+                            {"label": "m15", "value": 3},
+                            {"label": "m30", "value": 4},
+                            {"label": "H1", "value": 5},
+                            {"label": "H2", "value": 6},
+                            {"label": "Hhsdfl dslk", "value": 7},
+                            {"label": "H8", "value": 8},
+                            {"label": "H9", "value": 9},
+                        ],
+                        value=[],
+                        id="duplicate-periods-input",
+                        inline=True,
+                    ),
+                ], width=12, className='border my-1'),
+                dbc.Col([
+                    dbc.Label("Fields"),
+                    dbc.Checklist(
+                        options=[
+                            {"label": "date", "value": "date", 'disabled': True},
+                            {"label": "bidopen", "value": 'bidopen'},
+                            {"label": "bidclose", "value": 'bidclose'},
+                            {"label": "bidhigh", "value": 'bidhigh'},
+                            {"label": "bidlow", "value": 'bidlow'},
+                            {"label": "askopen", "value": 'askopen'},
+                            {"label": "askclose", "value": 'askclose'},
+                            {"label": "askhigh", "value": 'askhigh'},
+                            {"label": "asklow", "value": 'asklow'},
+                            {"label": "tickqty", "value": 'tickqty'},
+                        ],
+                        value=['date', 'bidopen'],
+                        id="duplicate-fields-input",
+                        inline=True,
+                    ),
+                ], width=12, className='border my-1'),
+                dbc.Col([
+                    dbc.Button(
+                        'Duplicate',
+                        id='button-duplicate',
+                        color='primary'
+                    ),
+
+                ]),
+            ]),
+        ]),
+
+    ], className=class_card, outline=True)
 
 
 def build_agent_card():
