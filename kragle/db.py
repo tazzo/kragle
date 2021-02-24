@@ -22,10 +22,6 @@ def check_date_index_db(db):
         db[coll_name].create_index([('date', -1)], unique=True)
 
 
-def check_date_index_collection(db):
-    db.create_index([('date', -1)], unique=True)
-
-
 class KragleDB:
 
     def __init__(self, dbname='forex_raw'):
@@ -33,6 +29,7 @@ class KragleDB:
         self.client = MongoClient('localhost', 27017)
         self.db = self.client[dbname]
         self.dbname = dbname
+        self.cheked = {}
         check_date_index_db(self.db)
 
     def close(self):
@@ -82,11 +79,15 @@ class KragleDB:
             period (String): the instrument period ('m1', 'm5', 'm15' ... )
         """
 
-        check_date_index_collection(self.db[instrument][period])
         for record in df.to_dict("records"):
             self.insert(instrument, period, record)
 
     def insert(self, instrument, period, record):
+        key = instrument + period
+        if key not in self.cheked:
+            self.db[instrument][period].create_index([('date', -1)], unique=True)
+            self.cheked[key] = True
+            print('cheking {}'.format(key))
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
     def dataframe_to_json(self, df, path):
@@ -195,7 +196,6 @@ class KragleDB:
         for field in fields:
             filter_fields[field] = 1
         for period in periods:
-            check_date_index_collection(newkdb.db[instrument][period])
             values = self.db[instrument][period].find({}, filter_fields)
             for value in values:
                 newkdb.insert(instrument, period, value)

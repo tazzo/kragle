@@ -97,19 +97,17 @@ def dataset_to_dataframe_dict(ds):
         res[name] = pd.DataFrame(value_list)
     return res
 
-
+#TODO test new refactor
 def prune_and_index_db(db):
     for coll_name in db.list_collection_names():
         logger.info('Prune {}'.format(coll_name))
-        l = list(db[coll_name]
-            .aggregate([
-            {"$group": {'_id': {"date": '$date'}, "count": {"$sum": 1}}},
+        l = db[coll_name].aggregate([
+            {"$group": {'_id': '$date', "count": {"$sum": 1}}},
             {"$match": {"count": {"$gt": 1}}},
             {'$sort': {"_id": 1}},
-
-        ]))
+        ])
         for val in l:
-            one = db[coll_name].find_one({'date': val['_id']['date']})
+            one = db[coll_name].find_one({'date': val['_id']})
             db[coll_name].delete_one({'_id': one['_id']})
         db[coll_name].create_index([('date', -1)], unique=True)
 
