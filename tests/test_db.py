@@ -218,7 +218,7 @@ def test_futuretool3():
     assert res[1][1] == Action.SELL
     assert res[2][1] == Action.SELL
 
-
+#TODO add assert for content
 def test_duplicate_db(kdb):
     duplicate = kdb.duplicate_db('kragle_test_duplicate')
     assert len(duplicate.get_instruments()) == 1

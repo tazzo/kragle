@@ -81,10 +81,13 @@ class KragleDB:
             instrument (String): the forex instrument ('EUR/USD', 'EUR/JPY' ... )
             period (String): the instrument period ('m1', 'm5', 'm15' ... )
         """
-        check_date_index_collection(self.db[instrument][period])
 
+        check_date_index_collection(self.db[instrument][period])
         for record in df.to_dict("records"):
-            self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
+            self.insert(instrument, period, record)
+
+    def insert(self, instrument, period, record):
+        self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
     def dataframe_to_json(self, df, path):
         """
@@ -187,15 +190,16 @@ class KragleDB:
                      instrument='EUR/USD',
                      periods=['m1', 'm5', 'm30', 'H2', 'H8'],
                      fields=['date', 'bidopen', 'tickqty', 'future']):  # date field must be present
-        newdb = self.client[dbname]
+        newkdb = KragleDB(dbname)
         filter_fields = {'_id': 0, 'date': 1}
         for field in fields:
             filter_fields[field] = 1
         for period in periods:
+            check_date_index_collection(newkdb.db[instrument][period])
             values = self.db[instrument][period].find({}, filter_fields)
             for value in values:
-                newdb[instrument][period].insert( value)
-        return KragleDB(dbname)
+                newkdb.insert(instrument, period, value)
+        return newkdb
 
 
 class FutureTool:
