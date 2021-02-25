@@ -82,12 +82,13 @@ class KragleDB:
         for record in df.to_dict("records"):
             self.insert(instrument, period, record)
 
+
     def insert(self, instrument, period, record):
         key = instrument + period
         if key not in self.cheked:
+            self.logger.info('Dheking "date" index for instrument [{}] period [{}]'.format(instrument, period))
             self.db[instrument][period].create_index([('date', -1)], unique=True)
             self.cheked[key] = True
-            print('cheking {}'.format(key))
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
     def dataframe_to_json(self, df, path):
@@ -192,13 +193,21 @@ class KragleDB:
                      periods=['m1', 'm5', 'm30', 'H2', 'H8'],
                      fields=['date', 'bidopen', 'tickqty', 'future']):  # date field must be present
         newkdb = KragleDB(dbname)
+        size = 100
         filter_fields = {'_id': 0, 'date': 1}
         for field in fields:
             filter_fields[field] = 1
         for period in periods:
+            self.logger.info('Duplicating period {}'.format(period))
+            newkdb.db[instrument][period].drop()
             values = self.db[instrument][period].find({}, filter_fields)
+            l = []
             for value in values:
-                newkdb.insert(instrument, period, value)
+                l.append(value)
+                if len(l) >= size:
+                    newkdb.db[instrument][period].insert_many(l)
+                    l = []
+            newkdb.db[instrument][period].insert_many(l)
         return newkdb
 
 
