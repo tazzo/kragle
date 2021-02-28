@@ -244,5 +244,23 @@ def test_duplicate_db(kdb, dup_setup):
     assert len(duplicate.get(instrument, 'm5')) == 599
     assert len(duplicate.get(instrument, 'm15')) == 0
     assert len(duplicate.get(instrument, 'm30')) == 600
-    assert len(duplicate.get(instrument, 'm30', from_date=dt.datetime(2018, 11, 27, 22, 55, tzinfo=pytz.timezone('Europe/Rome')))) == 1
-    assert len(duplicate.get(instrument, 'm30', from_date=dt.datetime(2018, 11, 27, 22, 50, tzinfo=pytz.timezone('Europe/Rome')))) == 2
+    assert len(duplicate.get(instrument, 'm30',
+                             from_date=dt.datetime(2018, 11, 27, 22, 55, tzinfo=pytz.timezone('Europe/Rome')))) == 1
+    assert len(duplicate.get(instrument, 'm30',
+                             from_date=dt.datetime(2018, 11, 27, 22, 50, tzinfo=pytz.timezone('Europe/Rome')))) == 2
+
+
+def test_duplicate_db_from_date(kdb, dup_setup):
+    instrument = 'EUR/USD'
+    from_date = dt.datetime(2018, 11, 27, 22, 50)
+
+    duplicate = kdb.duplicate_db('kragle_test_duplicate', periods=['m1', 'm5', 'm30'], from_date=from_date)
+    assert len(duplicate.get(instrument, 'm5')) == 2
+
+
+def test_duplicate_db_to_date(kdb, dup_setup):
+    instrument = 'EUR/USD'
+    to_date = dt.datetime(2018, 11, 23, 22, 40,)
+
+    duplicate = kdb.duplicate_db('kragle_test_duplicate', periods=['m1', 'm5', 'm30'], to_date=to_date)
+    assert len(duplicate.get(instrument, 'm5')) == 3

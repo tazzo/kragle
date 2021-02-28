@@ -48,25 +48,28 @@ class KragleDB:
     def get(self, instrument, period, from_date=None, to_date=None, limit=100000):
 
         db = self.db[instrument][period]
-        data = []
-        if (from_date is not None) and (type(from_date) is not dt.datetime):
-            raise ValueError('Start date must be a datetime.datetime not {} '.format(type(from_date)))
-        elif (to_date is not None) and (type(to_date) is not dt.datetime):
-            raise ValueError('End date must be a datetime.datetime not {} '.format(type(to_date)))
-        else:
-            filter = {}
-            if from_date is not None:
-                filter['$gte'] = from_date
-            if to_date is not None:
-                filter['$lte'] = to_date
-            if filter != {}:
-                filter = {'date': filter}
-            data = list(db.aggregate([
-                {'$match': filter},
-                {'$sort': {'date': 1}},
-                {'$limit': limit},
-            ]))
+        filter = self.query_date_filter(from_date, to_date)
+        data = list(db.aggregate([
+            {'$match': filter},
+            {'$sort': {'date': 1}},
+            {'$limit': limit},
+        ]))
         return pd.DataFrame(data)
+
+    def query_date_filter(self, from_date, to_date):
+        filter = {}
+        inner = {}
+        if (from_date is not None) and (type(from_date) is not dt.datetime):
+            raise ValueError('from_date must be None or a datetime.datetime not {} '.format(type(from_date)))
+        if (to_date is not None) and (type(to_date) is not dt.datetime):
+            raise ValueError('to_date must be None or a datetime.datetime not {} '.format(type(to_date)))
+        if from_date is not None:
+            inner['$gte'] = from_date
+        if to_date is not None:
+            inner['$lte'] = to_date
+        if inner != {}:
+            filter['date'] = inner
+        return filter
 
     def get_instrument_value(self, instrument, period, date):
         return self.db[instrument][period].find_one({'date': date})
@@ -128,12 +131,10 @@ class KragleDB:
             ret.append(self.create_train_value(instrument, periods, histlen, tmp['date']))
         return ret
 
-    def get_base_date_list(self, n, instrument, periods, date_start, date_end):
+    def get_base_date_list(self, n, instrument, periods, from_date, to_date):
         db = self.db[instrument][periods[0]]
-        base_date_list = list(db.find(
-            {'date': {'$gte': date_start, '$lte': date_end}},
-            {'date': 1, '_id': 0}
-        ))
+        filter = self.query_date_filter(from_date, to_date)
+        base_date_list = list(db.find(filter, {'date': 1, '_id': 0}))
         if len(base_date_list) < n:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
@@ -170,26 +171,28 @@ class KragleDB:
             {'$project': {'date': 1, 'value': '${}'.format(field), '_id': 0}},
         ]))
 
-    def get_date_list(self, instrument, period, date_start, date_end):
+    def get_date_list(self, instrument, period, from_date, to_date):
+        filter = self.query_date_filter(from_date, to_date)
         return list(self.db[instrument][period].aggregate([
-            {'$match': {'date': {'$gte': date_start, '$lte': date_end}}},
+            {'$match': filter},
             {'$sort': {'date': 1}},
             {'$project': {'date': 1, '_id': 0}},
         ]))
 
-    def insert_future(self, instrument, period, date_start, date_end, field='bidopen', futurelen=50, limit=15 * PIP):
+    def insert_future(self, instrument, period, from_date, to_date, field='bidopen', futurelen=50, limit=15 * PIP):
         """[summary]
 
         Args:
             instrument ([type]): [description]
             period ([type]): [description]
-            date_start ([type]): [description]
-            date_end ([type]): [description]
+            from_date ([type]): [description]
+            to_date ([type]): [description]
             futurelen (int, optional): [description]. Defaults to 50.
             limit (int, optional): [description]. Defaults to 15 PIP.
         """
+        filter = self.query_date_filter(from_date, to_date)
         values = self.db[instrument][period].aggregate([
-            {'$match': {'date': {'$gte': date_start, '$lte': date_end}}},
+            {'$match': filter},
             {'$sort': {'date': 1}},
         ])
         ft = FutureTool(field=field, futurelen=futurelen, limit=limit)
@@ -206,18 +209,21 @@ class KragleDB:
                      dbname,
                      instrument='EUR/USD',
                      periods=['m1', 'm5', 'm30', 'H2', 'H8'],
-                     fields=['date', 'bidopen', 'tickqty', 'future']):  # date field must be present
+                     fields=['date', 'bidopen', 'tickqty', 'future'],
+                     from_date=None,
+                     to_date=None):  # date field must be present
 
         client = MongoClient('localhost', 27017)
         db = client[dbname]
         size = 100
+        filter_date = self.query_date_filter(from_date, to_date)
         filter_fields = {'_id': 0, 'date': 1}
         for field in fields:
             filter_fields[field] = 1
         for period in periods:
             self.logger.info('Duplicating period {}'.format(period))
             db[instrument][period].drop()
-            values = self.db[instrument][period].find({}, filter_fields)
+            values = self.db[instrument][period].find(filter_date, filter_fields)
             l = []
             for value in values:
                 l.append(value)
