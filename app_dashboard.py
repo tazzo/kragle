@@ -704,7 +704,7 @@ def button_fourier_save(n_clicks, instrument):
 def fetch_synthetic(kdb, instrument, df):
     # delete old collection
     for period in kutils.periods:
-        kdb.drop('{}.{}'.format(instrument, period))
+        kdb.drop_period(instrument, period)
 
     kdb.fetch_dataframe(df, instrument, 'm1')
     # m5
@@ -850,7 +850,7 @@ def update_explore_chart(start_date, end_date, instrument, period):
     try:
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = kdb.get_instrument(instrument, period, start, end)
+        df = kdb.get(instrument, period, from_date=start, to_date=end)
     except:
         pass
     if df.shape[0] == 0:

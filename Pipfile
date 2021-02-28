@@ -16,6 +16,7 @@ dash = "*"
 dash-bootstrap-components = "*"
 jupyter = "*"
 pandas = '*'
+pytz ='*'
 
 
 [requires]

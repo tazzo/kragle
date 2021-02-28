@@ -4,7 +4,7 @@
   "description": "\"# kragle\"",
   "main": "",
   "scripts": {
-    "tests": "pipenv run pytest -s -v",
+    "tests": "pipenv run pytest -s -v ",
     "app": "pipenv run python app.py",
     "notebook": "pipenv run jupyter-notebook forex_history.ipynb",
     "update": "pipenv update --outdated",

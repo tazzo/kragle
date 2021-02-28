@@ -42,31 +42,47 @@ class KragleDB:
         return self.get_instruments_and_periods()[instrument]
 
     def get_instruments_and_periods(self):
-        names = self.db.collection_names()
+        names = self.db.list_collection_names()
         return kutils.dot_names_to_dict(names)
 
-    def get_instrument(self, instrument, period='m1', date_start=None, date_end=None, limit=100000):
+    def get(self, instrument, period, from_date=None, to_date=None, limit=100000):
 
         db = self.db[instrument][period]
-
-        if type(date_start) is not dt.datetime:
-            raise ValueError('Start date must be a datetime.datetime not {} '.format(type(date_start)))
-        elif type(date_end) is not dt.datetime:
-            raise ValueError('End date must be a datetime.datetime not {} '.format(type(date_end)))
+        data = []
+        if (from_date is not None) and (type(from_date) is not dt.datetime):
+            raise ValueError('Start date must be a datetime.datetime not {} '.format(type(from_date)))
+        elif (to_date is not None) and (type(to_date) is not dt.datetime):
+            raise ValueError('End date must be a datetime.datetime not {} '.format(type(to_date)))
         else:
+            filter = {}
+            if from_date is not None:
+                filter['$gte'] = from_date
+            if to_date is not None:
+                filter['$lte'] = to_date
+            if filter != {}:
+                filter = {'date': filter}
             data = list(db.aggregate([
-                {'$match': {'date': {'$gte': date_start, '$lte': date_end}}},
+                {'$match': filter},
                 {'$sort': {'date': 1}},
                 {'$limit': limit},
             ]))
         return pd.DataFrame(data)
 
     def get_instrument_value(self, instrument, period, date):
-        db = self.db[instrument][period]
-        return db.find_one({'date': date})
+        return self.db[instrument][period].find_one({'date': date})
 
-    def drop(self, instrument):
-        return self.db[instrument].drop()
+    # TODO add test
+    def drop_period(self, instrument, period):
+        return self.db[instrument][period].drop()
+
+    # TODO add test
+    def drop_instrument(self, instrument):
+        d = self.get_instruments_and_periods()
+        for period in d[instrument]:
+            self.drop_period(instrument, period)
+
+    def drop_db(self):
+        self.client.drop_database(self.dbname)
 
     # TODO: add a test
     def fetch_dataframe(self, df, instrument, period):
@@ -82,11 +98,10 @@ class KragleDB:
         for record in df.to_dict("records"):
             self.insert(instrument, period, record)
 
-
     def insert(self, instrument, period, record):
         key = instrument + period
         if key not in self.cheked:
-            self.logger.info('Dheking "date" index for instrument [{}] period [{}]'.format(instrument, period))
+            self.logger.info('Cheking "date" index for instrument [{}] period [{}]'.format(instrument, period))
             self.db[instrument][period].create_index([('date', -1)], unique=True)
             self.cheked[key] = True
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
@@ -192,23 +207,26 @@ class KragleDB:
                      instrument='EUR/USD',
                      periods=['m1', 'm5', 'm30', 'H2', 'H8'],
                      fields=['date', 'bidopen', 'tickqty', 'future']):  # date field must be present
-        newkdb = KragleDB(dbname)
+
+        client = MongoClient('localhost', 27017)
+        db = client[dbname]
         size = 100
         filter_fields = {'_id': 0, 'date': 1}
         for field in fields:
             filter_fields[field] = 1
         for period in periods:
             self.logger.info('Duplicating period {}'.format(period))
-            newkdb.db[instrument][period].drop()
+            db[instrument][period].drop()
             values = self.db[instrument][period].find({}, filter_fields)
             l = []
             for value in values:
                 l.append(value)
                 if len(l) >= size:
-                    newkdb.db[instrument][period].insert_many(l)
+                    db[instrument][period].insert_many(l)
                     l = []
-            newkdb.db[instrument][period].insert_many(l)
-        return newkdb
+            if len(l) > 0:
+                db[instrument][period].insert_many(l)
+        return KragleDB(dbname)
 
 
 class FutureTool:

@@ -1,14 +1,18 @@
 import datetime as dt
+import logging.config
 import pytest
+import pytz
 
 from kragle.db import KragleDB, FutureTool
 import kragle.utils as kutils
 from kragle.utils import Action
 
+logging.config.fileConfig('log.cfg')
+
 
 def __test_db_setup(db, periods, filename):
     kdb = KragleDB(db)
-    kdb.client.drop_database(kdb.dbname)
+    kdb.drop_db()
     for period in periods:
         df = kutils.dataframe_from_json(r'tests/test_data/' + period + filename + '.json')
         kdb.fetch_dataframe(df, 'EUR/USD', period)
@@ -16,7 +20,7 @@ def __test_db_setup(db, periods, filename):
 
 
 def __test_db_teardown(kdb):
-    kdb.client.drop_database(kdb.dbname)
+    kdb.drop_db()
     kdb.close()
 
 
@@ -166,7 +170,7 @@ def test_insert_future(kdb_future):
 
 def test_get_instrument_raise(kdb):
     with pytest.raises(ValueError, match=r".*datetime.*"):
-        dataset = kdb.get_instrument('EUR/USD', 'm1', 'start', 'end')
+        dataset = kdb.get('EUR/USD', 'm1', 'start', 'end')
 
 
 def _calc_value_future(fm, l):
@@ -218,9 +222,27 @@ def test_futuretool3():
     assert res[1][1] == Action.SELL
     assert res[2][1] == Action.SELL
 
-#TODO add assert for content
-def test_duplicate_db(kdb):
-    duplicate = kdb.duplicate_db('kragle_test_duplicate')
+
+@pytest.fixture(scope="function")
+def dup_setup():
+    kdb = KragleDB('kragle_test_duplicate')
+    kdb.drop_db()
+    yield ''
+    kdb.drop_db()
+
+
+def test_duplicate_db(kdb, dup_setup):
+    duplicate = kdb.duplicate_db('kragle_test_duplicate', periods=['m1', 'm5', 'm30'])
     assert len(duplicate.get_instruments()) == 1
-    assert 'EUR/USD' in duplicate.get_instruments()
-    duplicate.client.drop_database(duplicate.dbname)
+    instrument = 'EUR/USD'
+    assert instrument in duplicate.get_instruments()
+    assert 'm1' in duplicate.get_periods(instrument)
+    assert 'm5' in duplicate.get_periods(instrument)
+    assert 'm30' in duplicate.get_periods(instrument)
+    assert 'm15' not in duplicate.get_periods(instrument)
+    assert len(duplicate.get(instrument, 'm1')) == 600
+    assert len(duplicate.get(instrument, 'm5')) == 599
+    assert len(duplicate.get(instrument, 'm15')) == 0
+    assert len(duplicate.get(instrument, 'm30')) == 600
+    assert len(duplicate.get(instrument, 'm30', from_date=dt.datetime(2018, 11, 27, 22, 55, tzinfo=pytz.timezone('Europe/Rome')))) == 1
+    assert len(duplicate.get(instrument, 'm30', from_date=dt.datetime(2018, 11, 27, 22, 50, tzinfo=pytz.timezone('Europe/Rome')))) == 2
