@@ -132,39 +132,39 @@ def test_insert_future(kdb_future):
     start_date = dt.datetime(2018, 11, 23, 21, 30)
     end_date = dt.datetime(2018, 11, 23, 23, 10)
     kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', futurelen=4, limit=15)
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date)
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date)
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=10))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=10))
     assert val['future'] == Action.BUY.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=15))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=15))
     assert val['future'] == Action.BUY.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=20))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=20))
     assert val['future'] == Action.BUY.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=25))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=25))
     assert val['future'] == Action.BUY.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=30))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=30))
     assert val['future'] == Action.BUY.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=35))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=35))
     assert val['future'] == Action.SELL.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=40))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=40))
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=45))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=45))
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=50))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=50))
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=55))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=55))
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=60))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=60))
     assert val['future'] == Action.SELL.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=65))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=65))
     assert val['future'] == Action.SELL.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=70))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=70))
     assert val['future'] == Action.SELL.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=75))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=75))
     assert val['future'] == Action.HOLD.value
-    val = kdb_future.get_instrument_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=80))
+    val = kdb_future.get_single_value('EUR/USD', 'm5', start_date + dt.timedelta(minutes=80))
     assert val['future'] == Action.HOLD.value
 
 
@@ -184,7 +184,7 @@ def _calc_value_future(fm, l):
 
 def test_futuretool1():
     l = [{'bidopen': i} for i in [0, 2, 3, 4, 5, 6, 70, 80, 88, 90]]
-    fm = FutureTool(field='bidopen', futurelen=3, limit=20)
+    fm = FutureTool(field='bidopen', future_len=3, limit=20)
     res = _calc_value_future(fm, l)
     assert len(res) == 7
     assert res[0][1] == Action.HOLD
@@ -197,11 +197,11 @@ def test_futuretool1():
 
 def test_futuretool2():
     l = [{'bidopen': i} for i in [0, 1, 0, -2, 10, -10]]
-    fm = FutureTool(field='bidopen', futurelen=5, limit=4)
+    fm = FutureTool(field='bidopen', future_len=5, limit=4)
     res = _calc_value_future(fm, l)
     assert len(res) == 1
     assert res[0][1] == Action.BUY
-    fm = FutureTool(field='bidopen', futurelen=3, limit=4)
+    fm = FutureTool(field='bidopen', future_len=3, limit=4)
     res = _calc_value_future(fm, l)
     assert len(res) == 3
     assert res[0][1].value == 0
@@ -211,11 +211,11 @@ def test_futuretool2():
 
 def test_futuretool3():
     l = [{'bidopen': i} for i in [0, 1, 0, -2, -10, 10]]
-    fm = FutureTool(field='bidopen', futurelen=5, limit=4)
+    fm = FutureTool(field='bidopen', future_len=5, limit=4)
     res = _calc_value_future(fm, l)
     assert len(res) == 1
     assert res[0][1] == Action.SELL
-    fm = FutureTool(field='bidopen', futurelen=3, limit=4)
+    fm = FutureTool(field='bidopen', future_len=3, limit=4)
     res = _calc_value_future(fm, l)
     assert len(res) == 3
     assert res[0][1] == Action.HOLD
@@ -244,6 +244,7 @@ def test_duplicate_db(kdb, dup_setup):
     assert len(duplicate.get(instrument, 'm5')) == 599
     assert len(duplicate.get(instrument, 'm15')) == 0
     assert len(duplicate.get(instrument, 'm30')) == 600
+
     assert len(duplicate.get(instrument, 'm30',
                              from_date=dt.datetime(2018, 11, 27, 22, 55, tzinfo=pytz.timezone('Europe/Rome')))) == 1
     assert len(duplicate.get(instrument, 'm30',

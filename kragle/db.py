@@ -36,17 +36,36 @@ class KragleDB:
         self.client.close()
 
     def get_instruments(self):
+        """
+        @return: list of instruments names
+        """
         return list(self.get_instruments_and_periods())
 
     def get_periods(self, instrument):
+        """
+        @return: list of periods names in the selected instrument
+        """
         return self.get_instruments_and_periods()[instrument]
 
     def get_instruments_and_periods(self):
+        """
+        @return: Dict with instruments as keys and a list of periods as value
+         example: {'EUR/USD': ['m1', 'm5', 'm30'], 'B': ['1', '2'], 'C': ['1', '2', '3', '4']}
+
+        """
         names = self.db.list_collection_names()
         return kutils.dot_names_to_dict(names)
 
     def get(self, instrument, period, from_date=None, to_date=None, limit=100000):
+        """
 
+        @param instrument: instrument name. Example: 'EUR/USD'
+        @param period: period name. Example: 'm5'
+        @param from_date: filter beginning with this datetime
+        @param to_date: filter stop with this datetime
+        @param limit: max number of results. Default: 100000
+        @return: A pandas DataFrame with filtered records found
+        """
         db = self.db[instrument][period]
         filter = self.query_date_filter(from_date, to_date)
         data = list(db.aggregate([
@@ -57,6 +76,12 @@ class KragleDB:
         return pd.DataFrame(data)
 
     def query_date_filter(self, from_date, to_date):
+        """
+        @param from_date: filter beginning with this date
+        @param to_date: filter beginning with this date
+        @return: a mongodb query for a date field.
+        Example {'date': {'$gte': from_date, '$lte': to_date}} or {} if no date given
+        """
         filter = {}
         inner = {}
         if (from_date is not None) and (type(from_date) is not dt.datetime):
@@ -71,7 +96,14 @@ class KragleDB:
             filter['date'] = inner
         return filter
 
-    def get_instrument_value(self, instrument, period, date):
+    def get_single_value(self, instrument, period, date):
+        """
+
+        @param instrument: instrument name
+        @param period: period name
+        @param date: single datetime to find in date column
+        @return: a single record selected by date column
+        """
         return self.db[instrument][period].find_one({'date': date})
 
     # TODO add test
@@ -180,7 +212,7 @@ class KragleDB:
         ]))
 
     def insert_future(self, instrument, period, from_date, to_date, field='bidopen', futurelen=50, limit=15 * PIP):
-        """[summary]
+        """ insert calculated future value column in the selected instrument.period
 
         Args:
             instrument ([type]): [description]
@@ -195,7 +227,7 @@ class KragleDB:
             {'$match': filter},
             {'$sort': {'date': 1}},
         ])
-        ft = FutureTool(field=field, futurelen=futurelen, limit=limit)
+        ft = FutureTool(field=field, future_len=futurelen, limit=limit)
         for value in values:
             oldvalue_future = ft.calc(value)
             if oldvalue_future is not None:
@@ -212,7 +244,18 @@ class KragleDB:
                      fields=['date', 'bidopen', 'tickqty', 'future'],
                      from_date=None,
                      to_date=None):  # date field must be present
+        """
+        Duplicate a instrument DB. Can be selected which periods to duplicate,
+        which fields and which period of time
 
+        @param dbname: new DB name
+        @param instrument: instrument name. Default: EUR/USD
+        @param periods: list of periods to duplicate. Default: ['m1', 'm5', 'm30', 'H2', 'H8']
+        @param fields: list of fields to duplicate. Default: ['date', 'bidopen', 'tickqty', 'future']
+        @param from_date: duplicate from this datetime
+        @param to_date: duplicate to this datetime
+        @return: new duplicated KragleDB
+        """
         client = MongoClient('localhost', 27017)
         db = client[dbname]
         size = 100
@@ -236,32 +279,43 @@ class KragleDB:
 
 
 class FutureTool:
-    """
 
-    """
+    def __init__(self, field='bidopen', future_len=50, limit=15):
+        """
+        Tool Class for future calculation
 
-    def __init__(self, field='bidopen', futurelen=50, limit=15):
+        @param field: column key name field to use for future calculation
+        @param future_len: number of value tu use for future calculation
+        @param limit:
+        """
         self.field = field
-        self.futurelen = futurelen
+        self.future_len = future_len
         self.limit = limit
         self.deque = deque()
 
-    def calc(self, value):
-        self.deque.append(value)
+    def calc(self, record):
+        """
+        add a record in the internal queue and return a record with future calculated (only if the number of inserted records
+        is at least self.futurelen else None)
+        @param record: add a record in the internal queue
+        @return: return a value with future calculated e column added but only if the number of inserted records
+        is at least self.futurelen else None
+        """
+        self.deque.append(record)
         ret = None
-        if len(self.deque) > self.futurelen:
+        if len(self.deque) > self.future_len:
             ret = self._calc()
         return ret
 
     def _calc(self):
         action = kutils.Action.HOLD
-        value = self.deque.popleft()
-        f = value[self.field]
+        record = self.deque.popleft()
+        field_value = record[self.field]
         for v in self.deque:
-            if (v[self.field] - f) >= self.limit:
+            if (v[self.field] - field_value) >= self.limit:
                 action = kutils.Action.BUY
                 break
-            if (v[self.field] - f) <= (-1 * self.limit):
+            if (v[self.field] - field_value) <= (-1 * self.limit):
                 action = kutils.Action.SELL
                 break
-        return value, action
+        return record, action
