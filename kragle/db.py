@@ -17,11 +17,6 @@ def get_db_names():
     return l
 
 
-def check_date_index_db(db):
-    for coll_name in db.list_collection_names():
-        db[coll_name].create_index([('date', -1)], unique=True)
-
-
 class KragleDB:
 
     def __init__(self, dbname='forex_raw'):
@@ -30,10 +25,27 @@ class KragleDB:
         self.db = self.client[dbname]
         self.dbname = dbname
         self.cheked = {}
-        check_date_index_db(self.db)
+        self.check_date_index_db()
 
     def close(self):
         self.client.close()
+
+    # TODO add test
+    def check_date_index_db(self):
+        inst_and_per = self.get_instruments_and_periods()
+        for instrument in inst_and_per:
+            periods = inst_and_per[instrument]
+            for period in periods:
+                self.check_date_index(instrument, period)
+                # self.db[instrument][period].create_index([('date', -1)], unique=True)
+
+    # TODO add test
+    def check_date_index(self, instrument, period):
+        key = instrument + '.' + period
+        if key not in self.cheked:
+            self.logger.info('Cheking "date" index for instrument [{}] period [{}]'.format(instrument, period))
+            self.db[instrument][period].create_index([('date', -1)], unique=True)
+            self.cheked[key] = True
 
     def get_instruments(self):
         """
@@ -134,11 +146,7 @@ class KragleDB:
             self.insert(instrument, period, record)
 
     def insert(self, instrument, period, record):
-        key = instrument + period
-        if key not in self.cheked:
-            self.logger.info('Cheking "date" index for instrument [{}] period [{}]'.format(instrument, period))
-            self.db[instrument][period].create_index([('date', -1)], unique=True)
-            self.cheked[key] = True
+        self.check_date_index(instrument, period)
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
     def dataframe_to_json(self, df, path):
