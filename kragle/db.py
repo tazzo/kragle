@@ -25,13 +25,13 @@ class KragleDB:
         self.db = self.client[dbname]
         self.dbname = dbname
         self.cheked = {}
-        self.check_date_index_db()
+        self.check_db_date_index()
 
     def close(self):
         self.client.close()
 
     # TODO add test
-    def check_date_index_db(self):
+    def check_db_date_index(self):
         inst_and_per = self.get_instruments_and_periods()
         for instrument in inst_and_per:
             periods = inst_and_per[instrument]
@@ -49,7 +49,8 @@ class KragleDB:
 
     def get_instruments(self):
         """
-        @return: list of instruments names
+        @return: list of instruments names. Example ['EUR/USD', 'JPY/EUR', 'EUR/']
+
         """
         return list(self.get_instruments_and_periods())
 
@@ -161,20 +162,31 @@ class KragleDB:
         df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
 
     # TODO: create a test
-    def create_dataset(self, n, instrument, periods, histlen, date_start, date_end):
-        if date_start >= date_end:
+    def create_dataset(self, n, instrument, periods, history_len, frome_date, to_date):
+        if frome_date >= to_date:
             raise ValueError('Date error, start date must be before end date.')
-        base_date_list = self.get_base_date_list(n, instrument, periods, date_start, date_end)
+        base_date_list = self.get_base_date_list(n, instrument, periods, frome_date, to_date)
         ret = []
         for i in range(n):
             tmp = base_date_list.pop(random.randrange(len(base_date_list)))
-            ret.append(self.create_train_value(instrument, periods, histlen, tmp['date']))
+            ret.append(self.create_train_value(instrument, periods, history_len, tmp['date']))
         return ret
 
+    # TODO create a test
+    def save_dataset(self, db_name, dataset_name, dataset):
+        db = self.client[db_name]
+        db.drop_collection(dataset_name)
+        db[dataset_name].create_index([('date', -1)], unique=True)
+        db[dataset_name].insert_many(dataset)
+
+    def create_and_save_dataset(self, db_name, dataset_name, n, instrument, periods, history_len, from_date, to_date):
+        dataset = self.create_dataset(n, instrument, periods, history_len, from_date, to_date)
+        self.save_dataset(db_name, dataset_name, dataset)
+
     def get_base_date_list(self, n, instrument, periods, from_date, to_date):
-        db = self.db[instrument][periods[0]]
+        period_0 = self.db[instrument][periods[0]]
         filter = self.query_date_filter(from_date, to_date)
-        base_date_list = list(db.find(filter, {'date': 1, '_id': 0}))
+        base_date_list = list(period_0.find(filter, {'date': 1, '_id': 0}))
         if len(base_date_list) < n:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
