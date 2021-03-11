@@ -31,6 +31,7 @@ def kdb():
     periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H8']
     filename = '_test'
     kdb = __test_db_setup(dbname, periods, filename)
+    kdb.insert_future('EUR/USD', 'm5', None, None, field='bidopen', futurelen=4, limit=4 * 0.0001)
     yield kdb
     print(">> Teardown kdb << ", end='')
     __test_db_teardown(kdb)
@@ -99,6 +100,25 @@ def test_create_dataset(kdb):
     assert len(dataset[1]['x']['tickqty']) == 4
 
 
+@pytest.fixture(scope="function")
+def dataset_setup():
+    kdb = KragleDB('kragle_test_dataset')
+    kdb.drop_db()
+    yield ''
+    kdb.drop_db()
+
+
+def test_save_dataset(kdb, dataset_setup):
+    start = dt.datetime(2018, 11, 27, 15, 50)
+    end = dt.datetime(2018, 11, 27, 22, 50)
+    dataset = kdb.create_dataset(2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
+    db_name = 'kragle_test_dataset'
+    dataset_name = 'test_save_dataset'
+    kdb.save_dataset(db_name, dataset_name, dataset)
+    l = kdb.client[db_name].list_collection_names()
+    assert dataset_name in l
+
+
 def test_create_train_value_raise_date_period(kdb):
     with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 0)
@@ -109,8 +129,6 @@ def test_create_train_value_raise_date_period(kdb):
     with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 30)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
-    date_start = dt.datetime(2018, 11, 27, 22, 59)
-    kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
 
 
 def test_create_train_value(kdb):
@@ -173,19 +191,10 @@ def test_get_instrument_raise(kdb):
         dataset = kdb.get('EUR/USD', 'm1', 'start', 'end')
 
 
-def _calc_value_future(fm, l):
-    res = []
-    for v in l:
-        tuple_value_future = fm.calc(v)
-        if tuple_value_future is not None:
-            res.append(tuple_value_future)
-    return res
-
-
 def test_futuretool1():
     l = [{'bidopen': i} for i in [0, 2, 3, 4, 5, 6, 70, 80, 88, 90]]
     fm = FutureTool(field='bidopen', future_len=3, limit=20)
-    res = _calc_value_future(fm, l)
+    res = fm.calc_collection(l)
     assert len(res) == 7
     assert res[0][1] == Action.HOLD
     assert res[1][1] == Action.HOLD
@@ -198,11 +207,11 @@ def test_futuretool1():
 def test_futuretool2():
     l = [{'bidopen': i} for i in [0, 1, 0, -2, 10, -10]]
     fm = FutureTool(field='bidopen', future_len=5, limit=4)
-    res = _calc_value_future(fm, l)
+    res = fm.calc_collection(l)
     assert len(res) == 1
     assert res[0][1] == Action.BUY
     fm = FutureTool(field='bidopen', future_len=3, limit=4)
-    res = _calc_value_future(fm, l)
+    res = fm.calc_collection(l)
     assert len(res) == 3
     assert res[0][1].value == 0
     assert res[1][1] == Action.BUY
@@ -212,11 +221,11 @@ def test_futuretool2():
 def test_futuretool3():
     l = [{'bidopen': i} for i in [0, 1, 0, -2, -10, 10]]
     fm = FutureTool(field='bidopen', future_len=5, limit=4)
-    res = _calc_value_future(fm, l)
+    res = fm.calc_collection(l)
     assert len(res) == 1
     assert res[0][1] == Action.SELL
     fm = FutureTool(field='bidopen', future_len=3, limit=4)
-    res = _calc_value_future(fm, l)
+    res = fm.calc_collection(l)
     assert len(res) == 3
     assert res[0][1] == Action.HOLD
     assert res[1][1] == Action.SELL
@@ -261,7 +270,7 @@ def test_duplicate_db_from_date(kdb, dup_setup):
 
 def test_duplicate_db_to_date(kdb, dup_setup):
     instrument = 'EUR/USD'
-    to_date = dt.datetime(2018, 11, 23, 22, 40,)
+    to_date = dt.datetime(2018, 11, 23, 22, 40, )
 
     duplicate = kdb.duplicate_db('kragle_test_duplicate', periods=['m1', 'm5', 'm30'], to_date=to_date)
     assert len(duplicate.get(instrument, 'm5')) == 3

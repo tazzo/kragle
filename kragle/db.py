@@ -161,7 +161,6 @@ class KragleDB:
         """
         df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
 
-    # TODO: create a test
     def create_dataset(self, n, instrument, periods, history_len, frome_date, to_date):
         if frome_date >= to_date:
             raise ValueError('Date error, start date must be before end date.')
@@ -172,7 +171,6 @@ class KragleDB:
             ret.append(self.create_train_value(instrument, periods, history_len, tmp['date']))
         return ret
 
-    # TODO create a test
     def save_dataset(self, db_name, dataset_name, dataset):
         db = self.client[db_name]
         db.drop_collection(dataset_name)
@@ -191,18 +189,18 @@ class KragleDB:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
 
-    def create_train_value(self, instrument, periods, history_len, m1date):
-        # TODO: fix y
-        val = {'date': m1date, 'x': {}, 'y': random.random()}
+    def create_train_value(self, instrument, periods, history_len, m1date, future_period='m5'):
+        val = {'date': m1date, 'x': {}, 'y': None}
         for period in periods:
             l = self.get_history_bidopen(instrument, period, history_len, m1date)
             if len(l) < history_len:
                 raise ValueError('Not enough data to fulfill the request in period ' + period)
             if (period == 'm1') & (l[0]['date'] != m1date):
                 raise ValueError('Date {} not in requested period'.format(m1date))
-
+            # future
+            if period == future_period:
+                val['y'] = l[0]['future']
             val['x'][period] = l
-
             # tickqty
             if period == periods[0]:
                 l = self.get_history_tickqty(instrument, period, history_len, m1date)
@@ -220,7 +218,7 @@ class KragleDB:
             {'$match': {'date': {'$lte': date}}},
             {'$sort': {'date': -1}},
             {'$limit': history_len},
-            {'$project': {'date': 1, 'value': '${}'.format(field), '_id': 0}},
+            {'$project': {'date': 1, 'future': 1, 'value': '${}'.format(field), '_id': 0}},
         ]))
 
     def get_date_list(self, instrument, period, from_date, to_date):
@@ -312,6 +310,14 @@ class FutureTool:
         self.future_len = future_len
         self.limit = limit
         self.deque = deque()
+
+    def calc_collection(self, coll):
+        res = []
+        for record in coll:
+            tuple_value_future = self.calc(record)
+            if tuple_value_future is not None:
+                res.append(tuple_value_future)
+        return res
 
     def calc(self, record):
         """
