@@ -190,22 +190,24 @@ class KragleDB:
         return base_date_list
 
     def create_train_value(self, instrument, periods, history_len, m1date, future_period='m5'):
-        val = {'date': m1date, 'x': {}, 'y': None}
+        train_value = {'date': m1date, 'x': {}, 'y': None}
         for period in periods:
             l = self.get_history_bidopen(instrument, period, history_len, m1date)
             if len(l) < history_len:
-                raise ValueError('Not enough data to fulfill the request in period ' + period)
+                raise ValueError('Not enough data to fulfill the request in date {} - period {}'.format(m1date, period))
             if (period == 'm1') & (l[0]['date'] != m1date):
-                raise ValueError('Date {} not in requested period'.format(m1date))
+                raise ValueError('Date {} not in requested instrument {} period {}'.format(m1date, instrument, period))
             # future
             if period == future_period:
-                val['y'] = l[0]['future']
-            val['x'][period] = l
+                if 'future' in l[0]:
+                    train_value['y'] = l[0]['future']
+                else:
+                    self.logger.warning('Future not present in date {} '.format(m1date))
+            train_value['x'][period] = l
             # tickqty
             if period == periods[0]:
-                l = self.get_history_tickqty(instrument, period, history_len, m1date)
-                val['x']['tickqty'] = l
-        return val
+                train_value['x']['tickqty'] = self.get_history_tickqty(instrument, period, history_len, m1date)
+        return train_value
 
     def get_history_tickqty(self, instrument, period, history_len, date):
         return self.get_history_field(instrument, period, 'tickqty', history_len, date)
