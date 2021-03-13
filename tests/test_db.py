@@ -49,6 +49,57 @@ def kdb_future():
     __test_db_teardown(kdb)
 
 
+@pytest.fixture(scope="function")
+def kdb_void():
+    db_name = 'kragle_test_void'
+    kdb = KragleDB(db_name)
+    yield kdb
+    kdb.drop_db()
+    kdb.close()
+
+
+def test_fetch_dataframe(kdb_void):
+    df = kutils.dataframe_from_json(r'tests/test_data/m1_test.json')
+    instrument = 'EUR/USD'
+    period = 'm1'
+    kdb_void.fetch_dataframe(df, instrument, period)
+    assert instrument in kdb_void.get_instruments()
+    assert period in kdb_void.get_periods(instrument)
+    assert len(kdb_void.get(instrument, period)) == 600
+
+
+def test_drop_period(kdb_void):
+    df = kutils.dataframe_from_json(r'tests/test_data/m1_test.json')
+    instrument = 'EUR/USD'
+    period1 = 'm1'
+    period2 = 'm5'
+    kdb_void.fetch_dataframe(df, instrument, period1)
+    df = kutils.dataframe_from_json(r'tests/test_data/m5_test.json')
+    kdb_void.fetch_dataframe(df, instrument, period2)
+    kdb_void.drop_period(instrument, period1)
+    assert instrument in kdb_void.get_instruments()
+    assert period1 not in kdb_void.get_periods(instrument)
+    assert period2 in kdb_void.get_periods(instrument)
+    assert len(kdb_void.get(instrument, period1)) == 0
+    assert len(kdb_void.get(instrument, period2)) == 599
+
+
+def test_drop_instrument(kdb_void):
+    df = kutils.dataframe_from_json(r'tests/test_data/m1_test.json')
+    instrument = 'EUR/USD'
+    period1 = 'm1'
+    period2 = 'm5'
+    kdb_void.fetch_dataframe(df, instrument, period1)
+    df = kutils.dataframe_from_json(r'tests/test_data/m5_test.json')
+    kdb_void.fetch_dataframe(df, instrument, period2)
+    kdb_void.drop_instrument(instrument)
+    assert instrument not in kdb_void.get_instruments()
+    assert period1 not in kdb_void.get_periods(instrument)
+    assert period2 not in kdb_void.get_periods(instrument)
+    assert len(kdb_void.get(instrument, period1)) == 0
+    assert len(kdb_void.get(instrument, period2)) == 0
+
+
 def test_create_dataset_raise_date_order(kdb):
     """test start date after end date"""
     start = dt.datetime(2018, 11, 28, 22, 50)
@@ -106,6 +157,7 @@ def dataset_setup():
     kdb.drop_db()
     yield ''
     kdb.drop_db()
+    kdb.close()
 
 
 def test_save_dataset(kdb, dataset_setup):
@@ -120,13 +172,13 @@ def test_save_dataset(kdb, dataset_setup):
 
 
 def test_create_train_value_raise_date_period(kdb):
-    with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
+    with pytest.raises(ValueError, match=r".*Date 2018-11-27 23:00:00 not in requested instrument EUR/USD period m1.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 0)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
-    with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
+    with pytest.raises(ValueError, match=r".*Date 2018-11-27 23:20:00 not in requested instrument EUR/USD period m1.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 20)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
-    with pytest.raises(ValueError, match=r".*Date.*not in requested period.*"):
+    with pytest.raises(ValueError, match=r".*Date 2018-11-27 23:30:00 not in requested instrument EUR/USD period m1.*"):
         date_start = dt.datetime(2018, 11, 27, 23, 30)
         kdb.create_train_value('EUR/USD', ['m1', 'm5'], 8, date_start)
 
@@ -238,6 +290,7 @@ def dup_setup():
     kdb.drop_db()
     yield ''
     kdb.drop_db()
+    kdb.close()
 
 
 def test_duplicate_db(kdb, dup_setup):

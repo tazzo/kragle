@@ -58,7 +58,7 @@ class KragleDB:
         """
         @return: list of periods names in the selected instrument
         """
-        return self.get_instruments_and_periods()[instrument]
+        return self.get_instruments_and_periods().get(instrument, [])
 
     def get_instruments_and_periods(self):
         """
@@ -119,11 +119,9 @@ class KragleDB:
         """
         return self.db[instrument][period].find_one({'date': date})
 
-    # TODO add test
     def drop_period(self, instrument, period):
         return self.db[instrument][period].drop()
 
-    # TODO add test
     def drop_instrument(self, instrument):
         d = self.get_instruments_and_periods()
         for period in d[instrument]:
@@ -132,7 +130,6 @@ class KragleDB:
     def drop_db(self):
         self.client.drop_database(self.dbname)
 
-    # TODO: add a test
     def fetch_dataframe(self, df, instrument, period):
         """
         Fetch the dataframe in the DB using 'date' to replace existing elements o creating a new one
