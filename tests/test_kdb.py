@@ -31,13 +31,13 @@ def kdb():
     periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H8']
     filename = '_test'
     kdb = __test_db_setup(dbname, periods, filename)
-    kdb.insert_future('EUR/USD', 'm5', None, None, field='bidopen', futurelen=4, limit=4 * 0.0001)
+    kdb.insert_future('EUR/USD', 'm5', field='bidopen', futurelen=4, limit=4 * 0.0001)
     yield kdb
     print(">> Teardown kdb << ", end='')
     __test_db_teardown(kdb)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def kdb_future():
     print('>> Setup kdb future << ', end='')
     dbname = 'kragle_test_future'
@@ -82,6 +82,44 @@ def test_drop_period(kdb_void):
     assert period2 in kdb_void.get_periods(instrument)
     assert len(kdb_void.get(instrument, period1)) == 0
     assert len(kdb_void.get(instrument, period2)) == 599
+
+
+def test_get_datasets(kdb):
+    start = dt.datetime(2018, 11, 27, 15, 50)
+    end = dt.datetime(2018, 11, 27, 22, 50)
+    kdb.create_and_save_dataset('new_ds', 2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
+    assert 'new_ds' in kdb.get_datasets()
+    kdb.create_and_save_dataset('new_ds2', 2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
+    assert 'new_ds2' in kdb.get_datasets()
+
+
+def test_get_dataset(kdb):
+    start = dt.datetime(2018, 11, 27, 15, 50)
+    end = dt.datetime(2018, 11, 27, 22, 50)
+    ds_name = 'new_ds'
+    kdb.create_and_save_dataset(ds_name, 2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
+    dataset = kdb.get_dataset(ds_name)
+    # test len dataset
+    assert len(dataset) == 2
+    # test keys in dataset
+    assert 'date' in dataset[0]
+    assert 'x' in dataset[0]
+    assert 'y' in dataset[0]
+    # test 0 element
+    assert 'm1' in dataset[0]['x']
+    assert 'm5' in dataset[0]['x']
+    assert 'tickqty' in dataset[0]['x']
+    assert len(dataset[0]['x']['m1']) == 4
+    assert len(dataset[0]['x']['m5']) == 4
+    assert len(dataset[0]['x']['tickqty']) == 4
+    # test 1 element
+    assert 'm1' in dataset[1]['x']
+    assert 'm5' in dataset[1]['x']
+    assert 'tickqty' in dataset[1]['x']
+    assert len(dataset[1]['x']['m1']) == 4
+    assert len(dataset[1]['x']['m5']) == 4
+    assert len(dataset[1]['x']['tickqty']) == 4
+    assert 'future' not in dataset[0]['x']['m1']
 
 
 def test_drop_instrument(kdb_void):

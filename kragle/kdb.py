@@ -26,6 +26,7 @@ class KragleDB:
         self.dbname = dbname
         self.cheked = {}
         self.check_db_date_index()
+        self.dataset_suffix = '__dataset'
 
     def close(self):
         self.client.close()
@@ -49,16 +50,10 @@ class KragleDB:
 
     def get_instruments(self):
         """
-        @return: list of instruments names. Example ['EUR/USD', 'JPY/EUR', 'EUR/']
+        @return: list of instruments names. Example ['EUR/USD', 'JPY/EUR', 'EUR/UK']
 
         """
         return list(self.get_instruments_and_periods())
-
-    def get_datasets(self):
-        return []
-
-    def get_dataset(self):
-        return None
 
     def get_periods(self, instrument):
         """
@@ -164,6 +159,26 @@ class KragleDB:
         """
         df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
 
+    def get_datasets(self):
+        """
+        @return: a list of dataset name
+        """
+        names = self.db.list_collection_names()
+        ret = []
+        for name in names:
+            if name.endswith(self.dataset_suffix):
+                ret.append(name.removesuffix(self.dataset_suffix))
+        return ret
+
+    def get_dataset(self, ds_name):
+        """
+        @param ds_name: dataset name
+        @return: a dataset as a list of values {'date': ..., 'x':{'m1':[{'date': ..., 'value': 1.1212},...], 'm5':[...]}, 'y':0 }
+        """
+        if not ds_name.endswith(self.dataset_suffix):
+            ds_name += self.dataset_suffix
+        return list(self.db[ds_name].find({}))
+
     def create_dataset(self, n, instrument, periods, history_len, frome_date, to_date):
         if frome_date >= to_date:
             raise ValueError('Date error, start date must be before end date.')
@@ -175,9 +190,8 @@ class KragleDB:
         return ret
 
     def save_dataset(self, dataset_name, dataset):
-        dataset_suffix = '__dataset'
-        if not dataset_name.endswith(dataset_suffix):
-            dataset_name += dataset_suffix
+        if not dataset_name.endswith(self.dataset_suffix):
+            dataset_name += self.dataset_suffix
         db = self.client[self.dbname]
         db.drop_collection(dataset_name)
         db[dataset_name].create_index([('date', -1)], unique=True)
@@ -241,7 +255,8 @@ class KragleDB:
             {'$project': {'date': 1, '_id': 0}},
         ]))
 
-    def insert_future(self, instrument, period, from_date, to_date, field='bidopen', futurelen=50, limit=15 * PIP):
+    def insert_future(self, instrument, period, from_date=None, to_date=None, field='bidopen', futurelen=50,
+                      limit=15 * PIP):
         """ insert calculated future value column in the selected instrument.period
 
         Args:
