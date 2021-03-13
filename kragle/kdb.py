@@ -109,7 +109,7 @@ class KragleDB:
             filter['date'] = inner
         return filter
 
-    def get_single_value(self, instrument, period, date):
+    def get_one(self, instrument, period, date):
         """
 
         @param instrument: instrument name
@@ -195,15 +195,18 @@ class KragleDB:
             if (period == 'm1') & (l[0]['date'] != m1date):
                 raise ValueError('Date {} not in requested instrument {} period {}'.format(m1date, instrument, period))
             # future
-            if period == future_period:
-                if 'future' in l[0]:
-                    train_value['y'] = l[0]['future']
-                else:
-                    self.logger.warning('Future not present in date {} '.format(m1date))
+
             train_value['x'][period] = l
             # tickqty
             if period == periods[0]:
                 train_value['x']['tickqty'] = self.get_history_tickqty(instrument, period, history_len, m1date)
+            if period == future_period:
+                val = self.get_one(instrument, period, l[0]['date'])
+                if 'future' in val:
+                    train_value['y'] = val['future']
+                else:
+                    raise ValueError(
+                        'Future not present in date {} instrument {} period {}'.format(l[0]['date'], instrument, period))
         return train_value
 
     def get_history_tickqty(self, instrument, period, history_len, date):
@@ -217,7 +220,7 @@ class KragleDB:
             {'$match': {'date': {'$lte': date}}},
             {'$sort': {'date': -1}},
             {'$limit': history_len},
-            {'$project': {'date': 1, 'future': 1, 'value': '${}'.format(field), '_id': 0}},
+            {'$project': {'date': 1,  'value': '${}'.format(field), '_id': 0}},
         ]))
 
     def get_date_list(self, instrument, period, from_date, to_date):
