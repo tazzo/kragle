@@ -165,10 +165,9 @@ def test_save_dataset(kdb, dataset_setup):
     start = dt.datetime(2018, 11, 27, 15, 50)
     end = dt.datetime(2018, 11, 27, 22, 50)
     dataset = kdb.create_dataset(2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
-    db_name = 'kragle_test_dataset'
-    dataset_name = 'test_save_dataset'
-    kdb.save_dataset(db_name, dataset_name, dataset)
-    l = kdb.client[db_name].list_collection_names()
+    dataset_name = 'test_save__dataset'
+    kdb.save_dataset(dataset_name, dataset)
+    l = kdb.db.list_collection_names()
     assert dataset_name in l
 
 

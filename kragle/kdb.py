@@ -12,9 +12,9 @@ from kragle.utils import PIP
 
 def get_db_names():
     client = MongoClient('localhost', 27017)
-    l = client.list_database_names()
+    ret = client.list_database_names()
     client.close()
-    return l
+    return ret
 
 
 class KragleDB:
@@ -54,6 +54,12 @@ class KragleDB:
         """
         return list(self.get_instruments_and_periods())
 
+    def get_datasets(self):
+        return []
+
+    def get_dataset(self):
+        return None
+
     def get_periods(self, instrument):
         """
         @return: list of periods names in the selected instrument
@@ -88,6 +94,16 @@ class KragleDB:
         ]))
         return pd.DataFrame(data)
 
+    def get_one(self, instrument, period, date):
+        """
+
+        @param instrument: instrument name
+        @param period: period name
+        @param date: single datetime to find in date column
+        @return: a single record selected by date column
+        """
+        return self.db[instrument][period].find_one({'date': date})
+
     def query_date_filter(self, from_date, to_date):
         """
         @param from_date: filter beginning with this date
@@ -108,16 +124,6 @@ class KragleDB:
         if inner != {}:
             filter['date'] = inner
         return filter
-
-    def get_one(self, instrument, period, date):
-        """
-
-        @param instrument: instrument name
-        @param period: period name
-        @param date: single datetime to find in date column
-        @return: a single record selected by date column
-        """
-        return self.db[instrument][period].find_one({'date': date})
 
     def drop_period(self, instrument, period):
         return self.db[instrument][period].drop()
@@ -168,15 +174,18 @@ class KragleDB:
             ret.append(self.create_train_value(instrument, periods, history_len, tmp['date']))
         return ret
 
-    def save_dataset(self, db_name, dataset_name, dataset):
-        db = self.client[db_name]
+    def save_dataset(self, dataset_name, dataset):
+        dataset_suffix = '__dataset'
+        if not dataset_name.endswith(dataset_suffix):
+            dataset_name += dataset_suffix
+        db = self.client[self.dbname]
         db.drop_collection(dataset_name)
         db[dataset_name].create_index([('date', -1)], unique=True)
         db[dataset_name].insert_many(dataset)
 
-    def create_and_save_dataset(self, db_name, dataset_name, n, instrument, periods, history_len, from_date, to_date):
+    def create_and_save_dataset(self, dataset_name, n, instrument, periods, history_len, from_date, to_date):
         dataset = self.create_dataset(n, instrument, periods, history_len, from_date, to_date)
-        self.save_dataset(db_name, dataset_name, dataset)
+        self.save_dataset(dataset_name, dataset)
 
     def get_base_date_list(self, n, instrument, periods, from_date, to_date):
         period_0 = self.db[instrument][periods[0]]
@@ -206,7 +215,8 @@ class KragleDB:
                     train_value['y'] = val['future']
                 else:
                     raise ValueError(
-                        'Future not present in date {} instrument {} period {}'.format(l[0]['date'], instrument, period))
+                        'Future not present in date {} instrument {} period {}'.format(l[0]['date'], instrument,
+                                                                                       period))
         return train_value
 
     def get_history_tickqty(self, instrument, period, history_len, date):
@@ -220,7 +230,7 @@ class KragleDB:
             {'$match': {'date': {'$lte': date}}},
             {'$sort': {'date': -1}},
             {'$limit': history_len},
-            {'$project': {'date': 1,  'value': '${}'.format(field), '_id': 0}},
+            {'$project': {'date': 1, 'value': '${}'.format(field), '_id': 0}},
         ]))
 
     def get_date_list(self, instrument, period, from_date, to_date):
