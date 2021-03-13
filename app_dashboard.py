@@ -7,7 +7,7 @@ import kragle
 import kragle.utils as kutils
 import kragle.synthetic
 from app_layout import *
-from kragle.db import *
+from kragle.kdb import *
 from kragle.strategy import AgentTester, DeviationStrategy
 
 df_fourier = None

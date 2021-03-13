@@ -3,7 +3,7 @@ import logging.config
 import pytest
 import pytz
 
-from kragle.db import KragleDB, FutureTool
+from kragle.kdb import KragleDB, FutureTool
 import kragle.utils as kutils
 from kragle.utils import Action
 

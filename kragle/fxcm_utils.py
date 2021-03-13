@@ -3,7 +3,7 @@ import logging.config
 
 import fxcmpy
 
-from kragle.db import KragleDB
+from kragle.kdb import KragleDB
 from kragle.utils import  periods
 
 logger = logging.getLogger('kragle')

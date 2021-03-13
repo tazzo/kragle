@@ -2,7 +2,7 @@ import datetime as dt
 import pytest
 import logging.config
 
-from kragle.db import KragleDB
+from kragle.kdb import KragleDB
 import kragle.utils as kutils
 from kragle.strategy import AgentTester, BuyStrategy, SellStrategy
 from kragle.utils import PIP
