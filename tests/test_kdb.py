@@ -5,7 +5,7 @@ import pytz
 
 from kragle.kdb import KragleDB, FutureTool
 import kragle.utils as kutils
-from kragle.utils import Action
+from kragle.utils import Action, PIP
 
 logging.config.fileConfig('log.cfg')
 
@@ -24,7 +24,7 @@ def kdb():
     kdb = KragleDB(dbname)
     kdb.drop_db()
     load_test_period('EUR/USD', periods, kdb)
-    kdb.insert_future('EUR/USD', 'm5', field='bidopen', future_len=4, limit=4 * 0.0001)
+    kdb.insert_future('EUR/USD', 'm5', field='bidopen', future_len=4, limit=4 * PIP)
     yield kdb
     print(">> Teardown kdb << ", end='')
     kdb.drop_db()
