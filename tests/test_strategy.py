@@ -11,7 +11,7 @@ logging.config.fileConfig('log.cfg')
 
 def __test_db_setup(db, periods, filename):
     kdb = KragleDB(db)
-    kdb.client.drop_database(kdb.dbname)
+    kdb.client.drop_database(kdb.db_name)
     for period in periods:
         df = kutils.dataframe_from_json(r'kragle/test_data/' + period + filename + '.json')
         kdb.fetch_dataframe(df, 'EUR/USD', period)
@@ -19,7 +19,7 @@ def __test_db_setup(db, periods, filename):
 
 
 def __test_db_teardown(kdb):
-    kdb.client.drop_database(kdb.dbname)
+    kdb.client.drop_database(kdb.db_name)
     kdb.close()
 
 

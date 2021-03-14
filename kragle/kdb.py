@@ -19,14 +19,14 @@ def get_db_names():
 
 class KragleDB:
 
-    def __init__(self, dbname='forex_raw'):
+    def __init__(self, db_name='forex_raw'):
         self.logger = logging.getLogger('kragle')
         self.client = MongoClient('localhost', 27017)
-        self.db = self.client[dbname]
-        self.dbname = dbname
+        self.db = self.client[db_name]
+        self.db_name = db_name
         self.cheked = {}
-        self.check_db_date_index()
         self.dataset_suffix = '__dataset'
+        self.check_db_date_index()
 
     def close(self):
         self.client.close()
@@ -129,7 +129,7 @@ class KragleDB:
             self.drop_period(instrument, period)
 
     def drop_db(self):
-        self.client.drop_database(self.dbname)
+        self.client.drop_database(self.db_name)
 
     def fetch_dataframe(self, df, instrument, period):
         """
@@ -147,17 +147,6 @@ class KragleDB:
     def insert(self, instrument, period, record):
         self.check_date_index(instrument, period)
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
-
-    def dataframe_to_json(self, df, path):
-        """
-        Write the dataframe to a file (specified with path) in 'records' format
-        while eliminating '_id' column derived from mongoDB
-
-        Args:
-            df (DataFrame): A Pandas DataFrame to write
-            path ([type]): Path to file
-        """
-        df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
 
     def get_datasets(self):
         """
@@ -193,7 +182,7 @@ class KragleDB:
     def save_dataset(self, dataset_name, dataset):
         if not dataset_name.endswith(self.dataset_suffix):
             dataset_name += self.dataset_suffix
-        db = self.client[self.dbname]
+        db = self.client[self.db_name]
         db.drop_collection(dataset_name)
         db[dataset_name].create_index([('date', -1)], unique=True)
         db[dataset_name].insert_many(dataset)

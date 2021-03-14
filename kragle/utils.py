@@ -166,3 +166,15 @@ def table_from_dataframe(df):
 def get_fired_input_id(ctx):
     button_id = ctx.triggered[0]['prop_id'].split('.')[0]
     return button_id
+
+
+def dataframe_to_json(df, path):
+    """
+    Write the dataframe to a file (specified with path) in 'records' format
+    while eliminating '_id' column derived from mongoDB
+
+    Args:
+        df (DataFrame): A Pandas DataFrame to write
+        path ([type]): Path to file
+    """
+    df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
