@@ -44,7 +44,7 @@ class KragleDB:
     def check_date_index(self, instrument, period):
         key = instrument + '.' + period
         if key not in self.cheked:
-            self.logger.info('Cheking "date" index for instrument [{}] period [{}]'.format(instrument, period))
+            self.logger.info('Checking "date" index for instrument [{}] period [{}]'.format(instrument, period))
             self.db[instrument][period].create_index([('date', -1)], unique=True)
             self.cheked[key] = True
 
@@ -81,9 +81,9 @@ class KragleDB:
         @return: A pandas DataFrame with filtered records found
         """
         db = self.db[instrument][period]
-        filter = self.query_date_filter(from_date, to_date)
+        date_filter = self.query_date_filter(from_date, to_date)
         data = list(db.aggregate([
-            {'$match': filter},
+            {'$match': date_filter},
             {'$sort': {'date': 1}},
             {'$limit': limit},
         ]))
@@ -106,7 +106,7 @@ class KragleDB:
         @return: a mongodb query for a date field.
         Example {'date': {'$gte': from_date, '$lte': to_date}} or {} if no date given
         """
-        filter = {}
+        date_filter = {}
         inner = {}
         if (from_date is not None) and (type(from_date) is not dt.datetime):
             raise ValueError('from_date must be None or a datetime.datetime not {} '.format(type(from_date)))
@@ -117,8 +117,8 @@ class KragleDB:
         if to_date is not None:
             inner['$lte'] = to_date
         if inner != {}:
-            filter['date'] = inner
-        return filter
+            date_filter['date'] = inner
+        return date_filter
 
     def drop_period(self, instrument, period):
         return self.db[instrument][period].drop()
@@ -173,16 +173,17 @@ class KragleDB:
     def get_dataset(self, ds_name):
         """
         @param ds_name: dataset name
-        @return: a dataset as a list of values {'date': ..., 'x':{'m1':[{'date': ..., 'value': 1.1212},...], 'm5':[...]}, 'y':0 }
+        @return: a dataset as a list of values
+        example [{'date': ..., 'x':{'m1':[{'date': ..., 'value': 1.1212},...], 'm5':[...]}, 'y':0 }, ...]
         """
         if not ds_name.endswith(self.dataset_suffix):
             ds_name += self.dataset_suffix
         return list(self.db[ds_name].find({}))
 
-    def create_dataset(self, n, instrument, periods, history_len, frome_date, to_date):
-        if frome_date >= to_date:
+    def create_dataset(self, n, instrument, periods, history_len, from_date, to_date):
+        if from_date >= to_date:
             raise ValueError('Date error, start date must be before end date.')
-        base_date_list = self.get_base_date_list(n, instrument, periods, frome_date, to_date)
+        base_date_list = self.get_base_date_list(n, instrument, periods, from_date, to_date)
         ret = []
         for i in range(n):
             tmp = base_date_list.pop(random.randrange(len(base_date_list)))
@@ -203,8 +204,8 @@ class KragleDB:
 
     def get_base_date_list(self, n, instrument, periods, from_date, to_date):
         period_0 = self.db[instrument][periods[0]]
-        filter = self.query_date_filter(from_date, to_date)
-        base_date_list = list(period_0.find(filter, {'date': 1, '_id': 0}))
+        date_filter = self.query_date_filter(from_date, to_date)
+        base_date_list = list(period_0.find(date_filter, {'date': 1, '_id': 0}))
         if len(base_date_list) < n:
             raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
         return base_date_list
@@ -212,24 +213,25 @@ class KragleDB:
     def create_train_value(self, instrument, periods, history_len, m1date, future_period='m5'):
         train_value = {'date': m1date, 'x': {}, 'y': None}
         for period in periods:
-            l = self.get_history_bidopen(instrument, period, history_len, m1date)
-            if len(l) < history_len:
+            history_list = self.get_history_bidopen(instrument, period, history_len, m1date)
+            if len(history_list) < history_len:
                 raise ValueError('Not enough data to fulfill the request in date {} - period {}'.format(m1date, period))
-            if (period == 'm1') & (l[0]['date'] != m1date):
+            if (period == 'm1') & (history_list[0]['date'] != m1date):
                 raise ValueError('Date {} not in requested instrument {} period {}'.format(m1date, instrument, period))
             # future
 
-            train_value['x'][period] = l
+            train_value['x'][period] = history_list
             # tickqty
             if period == periods[0]:
                 train_value['x']['tickqty'] = self.get_history_tickqty(instrument, period, history_len, m1date)
             if period == future_period:
-                val = self.get_one(instrument, period, l[0]['date'])
+                val = self.get_one(instrument, period, history_list[0]['date'])
                 if 'future' in val:
                     train_value['y'] = val['future']
                 else:
                     raise ValueError(
-                        'Future not present in date {} instrument {} period {}'.format(l[0]['date'], instrument,
+                        'Future not present in date {} instrument {} period {}'.format(history_list[0]['date'],
+                                                                                       instrument,
                                                                                        period))
         return train_value
 
@@ -248,37 +250,38 @@ class KragleDB:
         ]))
 
     def get_date_list(self, instrument, period, from_date, to_date):
-        filter = self.query_date_filter(from_date, to_date)
+        date_filter = self.query_date_filter(from_date, to_date)
         return list(self.db[instrument][period].aggregate([
-            {'$match': filter},
+            {'$match': date_filter},
             {'$sort': {'date': 1}},
             {'$project': {'date': 1, '_id': 0}},
         ]))
 
-    def insert_future(self, instrument, period, from_date=None, to_date=None, field='bidopen', futurelen=50,
+    def insert_future(self, instrument, period, from_date=None, to_date=None, field='bidopen', future_len=50,
                       limit=15 * PIP):
         """ insert calculated future value column in the selected instrument.period
-
-        Args:
-            instrument ([type]): [description]
-            period ([type]): [description]
-            from_date ([type]): [description]
-            to_date ([type]): [description]
-            futurelen (int, optional): [description]. Defaults to 50.
-            limit (int, optional): [description]. Defaults to 15 PIP.
+        
+        @param instrument: 
+        @param period: 
+        @param from_date: 
+        @param to_date: 
+        @param field: Defaults to bidopen.
+        @param future_len: Defaults to 50.
+        @param limit: Defaults to 15 PIP.
+        @return: 
         """
-        filter = self.query_date_filter(from_date, to_date)
+        date_filter = self.query_date_filter(from_date, to_date)
         values = self.db[instrument][period].aggregate([
-            {'$match': filter},
+            {'$match': date_filter},
             {'$sort': {'date': 1}},
         ])
-        ft = FutureTool(field=field, future_len=futurelen, limit=limit)
+        ft = FutureTool(field=field, future_len=future_len, limit=limit)
         for value in values:
             oldvalue_future = ft.calc(value)
             if oldvalue_future is not None:
-                oldvalue, future = oldvalue_future
+                old_value, future = oldvalue_future
                 self.db[instrument][period].update_one(
-                    {'_id': oldvalue['_id']},
+                    {'_id': old_value['_id']},
                     {'$set': {"future": future.value}},
                     upsert=False)
 
@@ -312,14 +315,14 @@ class KragleDB:
             self.logger.info('Duplicating period {}'.format(period))
             db[instrument][period].drop()
             values = self.db[instrument][period].find(filter_date, filter_fields)
-            l = []
+            val_list = []
             for value in values:
-                l.append(value)
-                if len(l) >= size:
-                    db[instrument][period].insert_many(l)
-                    l = []
-            if len(l) > 0:
-                db[instrument][period].insert_many(l)
+                val_list.append(value)
+                if len(val_list) >= size:
+                    db[instrument][period].insert_many(val_list)
+                    val_list = []
+            if len(val_list) > 0:
+                db[instrument][period].insert_many(val_list)
         return KragleDB(dbname)
 
 
@@ -348,11 +351,11 @@ class FutureTool:
 
     def calc(self, record):
         """
-        add a record in the internal queue and return a record with future calculated (only if the number of inserted records
-        is at least self.futurelen else None)
+        add a record in the internal queue and return a record with future calculated (only if the number of inserted
+        records is at least self.future_len else None)
         @param record: add a record in the internal queue
         @return: return a value with future calculated e column added but only if the number of inserted records
-        is at least self.futurelen else None
+        is at least self.future_len else None
         """
         self.deque.append(record)
         ret = None

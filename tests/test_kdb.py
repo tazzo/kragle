@@ -10,18 +10,10 @@ from kragle.utils import Action
 logging.config.fileConfig('log.cfg')
 
 
-def __test_db_setup(db, periods, filename):
-    kdb = KragleDB(db)
-    kdb.drop_db()
+def load_test_period(instrument, periods, kdb, suffix='_test'):
     for period in periods:
-        df = kutils.dataframe_from_json(r'tests/test_data/' + period + filename + '.json')
-        kdb.fetch_dataframe(df, 'EUR/USD', period)
-    return kdb
-
-
-def __test_db_teardown(kdb):
-    kdb.drop_db()
-    kdb.close()
+        df = kutils.dataframe_from_json(r'tests/test_data/{}{}.json'.format(period, suffix))
+        kdb.fetch_dataframe(df, instrument, period)
 
 
 @pytest.fixture(scope="module")
@@ -29,39 +21,39 @@ def kdb():
     print('>> Setup kdb << ', end='')
     dbname = 'kragle_test'
     periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H8']
-    filename = '_test'
-    kdb = __test_db_setup(dbname, periods, filename)
-    kdb.insert_future('EUR/USD', 'm5', field='bidopen', futurelen=4, limit=4 * 0.0001)
+    kdb = KragleDB(dbname)
+    kdb.drop_db()
+    load_test_period('EUR/USD', periods, kdb)
+    kdb.insert_future('EUR/USD', 'm5', field='bidopen', future_len=4, limit=4 * 0.0001)
     yield kdb
     print(">> Teardown kdb << ", end='')
-    __test_db_teardown(kdb)
+    kdb.drop_db()
+    kdb.close()
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="module")
 def kdb_future():
     print('>> Setup kdb future << ', end='')
     dbname = 'kragle_test_future'
     periods = ['m5']
     filename = '_future_test'
-    kdb = __test_db_setup(dbname, periods, filename)
+    kdb = KragleDB(dbname)
+    kdb.drop_db()
+    load_test_period('EUR/USD', periods, kdb, suffix='_future_test')
     yield kdb
     print(">> Teardown kdb future << ", end='')
-    __test_db_teardown(kdb)
+    kdb.drop_db()
+    kdb.close()
 
 
 @pytest.fixture(scope="function")
 def kdb_void():
     db_name = 'kragle_test_void'
     kdb = KragleDB(db_name)
+    kdb.drop_db()
     yield kdb
     kdb.drop_db()
     kdb.close()
-
-
-def load_test_period(instrument, periods, kdb):
-    for period in periods:
-        df = kutils.dataframe_from_json(r'tests/test_data/{}_test.json'.format(period))
-        kdb.fetch_dataframe(df, instrument, period)
 
 
 def test_fetch_dataframe(kdb_void):
@@ -193,16 +185,7 @@ def test_create_dataset(kdb):
     assert 'future' not in dataset[0]['x']['m1']
 
 
-@pytest.fixture(scope="function")
-def dataset_setup():
-    kdb = KragleDB('kragle_test_dataset')
-    kdb.drop_db()
-    yield ''
-    kdb.drop_db()
-    kdb.close()
-
-
-def test_save_dataset(kdb, dataset_setup):
+def test_save_dataset(kdb):
     start = dt.datetime(2018, 11, 27, 15, 50)
     end = dt.datetime(2018, 11, 27, 22, 50)
     dataset = kdb.create_dataset(2, 'EUR/USD', ['m1', 'm5'], 4, start, end)
@@ -242,7 +225,7 @@ def test_create_train_value_hour(kdb):
 def test_insert_future(kdb_future):
     start_date = dt.datetime(2018, 11, 23, 21, 30)
     end_date = dt.datetime(2018, 11, 23, 23, 10)
-    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', futurelen=4, limit=15)
+    kdb_future.insert_future('EUR/USD', 'm5', start_date, end_date, field='bidopen', future_len=4, limit=15)
     val = kdb_future.get_one('EUR/USD', 'm5', start_date)
     assert val['future'] == Action.HOLD.value
     val = kdb_future.get_one('EUR/USD', 'm5', start_date + dt.timedelta(minutes=5))
