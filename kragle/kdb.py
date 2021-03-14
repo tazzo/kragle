@@ -8,6 +8,7 @@ from pymongo import MongoClient
 import kragle.utils as kutils
 
 from kragle.utils import PIP
+from utils import dot_names_to_dict
 
 
 def get_db_names():
@@ -68,7 +69,7 @@ class KragleDB:
 
         """
         names = self.db.list_collection_names()
-        return kutils.dot_names_to_dict(names)
+        return dot_names_to_dict(names)
 
     def get(self, instrument, period, from_date=None, to_date=None, limit=100000):
         """
@@ -364,3 +365,5 @@ class FutureTool:
                 action = kutils.Action.SELL
                 break
         return record, action
+
+

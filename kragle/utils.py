@@ -51,30 +51,11 @@ def random_date(start, end):
 
 
 def aggregate_dataframe(df):
-    sum = df[['tickqty']].sum()
+    tmp_sum = df[['tickqty']].sum()
     res = {'date': df.iloc[-1]['date'],
            'bidopen': df.iloc[-1]['bidopen'],
-           'tickqty': sum['tickqty'],
+           'tickqty': tmp_sum['tickqty'],
            }
-    return res
-
-
-def dot_names_to_dict(name_list):
-    """
-    given a list like ['A.1', 'A.2', 'A.3', 'B.1', 'B.2', 'C.1', 'C.2', 'C.3', 'C.4']
-    return a dict {'A': ['1', '2', '3'], 'B': ['1', '2'], 'C': ['1', '2', '3', '4']}
-
-    """
-    res = {}
-    for name in name_list:
-        try:
-            l = name.split('.')
-            val = res.get(l[0], [])
-            if len(l) == 2:
-                val.append(l[1])
-                res[l[0]] = val
-        except:
-            pass
     return res
 
 
@@ -96,20 +77,6 @@ def dataset_to_dataframe_dict(ds):
     for name, value_list in ds['x'].items():
         res[name] = pd.DataFrame(value_list)
     return res
-
-#TODO test new refactor
-def prune_and_index_db(db):
-    for coll_name in db.list_collection_names():
-        logger.info('Prune {}'.format(coll_name))
-        l = db[coll_name].aggregate([
-            {"$group": {'_id': '$date', "count": {"$sum": 1}}},
-            {"$match": {"count": {"$gt": 1}}},
-            {'$sort': {"_id": 1}},
-        ])
-        for val in l:
-            one = db[coll_name].find_one({'date': val['_id']})
-            db[coll_name].delete_one({'_id': one['_id']})
-        db[coll_name].create_index([('date', -1)], unique=True)
 
 
 class MeanStdDevCalculator:
@@ -178,3 +145,22 @@ def dataframe_to_json(df, path):
         path ([type]): Path to file
     """
     df.drop('_id', axis=1).to_json(path, orient='records', date_format='iso')
+
+
+def dot_names_to_dict(name_list):
+    """
+    given a list like ['A.1', 'A.2', 'A.3', 'B.1', 'B.2', 'C.1', 'C.2', 'C.3', 'C.4']
+    return a dict {'A': ['1', '2', '3'], 'B': ['1', '2'], 'C': ['1', '2', '3', '4']}
+
+    """
+    res = {}
+    for name in name_list:
+        try:
+            l = name.split('.')
+            if len(l) == 2:
+                val = res.get(l[0], [])
+                val.append(l[1])
+                res[l[0]] = val
+        except:
+            pass
+    return res

@@ -2,7 +2,9 @@ import datetime as dt
 import pandas as pd
 import logging.config
 
+import kdb
 import kragle.utils as kutils
+import utils
 
 logging.config.fileConfig('log.cfg')
 
@@ -29,7 +31,7 @@ def test_random_very_near_date():
 
 def test_dot_names_to_dict():
     l = ['A.1', 'A.2', 'A.3', 'B.1', 'B.2', 'C.1', 'C.2', 'C.3', 'C.4', 'not-this']
-    res = kutils.dot_names_to_dict(l)
+    res = utils.dot_names_to_dict(l)
     assert res['A'] == ['1', '2', '3']
     assert res['B'] == ['1', '2']
     assert res['C'] == ['1', '2', '3', '4']
