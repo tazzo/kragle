@@ -58,24 +58,27 @@ def kdb_void():
     kdb.close()
 
 
+def load_test_period(instrument, periods, kdb):
+    for period in periods:
+        df = kutils.dataframe_from_json(r'tests/test_data/{}_test.json'.format(period))
+        kdb.fetch_dataframe(df, instrument, period)
+
+
 def test_fetch_dataframe(kdb_void):
-    df = kutils.dataframe_from_json(r'tests/test_data/m1_test.json')
     instrument = 'EUR/USD'
     period = 'm1'
-    kdb_void.fetch_dataframe(df, instrument, period)
+    load_test_period(instrument, [period], kdb_void)
+
     assert instrument in kdb_void.get_instruments()
     assert period in kdb_void.get_periods(instrument)
     assert len(kdb_void.get(instrument, period)) == 600
 
 
 def test_drop_period(kdb_void):
-    df = kutils.dataframe_from_json(r'tests/test_data/m1_test.json')
     instrument = 'EUR/USD'
     period1 = 'm1'
     period2 = 'm5'
-    kdb_void.fetch_dataframe(df, instrument, period1)
-    df = kutils.dataframe_from_json(r'tests/test_data/m5_test.json')
-    kdb_void.fetch_dataframe(df, instrument, period2)
+    load_test_period(instrument, [period1, period2], kdb_void)
     kdb_void.drop_period(instrument, period1)
     assert instrument in kdb_void.get_instruments()
     assert period1 not in kdb_void.get_periods(instrument)
