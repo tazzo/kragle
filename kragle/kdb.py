@@ -7,6 +7,7 @@ import pandas as pd
 from pymongo import MongoClient
 import kragle.utils as kutils
 
+
 from kragle.utils import PIP
 from kragle.utils import dot_names_to_dict
 
@@ -20,7 +21,7 @@ def get_db_names():
 
 class KragleDB:
 
-    def __init__(self, db_name='forex_raw'):
+    def __init__(self, db_name='EUR_USD_raw'):
         self.logger = logging.getLogger('kragle')
         self.client = MongoClient('localhost', 27017)
         self.db = self.client[db_name]
