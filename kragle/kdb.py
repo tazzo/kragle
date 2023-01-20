@@ -8,7 +8,7 @@ from pymongo import MongoClient
 import kragle.utils as kutils
 
 from kragle.utils import PIP
-from utils import dot_names_to_dict
+from kragle.utils import dot_names_to_dict
 
 
 def get_db_names():

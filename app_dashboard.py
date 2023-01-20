@@ -569,7 +569,7 @@ def agent_instruments_refresh(dbname):
     [Input('button-agent-dbnames-refresh', 'n_clicks')]
 )
 def button_agent_DB_names_refresh(n_clicks):
-    names = kragle.db.get_db_names()
+    names = get_db_names()
     options = []
     for name in names:
         options.append({'label': name, 'value': name})
@@ -663,7 +663,7 @@ def chart_instruments_refresh(dbname):
     [Input('button-explorer-dbnames-refresh', 'n_clicks')]
 )
 def button_chart_DB_names_refresh(n_clicks):
-    names = kragle.db.get_db_names()
+    names = get_db_names()
     options = []
     for name in names:
         options.append({'label': name, 'value': name})

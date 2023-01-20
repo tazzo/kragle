@@ -14,7 +14,7 @@ class FxcmManager:
         self.kdb = KragleDB(dbname)
         logger.info('Done')
         logger.info('Init fxcmpy ...')
-        self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
+        self.fxcon = fxcmpy.fxcmpy(config_file=config_file)
         logger.info('Done')
 
     def close(self):
