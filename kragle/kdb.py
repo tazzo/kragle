@@ -198,7 +198,7 @@ class KragleDB:
                      dbname,
                      instrument='EUR/USD',
                      periods=['m1', 'm5', 'm30', 'H2', 'H8'],
-                     fields=['date', 'bidopen', 'tickqty', 'future'],
+                     fields=['date', 'bidopen', 'tickqty'],
                      from_date=None,
                      to_date=None):  # date field must be present
         """
@@ -208,7 +208,7 @@ class KragleDB:
         @param dbname: new DB name
         @param instrument: instrument name. Default: EUR/USD
         @param periods: list of periods to duplicate. Default: ['m1', 'm5', 'm30', 'H2', 'H8']
-        @param fields: list of fields to duplicate. Default: ['date', 'bidopen', 'tickqty', 'future']
+        @param fields: list of fields to duplicate. Default: ['date', 'bidopen', 'tickqty']
         @param from_date: duplicate from this datetime
         @param to_date: duplicate to this datetime
         @return: new duplicated KragleDB
