@@ -224,10 +224,15 @@ class KragleDB:
             res['bidclose'] = v['bidclose']
             res['askclose'] = v['askclose']
             res['tickqty'] += v['tickqty']
-            if res['bidhigh'] < v['bidhigh']: res['bidhigh'] = v['bidhigh']
-            if res['askhigh'] < v['askhigh']: res['askhigh'] = v['askhigh']
-            if res['bidlow'] > v['bidlow']: res['bidlow'] = v['bidlow']
-            if res['asklow'] > v['asklow']: res['asklow'] = v['asklow']
+            if res['bidhigh'] < v['bidhigh']:
+                res['bidhigh'] = v['bidhigh']
+            if res['askhigh'] < v['askhigh']:
+                res['askhigh'] = v['askhigh']
+            if res['bidlow'] > v['bidlow']:
+                res['bidlow'] = v['bidlow']
+            if res['asklow'] > v['asklow']:
+
+                res['asklow'] = v['asklow']
 
         return res;
 
@@ -280,3 +285,24 @@ class KragleDB:
                 db[instrument][period].insert_many(val_list)
         return KragleDB(dbname)
 
+    def calc_mean_stddev(self, instrument, period,  from_date, to_date):
+        values = self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$gte': from_date, '$lte': to_date}}},
+        ])
+        old = None
+        self.logger.info(instrument)
+        b_calc = kutils.MeanStdDevCalculator()
+        t_calc = kutils.MeanStdDevCalculator()
+        tmp = 0
+        for v in values:
+            if old != None:
+                tmp = (v['bidopen']-old['bidopen'])/kutils.normalizer[period]['bidopen']
+                b_calc.add(tmp)
+                t_calc.add(v['tickqty']/kutils.normalizer[period]['tickqty'])
+            old = v
+        res = {}
+        res['bidopen-mean'] = b_calc.get_mean()
+        res['bidopen-stddev'] = b_calc.get_stddev()
+        res['tickqty-mean'] = t_calc.get_mean()
+        res['tickqty-stddev'] = t_calc.get_stddev()
+        return res

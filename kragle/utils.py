@@ -15,6 +15,15 @@ instruments = ['USD/SEK', 'EUR/USD',
 
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
+normalizer = {
+    'm1':  {'bidopen': 0.00015, 'tickqty': 400},
+    'm5':  {'bidopen': 0.00030, 'tickqty': 2000},
+    'm30': {'bidopen': 0.00075, 'tickqty': 12_000},
+    'H2':  {'bidopen': 0.0015, 'tickqty': 40_000},
+    'H8':  {'bidopen': 0.0030, 'tickqty': 160_000},
+    'D1':  {'bidopen': 0.00045, 'tickqty': 400_000},
+}
+
 time_in_force = ['IOC', 'GTC', 'FOK', 'DAY']
 
 period_to_minutes = {
@@ -88,8 +97,8 @@ class MeanStdDevCalculator:
 
     def add(self, value):
         self.n = self.n + 1
-        self.mean = self.mean + value
-        self.stddev = self.stddev + value * value
+        self.mean += value
+        self.stddev += value * value
 
     def get_mean(self):
         return self.mean / self.n
@@ -100,7 +109,7 @@ class MeanStdDevCalculator:
 
 def calc_mean_stddev_on_m1(db):
     """
-    Calc mean and stddev on bidopen and tickqty on H1 period
+    Calc mean and stddev on bidopen and tickqty on m1 period
     """
     d = dot_names_to_dict(db.list_collection_names())
     res = {}
