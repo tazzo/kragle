@@ -192,6 +192,18 @@ class KragleDB:
             {'$sort': {'date': -1}},
         ])
 
+    def get_candles(self, instrument, period,  to_date, n):
+        values =  list(self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$lte': to_date}}},
+            {'$sort': {'date': -1}},
+            {'$limit': n},
+        ]))
+
+        last_candle = self.aggregate_candle( instrument,  values[0]['date'], to_date)
+        values[0] = last_candle
+        return values
+
+
     def aggregate_candle(self, instrument,  from_date, to_date):
         values = self.db[instrument]['m1'].aggregate([
             {'$match': {'date': {'$gte': from_date, '$lte': to_date}}},
