@@ -57,7 +57,7 @@ class KragleDB:
         """
         return list(self.get_instruments_and_periods())
 
-    def get_periods(self, instrument):
+    def get_periods(self, instrument='EUR/USD'):
         """
         @return: list of periods names in the selected instrument
         """
@@ -186,6 +186,39 @@ class KragleDB:
             {'$project': {'date': 1, 'value': '${}'.format(field), '_id': 0}},
         ]))
 
+    def get_by_date(self, instrument, period,  from_date, to_date):
+        return self.db[instrument][period].aggregate([
+            {'$match': {'date': {'$gte': from_date, '$lte': to_date}}},
+            {'$sort': {'date': -1}},
+        ])
+
+    def aggregate_candle(self, instrument,  from_date, to_date):
+        values = self.db[instrument]['m1'].aggregate([
+            {'$match': {'date': {'$gte': from_date, '$lte': to_date}}},
+            {'$sort': {'date': 1}},
+        ])
+        v = values.next()
+        res = { 'date': v['date'],
+                'bidopen': v['bidopen'],
+                'bidclose': v['bidclose'],
+                'bidhigh': v['bidhigh'],
+                'bidlow': v['bidlow'],
+                'askopen': v['askopen'],
+                'askclose': v['askclose'],
+                'askhigh': v['askhigh'],
+                'asklow': v['asklow'],
+                'tickqty': v['tickqty']}
+        for v in values:
+            res['bidclose'] = v['bidclose']
+            res['askclose'] = v['askclose']
+            res['tickqty'] += v['tickqty']
+            if res['bidhigh'] < v['bidhigh']: res['bidhigh'] = v['bidhigh']
+            if res['askhigh'] < v['askhigh']: res['askhigh'] = v['askhigh']
+            if res['bidlow'] > v['bidlow']: res['bidlow'] = v['bidlow']
+            if res['asklow'] > v['asklow']: res['asklow'] = v['asklow']
+
+        return res;
+
     def get_date_list(self, instrument, period, from_date, to_date):
         date_filter = self.query_date_filter(from_date, to_date)
         return list(self.db[instrument][period].aggregate([
@@ -193,6 +226,7 @@ class KragleDB:
             {'$sort': {'date': 1}},
             {'$project': {'date': 1, '_id': 0}},
         ]))
+
 
     def duplicate_db(self,
                      dbname,

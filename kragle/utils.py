@@ -33,7 +33,7 @@ period_to_minutes = {
 
 # EUR/USD pip
 PIP = .0001
-
+FIELDS = [ 'date', 'bidopen', 'bidclose', 'bidhigh', 'bidlow', 'askopen', 'askclose', 'askhigh', 'asklow', 'tickqty']
 
 class Action(Enum):
     BUY = 1
