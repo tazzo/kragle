@@ -29,8 +29,19 @@ def kdb():
     kdb.drop_db()
     kdb.close()
 
-
-
+@pytest.fixture(scope="module")
+def kdb_future():
+    print('>> Setup kdb future << ', end='')
+    dbname = 'kragle_test_future'
+    periods = ['m1']
+    filename = '_future_test'
+    kdb = KragleDB(dbname)
+    kdb.drop_db()
+    load_test_period('EUR/USD', periods, kdb, suffix='_future_test')
+    yield kdb
+    print(">> Teardown kdb future << ", end='')
+    kdb.drop_db()
+    kdb.close()
 
 @pytest.fixture(scope="function")
 def kdb_void():
@@ -128,3 +139,20 @@ def test_duplicate_db_to_date(kdb, dup_setup):
 
     duplicate = kdb.duplicate_db('kragle_test_duplicate', periods=['m1', 'm5', 'm30'], to_date=to_date)
     assert len(duplicate.get(instrument, 'm5')) == 3
+
+
+def test_get_action_from_future(kdb_future):
+    instrument = 'EUR/USD'
+    from_date = dt.datetime(2018, 11, 27, 13, 0)
+
+    action = kdb_future.get_action_from_future(instrument,  from_date, pips=15, limit=30)
+    assert action == kutils.Action.HOLD
+
+    action = kdb_future.get_action_from_future(instrument,  from_date, pips=15, limit=50)
+    assert action == kutils.Action.BUY
+
+    action = kdb_future.get_action_from_future(instrument,  from_date, pips=2, limit=30)
+    assert action == kutils.Action.SELL
+
+    action = kdb_future.get_action_from_future(instrument,  from_date, pips=7, limit=30)
+    assert action == kutils.Action.BUY

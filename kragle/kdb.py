@@ -1,15 +1,23 @@
-import random
 import datetime as dt
 import logging
-from collections import deque
+from random import randrange
 
 import pandas as pd
 from pymongo import MongoClient
 import kragle.utils as kutils
 
-
-from kragle.utils import PIP
 from kragle.utils import dot_names_to_dict
+
+
+def random_date(start, end):
+    """
+    This function will return a random datetime between two datetime
+    objects.
+    """
+    delta = end - start
+    int_delta = (delta.days * 24 * 60 * 60)
+    random_minutes = randrange(int_delta)
+    return start + dt.timedelta(minutes=random_minutes)
 
 
 def get_db_names():
@@ -150,14 +158,33 @@ class KragleDB:
         self.check_date_index(instrument, period)
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
-    def create_dataset(self, n, instrument, periods, history_len, from_date, to_date):
+    def create_dataset(self,
+                       db_name,
+                       n,
+                       from_date,
+                       to_date,
+                       instrument='EUR/USD',
+                       periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
+                       history_len=10,
+                       pips=15
+                       ):
 
-        return []
+        ds = []
+        while True:
+            try:
+                rnd_date = random_date(from_date, to_date)
+                ds.append(self.get_sample(instrument, periods, rnd_date, history_len, pips))
+                if len(ds) >= n:
+                    self.save_dataset(db_name, ds)
+                    break
+            except:
+                pass
+
 
     def save_dataset(self, dataset_name, dataset):
         if not dataset_name.endswith(self.dataset_suffix):
             dataset_name += self.dataset_suffix
-        db = self.client[self.db_name]
+        db = self.client[dataset_name]
         db.drop_collection(dataset_name)
         db[dataset_name].create_index([('date', -1)], unique=True)
         db[dataset_name].insert_many(dataset)
@@ -203,35 +230,35 @@ class KragleDB:
         values[0] = last_candle
         return values
 
-    def get_normalized_period(self, instrument, period,  to_date, n):
+    def get_normalized_period(self, instrument, period, to_date, history_len):
         res = []
         old = None
         self.logger.info(period)
-        for v in self.get_candles(instrument, period, to_date, n + 1):
+        for v in self.get_candles(instrument, period, to_date, history_len + 1):
             if old != None:
-                tmpbid = (v['bidopen'] - old['bidopen']) / kutils.normalizer[period]['bidopen']
+                tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
                 tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
                 res.append([tmpbid, tmptick])
             old = v
         return res
 
-    def get_normalized_periods(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],  to_date=None, n=10):
+    def get_normalized_periods(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10):
         res = []
         for period in periods:
-            res.append(self.get_normalized_period(instrument, period, to_date, n))
+            res.append(self.get_normalized_period(instrument, period, to_date, history_len))
 
         return res
 
-    def get_sample(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],  to_date=None, n=10, pips=15):
+    def get_sample(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, pips=15):
         res = {
             'date': to_date,
-            'x': self.get_normalized_periods(instrument, periods, to_date, n),
-            'y': self.get_action_from_future(instrument=instrument, date=to_date, pips=pips)
+            'x': self.get_normalized_periods(instrument, periods, to_date, history_len),
+            'y': self.get_action_from_future(instrument=instrument, date=to_date, pips=pips).value
         }
         return res
 
     def get_action_from_future(self, instrument='EUR/USD',  date=None, pips=15, limit=60):
-        res = kutils.Action.HOLD.value
+        res = kutils.Action.HOLD
         values = self.db[instrument]['m1'].aggregate([
             {'$match': {'date': {'$gte': date}}},
             {'$sort': {'date': 1}},
@@ -240,10 +267,10 @@ class KragleDB:
         base = values.next()
         for v in values:
             if ((v['bidhigh']-base['bidopen']) / kutils.PIP) > pips:
-                res = kutils.Action.BUY.value
+                res = kutils.Action.BUY
                 break
             if ((base['bidopen']-v['bidlow']) / kutils.PIP) > pips:
-                res = kutils.Action.SELL.value
+                res = kutils.Action.SELL
                 break
         return res
 

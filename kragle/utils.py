@@ -16,7 +16,8 @@ instruments = ['USD/SEK', 'EUR/USD',
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
 normalizer = {
-    'm1':  {'bidopen': 0.00015, 'tickqty': 400},
+    'm1':  {'bidopen': 0.00020
+        , 'tickqty': 400},
     'm5':  {'bidopen': 0.00030, 'tickqty': 2000},
     'm30': {'bidopen': 0.00075, 'tickqty': 12_000},
     'H2':  {'bidopen': 0.0015, 'tickqty': 40_000},
