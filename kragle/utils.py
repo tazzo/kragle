@@ -21,7 +21,7 @@ normalizer = {
     'm30': {'bidopen': 0.00075, 'tickqty': 12_000},
     'H2':  {'bidopen': 0.0015, 'tickqty': 40_000},
     'H8':  {'bidopen': 0.0030, 'tickqty': 160_000},
-    'D1':  {'bidopen': 0.00045, 'tickqty': 400_000},
+    'D1':  {'bidopen': 0.0045, 'tickqty': 400_000},
 }
 
 time_in_force = ['IOC', 'GTC', 'FOK', 'DAY']

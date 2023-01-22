@@ -203,6 +203,49 @@ class KragleDB:
         values[0] = last_candle
         return values
 
+    def get_normalized_period(self, instrument, period,  to_date, n):
+        res = []
+        old = None
+        self.logger.info(period)
+        for v in self.get_candles(instrument, period, to_date, n + 1):
+            if old != None:
+                tmpbid = (v['bidopen'] - old['bidopen']) / kutils.normalizer[period]['bidopen']
+                tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
+                res.append([tmpbid, tmptick])
+            old = v
+        return res
+
+    def get_normalized_periods(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],  to_date=None, n=10):
+        res = []
+        for period in periods:
+            res.append(self.get_normalized_period(instrument, period, to_date, n))
+
+        return res
+
+    def get_sample(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],  to_date=None, n=10, pips=15):
+        res = {
+            'date': to_date,
+            'x': self.get_normalized_periods(instrument, periods, to_date, n),
+            'y': self.get_action_from_future(instrument=instrument, date=to_date, pips=pips)
+        }
+        return res
+
+    def get_action_from_future(self, instrument='EUR/USD',  date=None, pips=15, limit=60):
+        res = kutils.Action.HOLD.value
+        values = self.db[instrument]['m1'].aggregate([
+            {'$match': {'date': {'$gte': date}}},
+            {'$sort': {'date': 1}},
+            {'$limit': limit},
+        ])
+        base = values.next()
+        for v in values:
+            if ((v['bidhigh']-base['bidopen']) / kutils.PIP) > pips:
+                res = kutils.Action.BUY.value
+                break
+            if ((base['bidopen']-v['bidlow']) / kutils.PIP) > pips:
+                res = kutils.Action.SELL.value
+                break
+        return res
 
     def aggregate_candle(self, instrument,  from_date, to_date):
         values = self.db[instrument]['m1'].aggregate([
