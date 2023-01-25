@@ -145,14 +145,14 @@ def test_get_action_from_future(kdb_future):
     instrument = 'EUR/USD'
     from_date = dt.datetime(2018, 11, 27, 13, 0)
 
-    action = kdb_future.get_action_from_future(instrument,  from_date, pips=15, limit=30)
+    action = kdb_future.get_action_from_future(instrument, from_date, pips=15, limit_future=30)
     assert action == kutils.Action.HOLD
 
-    action = kdb_future.get_action_from_future(instrument,  from_date, pips=15, limit=50)
+    action = kdb_future.get_action_from_future(instrument, from_date, pips=15, limit_future=50)
     assert action == kutils.Action.BUY
 
-    action = kdb_future.get_action_from_future(instrument,  from_date, pips=2, limit=30)
+    action = kdb_future.get_action_from_future(instrument, from_date, pips=2, limit_future=30)
     assert action == kutils.Action.SELL
 
-    action = kdb_future.get_action_from_future(instrument,  from_date, pips=7, limit=30)
+    action = kdb_future.get_action_from_future(instrument, from_date, pips=7, limit_future=30)
     assert action == kutils.Action.BUY

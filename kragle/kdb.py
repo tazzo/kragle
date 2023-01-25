@@ -166,14 +166,15 @@ class KragleDB:
                        instrument='EUR/USD',
                        periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
                        history_len=10,
-                       pips=15
+                       pips=15,
+                       limit_future=30
                        ):
 
         ds = []
         while True:
             try:
                 rnd_date = random_date(from_date, to_date)
-                ds.append(self.get_sample(instrument, periods, rnd_date, history_len, pips))
+                ds.append(self.get_sample(instrument, periods, rnd_date, history_len, pips, limit_future))
                 if len(ds) >= n:
                     self.save_dataset(db_name, ds)
                     break
@@ -249,20 +250,20 @@ class KragleDB:
 
         return res
 
-    def get_sample(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, pips=15):
+    def get_sample(self, instrument='EUR/USD', periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, pips=15, limit_future=30):
         res = {
             'date': to_date,
             'x': self.get_normalized_periods(instrument, periods, to_date, history_len),
-            'y': self.get_action_from_future(instrument=instrument, date=to_date, pips=pips).value
+            'y': self.get_action_from_future(instrument=instrument, date=to_date, pips=pips, limit_future=limit_future).value
         }
         return res
 
-    def get_action_from_future(self, instrument='EUR/USD',  date=None, pips=15, limit=60):
+    def get_action_from_future(self, instrument='EUR/USD', date=None, pips=15, limit_future=60):
         res = kutils.Action.HOLD
         values = self.db[instrument]['m1'].aggregate([
             {'$match': {'date': {'$gte': date}}},
             {'$sort': {'date': 1}},
-            {'$limit': limit},
+            {'$limit': limit_future},
         ])
         base = values.next()
         for v in values:
