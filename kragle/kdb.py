@@ -1,6 +1,6 @@
 import datetime as dt
 import logging
-from random import randrange
+from random import randrange, random
 
 import pandas as pd
 from pymongo import MongoClient
@@ -17,7 +17,8 @@ def random_date(start, end):
     objects.
     """
     delta = end - start
-    int_delta = (delta.days * 24 * 60 * 60)
+    int_delta = delta.total_seconds()/60
+    #print('int delta ', int_delta)
     random_minutes = randrange(int_delta)
     return start + dt.timedelta(minutes=random_minutes)
 
@@ -170,30 +171,48 @@ class KragleDB:
                        history_len=10,
                        pips=15,
                        limit_future=30,
-                       type='train'
+                       distribution=[0.7, 0.2, 0.1],
+                       drop=True
                        ):
 
-        ds = []
+        ds_train = []
+        ds_valid = []
+        ds_test = []
         while True:
             try:
                 rnd_date = random_date(from_date, to_date)
-                ds.append(self.get_sample(instrument, periods, rnd_date, history_len, pips, limit_future))
-                if len(ds) % 10 == 0:
-                    print(len(ds))
-                if len(ds) >= n:
-                    self.save_dataset(db_name, ds, type)
+                s = self.get_sample(instrument, periods, rnd_date, history_len, pips, limit_future)
+                rnd = random()
+                if rnd <= distribution[0]:
+                    ds_train.append(s)
+                elif rnd <= distribution[0]+distribution[1]:
+                    ds_valid.append(s)
+                else:
+                    ds_test.append(s)
+                if len(ds_train) % 50 == 0:
+                    print('Dataset len: {}     max: {}'.format(len(ds_train), n))
+                if len(ds_train) >= n:
+                    self.save_dataset(db_name, ds_train, ds_valid, ds_test, drop)
                     break
-            except:
+            except Exception as e:
                 pass
 
 
-    def save_dataset(self, dataset_name, dataset, type='train'):
+
+    def save_dataset(self, dataset_name, ds_train, ds_valid, ds_test, drop = False):
         if not dataset_name.endswith(self.dataset_suffix):
             dataset_name += self.dataset_suffix
         db = self.client[dataset_name]
-        db.drop_collection(type)
-        db[type].insert_many(dataset)
-        db[type].create_index([('date', -1)], unique=True)
+
+        db.drop_collection('train')
+        db.drop_collection('valid')
+        db.drop_collection('test')
+        db['train'].insert_many(ds_train)
+        db['valid'].insert_many(ds_valid)
+        db['test'].insert_many(ds_test)
+        db['train'].create_index([('date', -1)], unique=True)
+        db['valid'].create_index([('date', -1)], unique=True)
+        db['test'].create_index([('date', -1)], unique=True)
 
 
     def get_dataset(self, dataset_name):
@@ -215,6 +234,18 @@ class KragleDB:
         test_dataset = (numpy.array(test_set), numpy.array(test_labels))
         return train_dataset, valid_dataset, test_dataset
 
+    def get_dataset_bytype(self, dataset_name, nclass):
+        t_set, t_labels = [], []
+        if nclass is not None:
+            db = self.client[dataset_name]
+            for v in db['test'].find({}):
+                if v['y'] == nclass:
+                    t_set.append(numpy.array(v['x']))
+                    t_labels.append(v['y'] + 1)
+            t_dataset = (numpy.array(t_set), numpy.array(t_labels))
+            return t_dataset
+        else:
+            return self.get_dataset(dataset_name)
 
     def get_base_date_list(self, n, instrument, periods, from_date, to_date):
         period_0 = self.db[instrument][periods[0]]
