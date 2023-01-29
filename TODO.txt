@@ -3,7 +3,7 @@
 - add future in dataset creation?
 - test per get_instrument
 - add test for create_dataset tickqty field
-- DB per data test già preparati 
+- DB per data test già preparati
     - normalizzati?
     - raggruppati
     - con future normalizzato?

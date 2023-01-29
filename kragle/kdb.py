@@ -5,6 +5,8 @@ from random import randrange
 import pandas as pd
 from pymongo import MongoClient
 import kragle.utils as kutils
+import numpy
+import tensorflow as tf
 
 from kragle.utils import dot_names_to_dict
 
@@ -167,7 +169,8 @@ class KragleDB:
                        periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
                        history_len=10,
                        pips=15,
-                       limit_future=30
+                       limit_future=30,
+                       type='train'
                        ):
 
         ds = []
@@ -175,21 +178,42 @@ class KragleDB:
             try:
                 rnd_date = random_date(from_date, to_date)
                 ds.append(self.get_sample(instrument, periods, rnd_date, history_len, pips, limit_future))
+                if len(ds) % 10 == 0:
+                    print(len(ds))
                 if len(ds) >= n:
-                    self.save_dataset(db_name, ds)
+                    self.save_dataset(db_name, ds, type)
                     break
             except:
                 pass
 
 
-    def save_dataset(self, dataset_name, dataset):
+    def save_dataset(self, dataset_name, dataset, type='train'):
         if not dataset_name.endswith(self.dataset_suffix):
             dataset_name += self.dataset_suffix
         db = self.client[dataset_name]
-        db.drop_collection(dataset_name)
-        db[dataset_name].create_index([('date', -1)], unique=True)
-        db[dataset_name].insert_many(dataset)
+        db.drop_collection(type)
+        db[type].insert_many(dataset)
+        db[type].create_index([('date', -1)], unique=True)
 
+
+    def get_dataset(self, dataset_name):
+        train_set, train_labels = [], []
+        valid_set, valid_labels = [], []
+        test_set, test_labels = [], []
+        db = self.client[dataset_name]
+        for v in db['train'].find({}):
+            train_set.append(numpy.array(v['x']))
+            train_labels.append(v['y']+1)
+        train_dataset = (numpy.array(train_set), numpy.array(train_labels))
+        for v in db['valid'].find({}):
+            valid_set.append(numpy.array(v['x']))
+            valid_labels.append(v['y']+1)
+        valid_dataset = (numpy.array(valid_set), numpy.array(valid_labels))
+        for v in db['test'].find({}):
+            test_set.append(numpy.array(v['x']))
+            test_labels.append(v['y']+1)
+        test_dataset = (numpy.array(test_set), numpy.array(test_labels))
+        return train_dataset, valid_dataset, test_dataset
 
 
     def get_base_date_list(self, n, instrument, periods, from_date, to_date):
