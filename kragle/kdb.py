@@ -38,7 +38,6 @@ class KragleDB:
         self.db = self.client[db_name]
         self.db_name = db_name
         self.cheked = {}
-        self.dataset_suffix = '__dataset'
         self.check_db_date_index()
 
     def close(self):
@@ -162,7 +161,7 @@ class KragleDB:
         self.db[instrument][period].replace_one({'date': record['date']}, record, upsert=True)
 
     def create_dataset(self,
-                       db_name,
+                       dataset_name,
                        n,
                        from_date,
                        to_date,
@@ -178,41 +177,33 @@ class KragleDB:
         ds_train = []
         ds_valid = []
         ds_test = []
+        tmp_n = 0
+        dsdb = self.open_dataset(dataset_name=dataset_name)
         while True:
             try:
                 rnd_date = random_date(from_date, to_date)
-                s = self.get_sample(instrument, periods, rnd_date, history_len, pips, limit_future)
+                sample = self.get_sample(instrument, periods, rnd_date, history_len, pips, limit_future)
                 rnd = random()
                 if rnd <= distribution[0]:
-                    ds_train.append(s)
+                    dsdb[dataset_name]['train'].replace_one({'date': sample['date']}, sample, upsert=True)
+                    tmp_n += 1
                 elif rnd <= distribution[0]+distribution[1]:
-                    ds_valid.append(s)
+                    dsdb[dataset_name]['valid'].replace_one({'date': sample['date']}, sample, upsert=True)
                 else:
-                    ds_test.append(s)
-                if len(ds_train) % 50 == 0:
-                    print('Dataset len: {}     max: {}'.format(len(ds_train), n))
-                if len(ds_train) >= n:
-                    self.save_dataset(db_name, ds_train, ds_valid, ds_test, drop)
+                    dsdb[dataset_name]['test'].replace_one({'date': sample['date']}, sample, upsert=True)
+                if (tmp_n % 50) == 0:
+                    print('Dataset len: {}\t/\t{}'.format(tmp_n, n))
+                if tmp_n >= n:
                     break
             except Exception as e:
                 pass
 
-
-
-    def save_dataset(self, dataset_name, ds_train, ds_valid, ds_test, drop = False):
-        if not dataset_name.endswith(self.dataset_suffix):
-            dataset_name += self.dataset_suffix
-        db = self.client[dataset_name]
-
-        db.drop_collection('train')
-        db.drop_collection('valid')
-        db.drop_collection('test')
-        db['train'].insert_many(ds_train)
-        db['valid'].insert_many(ds_valid)
-        db['test'].insert_many(ds_test)
-        db['train'].create_index([('date', -1)], unique=True)
-        db['valid'].create_index([('date', -1)], unique=True)
-        db['test'].create_index([('date', -1)], unique=True)
+    def open_dataset(self, db_name='Datasets', dataset_name='dummy_dataset'):
+        db = self.client[db_name]
+        db[dataset_name]['train'].create_index([('date', -1)], unique=True)
+        db[dataset_name]['valid'].create_index([('date', -1)], unique=True)
+        db[dataset_name]['test'].create_index([('date', -1)], unique=True)
+        return db
 
 
     def get_dataset(self, dataset_name):
