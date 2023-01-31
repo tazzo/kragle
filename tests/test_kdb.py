@@ -10,7 +10,7 @@ from kragle.utils import Action, PIP
 logging.config.fileConfig('log.cfg')
 
 
-def load_test_period(instrument, periods, kdb, suffix='_test'):
+def load_test_period(periods, kdb, suffix='_test'):
     for period in periods:
         df = kutils.dataframe_from_json(r'tests/test_data/{}{}.json'.format(period, suffix))
         kdb.fetch_dataframe(df, period)
@@ -23,11 +23,12 @@ def kdb():
     periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H8']
     kdb = KragleDB(dbname)
     kdb.drop_db()
-    load_test_period('EUR/USD', periods, kdb)
+    load_test_period(periods, kdb)
     yield kdb
     print(">> Teardown kdb << ", end='')
     kdb.drop_db()
     kdb.close()
+
 
 @pytest.fixture(scope="module")
 def kdb_future():
@@ -37,11 +38,12 @@ def kdb_future():
     filename = '_future_test'
     kdb = KragleDB(dbname)
     kdb.drop_db()
-    load_test_period('EUR/USD', periods, kdb, suffix='_future_test')
+    load_test_period(periods, kdb, suffix='_future_test')
     yield kdb
     print(">> Teardown kdb future << ", end='')
     kdb.drop_db()
     kdb.close()
+
 
 @pytest.fixture(scope="function")
 def kdb_void():
@@ -56,7 +58,7 @@ def kdb_void():
 def test_fetch_dataframe(kdb_void):
     instrument = 'EUR/USD'
     period = 'm1'
-    load_test_period(instrument, [period], kdb_void)
+    load_test_period([period], kdb_void)
 
     assert instrument in kdb_void.get_instruments()
     assert period in kdb_void.get_periods()
@@ -67,14 +69,13 @@ def test_drop_period(kdb_void):
     instrument = 'EUR/USD'
     period1 = 'm1'
     period2 = 'm5'
-    load_test_period(instrument, [period1, period2], kdb_void)
+    load_test_period([period1, period2], kdb_void)
     kdb_void.drop_period(period1)
     assert instrument in kdb_void.get_instruments()
     assert period1 not in kdb_void.get_periods()
     assert period2 in kdb_void.get_periods()
     assert len(kdb_void.get(period1)) == 0
     assert len(kdb_void.get(period2)) == 599
-
 
 
 def test_drop_instrument(kdb_void):
@@ -92,9 +93,11 @@ def test_drop_instrument(kdb_void):
     assert len(kdb_void.get(period1)) == 0
     assert len(kdb_void.get(period2)) == 0
 
+
 def test_get_instrument_raise(kdb):
     with pytest.raises(ValueError, match=r".*datetime.*"):
         dataset = kdb.get('m1', 'start', 'end')
+
 
 @pytest.fixture(scope="function")
 def dup_setup():

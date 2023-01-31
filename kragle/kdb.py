@@ -161,81 +161,76 @@ class KragleDB:
         self.check_date_index(period)
         self.db[period].replace_one({'date': record['date']}, record, upsert=True)
 
-    def create_dataset(self, dataset_name, n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
-                       history_len=10, pips=15, limit_future=30, distribution=[0.7, 0.2, 0.1], drop=True):
+    def create_dataset(self,  n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
+                       history_len=10, pips=15, limit_future=180, distribution=[0.7, 0.2, 0.1]):
 
-        ds_train = []
-        ds_valid = []
-        ds_test = []
+        ds_name = 'pips{}hist{}fut{}'.format(pips, history_len, limit_future)
         tmp_n = 0
-        dsdb = self.open_dataset(dataset_name=dataset_name)
+        dsdb = self.open_dataset(ds_name=ds_name)
         while True:
             try:
                 rnd_date = random_date(from_date, to_date)
                 sample = self.get_sample(periods, rnd_date, history_len, pips, limit_future)
                 rnd = random()
                 if rnd <= distribution[0]:
-                    dsdb[dataset_name]['train'].replace_one({'date': sample['date']}, sample, upsert=True)
+                    dsdb['train'].replace_one({'date': sample['date']}, sample, upsert=True)
                     tmp_n += 1
                 elif rnd <= distribution[0]+distribution[1]:
-                    dsdb[dataset_name]['valid'].replace_one({'date': sample['date']}, sample, upsert=True)
+                    dsdb['valid'].replace_one({'date': sample['date']}, sample, upsert=True)
                 else:
-                    dsdb[dataset_name]['test'].replace_one({'date': sample['date']}, sample, upsert=True)
+                    dsdb['test'].replace_one({'date': sample['date']}, sample, upsert=True)
                 if (tmp_n % 50) == 0:
-                    print('Dataset len: {}\t/\t{}'.format(tmp_n, n))
+                    print('Dataset len: {}/{}'.format(tmp_n, n))
                 if tmp_n >= n:
                     break
             except Exception as e:
                 pass
-        self.check_dataset(dataset_name=dataset_name)
+        self.check_dataset(ds_name=ds_name)
 
-    def check_dataset(self, db_name='Datasets', dataset_name='dummy_dataset'):
-        db = self.client[db_name]
-        for v in db[dataset_name]['valid'].find({}):
-            db[dataset_name]['train'].delete_one({'date': v['date']})
-        for v in db[dataset_name]['test'].find({}):
-            db[dataset_name]['train'].delete_one({'date': v['date']})
-            db[dataset_name]['valid'].delete_one({'date': v['date']})
+    def check_dataset(self, ds_name='dummy_dataset'):
+        for v in self.ds[ds_name]['valid'].find({}):
+            self.ds[ds_name]['train'].delete_one({'date': v['date']})
+        for v in self.ds[ds_name]['test'].find({}):
+            self.ds[ds_name]['train'].delete_one({'date': v['date']})
+            self.ds[ds_name]['valid'].delete_one({'date': v['date']})
 
-    def open_dataset(self, db_name='Datasets', dataset_name='dummy_dataset'):
-        db = self.client[db_name]
-        db[dataset_name]['train'].create_index([('date', -1)], unique=True)
-        db[dataset_name]['valid'].create_index([('date', -1)], unique=True)
-        db[dataset_name]['test'].create_index([('date', -1)], unique=True)
-        return db
+    def open_dataset(self, ds_name='dummy_dataset'):
+        self.ds[ds_name]['train'].create_index([('date', -1)], unique=True)
+        self.ds[ds_name]['valid'].create_index([('date', -1)], unique=True)
+        self.ds[ds_name]['test'].create_index([('date', -1)], unique=True)
+        return self.ds[ds_name]
 
 
-    def get_dataset(self, db_name='Datasets', dataset_name='dummy_dataset'):
+    def get_dataset(self, ds_name='dummy_dataset'):
         train_set, train_labels = [], []
         valid_set, valid_labels = [], []
         test_set, test_labels = [], []
-        db = self.client[db_name]
-        for v in db[dataset_name]['train'].find({}):
+
+        for v in self.ds[ds_name]['train'].find({}):
             train_set.append(numpy.array(v['x']))
             train_labels.append(v['y']+1)
         train_dataset = (numpy.array(train_set), numpy.array(train_labels))
-        for v in db[dataset_name]['valid'].find({}):
+        for v in self.ds[ds_name]['valid'].find({}):
             valid_set.append(numpy.array(v['x']))
             valid_labels.append(v['y']+1)
         valid_dataset = (numpy.array(valid_set), numpy.array(valid_labels))
-        for v in db[dataset_name]['test'].find({}):
+        for v in self.ds[ds_name]['test'].find({}):
             test_set.append(numpy.array(v['x']))
             test_labels.append(v['y']+1)
         test_dataset = (numpy.array(test_set), numpy.array(test_labels))
         return train_dataset, valid_dataset, test_dataset
 
-    def get_dataset_bytype(self, db_name='Datasets', dataset_name='dummy_dataset', nclass=None):
+    def get_dataset_bytype(self, ds_name='dummy_dataset', nclass=None):
         t_set, t_labels = [], []
         if nclass is not None:
-            db = self.client[db_name]
-            for v in db[dataset_name]['test'].find({}):
+            for v in self.ds[ds_name]['test'].find({}):
                 if v['y'] == nclass:
                     t_set.append(numpy.array(v['x']))
                     t_labels.append(v['y'] + 1)
             t_dataset = (numpy.array(t_set), numpy.array(t_labels))
             return t_dataset
         else:
-            return self.get_dataset(dataset_name)
+            return self.get_dataset()
 
     def get_base_date_list(self, n, periods, from_date, to_date):
         period_0 = self.db[periods[0]]
