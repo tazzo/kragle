@@ -704,37 +704,37 @@ def button_fourier_save(n_clicks, instrument):
 def fetch_synthetic(kdb, instrument, df):
     # delete old collection
     for period in kutils.periods:
-        kdb.drop_period(instrument, period)
+        kdb.drop_period(period)
 
-    kdb.fetch_dataframe(df, instrument, 'm1')
+    kdb.fetch_dataframe(df, 'm1')
     # m5
     droplist = []
     for i in range(df.shape[0]):
         if i % 5 != 0:
             droplist.append(i)
     dfm5 = df.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfm5, instrument, 'm5')
+    kdb.fetch_dataframe(dfm5, 'm5')
     # m15
     droplist = []
     for i in range(dfm5.shape[0]):
         if i % 3 != 0:
             droplist.append(i)
     dfm15 = dfm5.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfm15, instrument, 'm15')
+    kdb.fetch_dataframe(dfm15, 'm15')
     # m30
     droplist = []
     for i in range(dfm15.shape[0]):
         if i % 2 != 0:
             droplist.append(i)
     dfm30 = dfm15.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfm30, instrument, 'm30')
+    kdb.fetch_dataframe(dfm30, 'm30')
     # H1
     droplist = []
     for i in range(dfm30.shape[0]):
         if i % 2 != 0:
             droplist.append(i)
     dfH1 = dfm30.drop(droplist).reset_index(drop=True)
-    kdb.fetch_dataframe(dfH1, instrument, 'H1')
+    kdb.fetch_dataframe(dfH1, 'H1')
     kdb.close()
 
 
@@ -832,7 +832,7 @@ def button_create_dataset(n_clicks, instrument, nval, history_len, date_start, d
             date_end = dt.datetime.strptime(date_end, '%Y-%m-%d %H:%M')
         except:
             return ['']
-        dataset = kdb.create_dataset(nval, instrument, ['m1', 'm5', 'm15', 'H1'], history_len, date_start, date_end)
+        dataset = kdb.create_dataset(nval, instrument, ['m1', 'm5', 'm15', 'H1'], history_len, date_end)
 
         return ['instr:{} nval:{} history length:{}'.format(instrument, nval, history_len)]
     return ['']
@@ -850,7 +850,7 @@ def update_explore_chart(start_date, end_date, instrument, period):
     try:
         start = dt.datetime.strptime(start_date, '%Y-%m-%d %H:%M')
         end = dt.datetime.strptime(end_date, '%Y-%m-%d %H:%M')
-        df = kdb.get(instrument, period, from_date=start, to_date=end)
+        df = kdb.get(period, from_date=start, to_date=end)
     except:
         pass
     if df.shape[0] == 0:

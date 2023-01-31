@@ -44,7 +44,7 @@ class FxcmManager:
             logger.info('instrument: ' + instrument + ' period: ' + period + ' delta: ' + str(delta) + ' from: ' + str(
                 tmpstart) + ' to:' + str(tmpend) + ' n: ' + str(df.size))
 
-            self.kdb.fetch_dataframe(df, instrument, period)
+            self.kdb.fetch_dataframe(df, period)
 
             if tmpend == end:
                 loop = False

@@ -42,7 +42,7 @@ class AgentTester:
 
     def test_strategy(self, instrument, date_start, date_end):
         self.df = pd.DataFrame(columns=['date', 'bidopen', 'action', 'color', 'size', 'wallet'])
-        date_list = self.kdb.get_date_list(instrument, 'm1', date_start, date_end)
+        date_list = self.kdb.get_date_list('m1', date_start, date_end)
         for date_value in date_list:
             df_value = {}
 

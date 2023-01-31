@@ -14,7 +14,7 @@ def __test_db_setup(db, periods, filename):
     kdb.client.drop_database(kdb.db_name)
     for period in periods:
         df = kutils.dataframe_from_json(r'kragle/test_data/' + period + filename + '.json')
-        kdb.fetch_dataframe(df, 'EUR/USD', period)
+        kdb.fetch_dataframe(df, period)
     return kdb
 
 

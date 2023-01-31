@@ -19,6 +19,7 @@ pandas = '*'
 pytz ='*'
 tensorflow ='*'
 matplotlib ='*'
+pytest = "*"
 
 [requires]
 python_version = "3.9"
