@@ -150,7 +150,6 @@ class KragleDB:
 
         Args:
             df (pandas.DataFrame): the dataframe to fetch
-            instrument (String): the forex instrument ('EUR/USD', 'EUR/JPY' ... )
             period (String): the instrument period ('m1', 'm5', 'm15' ... )
         """
 
@@ -230,6 +229,14 @@ class KragleDB:
             return t_dataset
         else:
             return self.get_dataset(ds_name)
+
+    def get_dataset_percentage(self, ds_name, type='train'):
+        p = kutils.Percentage()
+
+        for v in self.ds[ds_name][type].find({}):
+            p.add(v)
+        return p.get_percentage()
+
 
     def get_base_date_list(self, n, periods, from_date, to_date):
         period_0 = self.db[periods[0]]
@@ -354,7 +361,7 @@ class KragleDB:
             {'$project': {'date': 1, '_id': 0}},
         ]))
 
-    def duplicate_db(self, dbname, periods=['m1', 'm5', 'm30', 'H2', 'H8'], fields=['date', 'bidopen', 'tickqty'],
+    def duplicate_db(self, dbname, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], fields=['date', 'bidopen', 'tickqty'],
                      from_date=None, to_date=None):  # date field must be present
         """
         Duplicate a instrument DB. Can be selected which periods to duplicate,

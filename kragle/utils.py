@@ -16,12 +16,12 @@ instruments = ['USD/SEK', 'EUR/USD',
 periods = ['m1', 'm5', 'm15', 'm30', 'H1', 'H2', 'H3', 'H4', 'H6', 'H8', 'D1']
 
 normalizer = {
-    'm1':  {'bidopen': 0.00020, 'tickqty': 400},
-    'm5':  {'bidopen': 0.00030, 'tickqty': 2000},
+    'm1': {'bidopen': 0.00020, 'tickqty': 400},
+    'm5': {'bidopen': 0.00030, 'tickqty': 2000},
     'm30': {'bidopen': 0.00075, 'tickqty': 12_000},
-    'H2':  {'bidopen': 0.0015, 'tickqty': 40_000},
-    'H8':  {'bidopen': 0.0030, 'tickqty': 160_000},
-    'D1':  {'bidopen': 0.0045, 'tickqty': 400_000},
+    'H2': {'bidopen': 0.0015, 'tickqty': 40_000},
+    'H8': {'bidopen': 0.0030, 'tickqty': 160_000},
+    'D1': {'bidopen': 0.0045, 'tickqty': 400_000},
 }
 
 time_in_force = ['IOC', 'GTC', 'FOK', 'DAY']
@@ -42,7 +42,8 @@ period_to_minutes = {
 
 # EUR/USD pip
 PIP = .0001
-FIELDS = [ 'date', 'bidopen', 'bidclose', 'bidhigh', 'bidlow', 'askopen', 'askclose', 'askhigh', 'asklow', 'tickqty']
+FIELDS = ['date', 'bidopen', 'bidclose', 'bidhigh', 'bidlow', 'askopen', 'askclose', 'askhigh', 'asklow', 'tickqty']
+
 
 class Action(Enum):
     BUY = 1
@@ -79,6 +80,27 @@ def dataframe_from_json(path):
         [DataFrame]: pandas dataframe
     """
     return pd.read_json(path, orient='records')
+
+
+class Percentage:
+
+    def __init__(self):
+        self.total = 0
+        self.sell = 0
+        self.hold = 0
+        self.buy = 0
+
+    def add(self, value):
+        if value['y'] == -1:
+            self.sell += 1
+        if value['y'] == 0:
+            self.hold += 1
+        if value['y'] == 1:
+            self.buy += 1
+        self.total += 1
+
+    def get_percentage(self):
+        return (self.sell / self.total, self.hold / self.total, self.buy / self.total)
 
 
 def dataset_to_dataframe_dict(ds):
