@@ -166,7 +166,7 @@ class KragleDB:
 
         ds_name = 'pips{}hist{}fut{}'.format(pips, history_len, limit_future)
         tmp_n = 0
-        dsdb = self.open_dataset(ds_name=ds_name)
+        dsdb = self.open_dataset(ds_name)
         while True:
             try:
                 rnd_date = random_date(from_date, to_date)
@@ -185,16 +185,16 @@ class KragleDB:
                     break
             except Exception as e:
                 pass
-        self.check_dataset(ds_name=ds_name)
+        self.check_dataset(ds_name)
 
-    def check_dataset(self, ds_name='dummy_dataset'):
+    def check_dataset(self, ds_name):
         for v in self.ds[ds_name]['valid'].find({}):
             self.ds[ds_name]['train'].delete_one({'date': v['date']})
         for v in self.ds[ds_name]['test'].find({}):
             self.ds[ds_name]['train'].delete_one({'date': v['date']})
             self.ds[ds_name]['valid'].delete_one({'date': v['date']})
 
-    def open_dataset(self, ds_name='dummy_dataset'):
+    def open_dataset(self, ds_name):
         self.ds[ds_name]['train'].create_index([('date', -1)], unique=True)
         self.ds[ds_name]['valid'].create_index([('date', -1)], unique=True)
         self.ds[ds_name]['test'].create_index([('date', -1)], unique=True)
