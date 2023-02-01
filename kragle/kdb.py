@@ -17,8 +17,8 @@ def random_date(start, end):
     objects.
     """
     delta = end - start
-    int_delta = delta.total_seconds()/60
-    #print('int delta ', int_delta)
+    int_delta = delta.total_seconds() / 60
+    # print('int delta ', int_delta)
     random_minutes = randrange(int_delta)
     return start + dt.timedelta(minutes=random_minutes)
 
@@ -161,7 +161,7 @@ class KragleDB:
         self.check_date_index(period)
         self.db[period].replace_one({'date': record['date']}, record, upsert=True)
 
-    def create_dataset(self,  n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
+    def create_dataset(self, n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
                        history_len=10, pips=15, limit_future=180, distribution=[0.7, 0.2, 0.1]):
 
         ds_name = 'pips{}hist{}fut{}'.format(pips, history_len, limit_future)
@@ -175,7 +175,7 @@ class KragleDB:
                 if rnd <= distribution[0]:
                     dsdb['train'].replace_one({'date': sample['date']}, sample, upsert=True)
                     tmp_n += 1
-                elif rnd <= distribution[0]+distribution[1]:
+                elif rnd <= distribution[0] + distribution[1]:
                     dsdb['valid'].replace_one({'date': sample['date']}, sample, upsert=True)
                 else:
                     dsdb['test'].replace_one({'date': sample['date']}, sample, upsert=True)
@@ -200,27 +200,26 @@ class KragleDB:
         self.ds[ds_name]['test'].create_index([('date', -1)], unique=True)
         return self.ds[ds_name]
 
-
-    def get_dataset(self, ds_name='dummy_dataset'):
+    def get_dataset(self, ds_name):
         train_set, train_labels = [], []
         valid_set, valid_labels = [], []
         test_set, test_labels = [], []
 
         for v in self.ds[ds_name]['train'].find({}):
             train_set.append(numpy.array(v['x']))
-            train_labels.append(v['y']+1)
+            train_labels.append(v['y'] + 1)
         train_dataset = (numpy.array(train_set), numpy.array(train_labels))
         for v in self.ds[ds_name]['valid'].find({}):
             valid_set.append(numpy.array(v['x']))
-            valid_labels.append(v['y']+1)
+            valid_labels.append(v['y'] + 1)
         valid_dataset = (numpy.array(valid_set), numpy.array(valid_labels))
         for v in self.ds[ds_name]['test'].find({}):
             test_set.append(numpy.array(v['x']))
-            test_labels.append(v['y']+1)
+            test_labels.append(v['y'] + 1)
         test_dataset = (numpy.array(test_set), numpy.array(test_labels))
         return train_dataset, valid_dataset, test_dataset
 
-    def get_dataset_bytype(self, ds_name='dummy_dataset', nclass=None):
+    def get_dataset_bytype(self, ds_name, nclass=None):
         t_set, t_labels = [], []
         if nclass is not None:
             for v in self.ds[ds_name]['test'].find({}):
@@ -230,7 +229,7 @@ class KragleDB:
             t_dataset = (numpy.array(t_set), numpy.array(t_labels))
             return t_dataset
         else:
-            return self.get_dataset()
+            return self.get_dataset(ds_name)
 
     def get_base_date_list(self, n, periods, from_date, to_date):
         period_0 = self.db[periods[0]]
@@ -261,7 +260,7 @@ class KragleDB:
         ])
 
     def get_candles(self, period, to_date, n):
-        values =  list(self.db[period].aggregate([
+        values = list(self.db[period].aggregate([
             {'$match': {'date': {'$lte': to_date}}},
             {'$sort': {'date': -1}},
             {'$limit': n},
@@ -308,10 +307,10 @@ class KragleDB:
         ])
         base = values.next()
         for v in values:
-            if ((v['bidhigh']-base['bidopen']) / kutils.PIP) > pips:
+            if ((v['bidhigh'] - base['bidopen']) / kutils.PIP) > pips:
                 res = kutils.Action.BUY
                 break
-            if ((base['bidopen']-v['bidlow']) / kutils.PIP) > pips:
+            if ((base['bidopen'] - v['bidlow']) / kutils.PIP) > pips:
                 res = kutils.Action.SELL
                 break
         return res
@@ -322,16 +321,16 @@ class KragleDB:
             {'$sort': {'date': 1}},
         ])
         v = values.next()
-        res = { 'date': v['date'],
-                'bidopen': v['bidopen'],
-                'bidclose': v['bidclose'],
-                'bidhigh': v['bidhigh'],
-                'bidlow': v['bidlow'],
-                'askopen': v['askopen'],
-                'askclose': v['askclose'],
-                'askhigh': v['askhigh'],
-                'asklow': v['asklow'],
-                'tickqty': v['tickqty']}
+        res = {'date': v['date'],
+               'bidopen': v['bidopen'],
+               'bidclose': v['bidclose'],
+               'bidhigh': v['bidhigh'],
+               'bidlow': v['bidlow'],
+               'askopen': v['askopen'],
+               'askclose': v['askclose'],
+               'askhigh': v['askhigh'],
+               'asklow': v['asklow'],
+               'tickqty': v['tickqty']}
         for v in values:
             res['bidclose'] = v['bidclose']
             res['askclose'] = v['askclose']
@@ -343,7 +342,6 @@ class KragleDB:
             if res['bidlow'] > v['bidlow']:
                 res['bidlow'] = v['bidlow']
             if res['asklow'] > v['asklow']:
-
                 res['asklow'] = v['asklow']
 
         return res;
@@ -355,7 +353,6 @@ class KragleDB:
             {'$sort': {'date': 1}},
             {'$project': {'date': 1, '_id': 0}},
         ]))
-
 
     def duplicate_db(self, dbname, periods=['m1', 'm5', 'm30', 'H2', 'H8'], fields=['date', 'bidopen', 'tickqty'],
                      from_date=None, to_date=None):  # date field must be present
@@ -402,9 +399,9 @@ class KragleDB:
         tmp = 0
         for v in values:
             if old != None:
-                tmp = (v['bidopen']-old['bidopen'])/kutils.normalizer[period]['bidopen']
+                tmp = (v['bidopen'] - old['bidopen']) / kutils.normalizer[period]['bidopen']
                 b_calc.add(tmp)
-                t_calc.add(v['tickqty']/kutils.normalizer[period]['tickqty'])
+                t_calc.add(v['tickqty'] / kutils.normalizer[period]['tickqty'])
             old = v
         res = {'bidopen-mean': b_calc.get_mean(),
                'bidopen-stddev': b_calc.get_stddev(),
