@@ -302,7 +302,7 @@ class KragleDB:
         res = []
         old = None
         self.logger.info(period)
-        for v in self.fxcon.get_candles(self.instrument, period=period, number=history_len+1).to_dict('records'):
+        for v in self.fxcon.get_candles(self.instrument, period=period, number=history_len+1, with_index=False).to_dict('records')[::-1]:
             if normalized:
                 if old != None:
                     tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
@@ -324,7 +324,8 @@ class KragleDB:
         self.fxcon.close()
         return res
 
-
+    def fetch_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, normalized=False):
+        v = self.get_data_tensor_fxcm(periods=periods, history_len=history_len, normalized=normalized)
 
 
     def get_sample(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, pips=15,
