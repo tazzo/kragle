@@ -289,7 +289,7 @@ class KragleDB:
                     res.append([tmpbid, tmptick])
                 old = v
             else:
-                res.append([v['bidopen'], v['tickqty']])
+                res.append([v['date'], v['bidopen'], v['tickqty']])
         return res
 
     def get_data_tensor(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, normalized=True):
@@ -300,6 +300,7 @@ class KragleDB:
 
     def get_data_period_fcxm(self, period, history_len, normalized=True):
         res = []
+        res_date = None
         old = None
         self.logger.info(period)
         for v in self.fxcon.get_candles(self.instrument, period=period, number=history_len+1, with_index=False).to_dict('records')[::-1]:
@@ -310,22 +311,30 @@ class KragleDB:
                     res.append([tmpbid, tmptick])
                 old = v
             else:
-                res.append([v['bidopen'], v['tickqty']])
-        return res
+                res.append([v['date'], v['bidopen'], v['tickqty']])
+            if res_date == None:
+                res_date = v['date']
+        return res, res_date
 
     def get_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, normalized=True):
         res = []
+        res_date = None
         import fxcmpy
         self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
 
         for period in periods:
-            res.append(self.get_data_period_fcxm(period, history_len, normalized=normalized))
+            data, date = self.get_data_period_fcxm(period, history_len, normalized=normalized)
+            res.append(data)
+            if period == 'm1':
+                res_date = date
 
         self.fxcon.close()
-        return res
+        return res, res_date
 
-    def fetch_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, normalized=False):
-        v = self.get_data_tensor_fxcm(periods=periods, history_len=history_len, normalized=normalized)
+    def fetch_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10):
+        v, d = self.get_data_tensor_fxcm(periods=periods, history_len=history_len, normalized=False)
+        record = {'date': d, 'tensor': v}
+        self.db.replace_one({'date': record['date']}, record, upsert=True)
 
 
     def get_sample(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, pips=15,
