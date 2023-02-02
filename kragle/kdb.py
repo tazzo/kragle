@@ -277,44 +277,49 @@ class KragleDB:
         values[0] = last_candle
         return values
 
-    def get_normalized_period(self, period, to_date, history_len):
+    def get_data_period(self, period, to_date, history_len, normalized=True):
         res = []
-        old = None
         self.logger.info(period)
+        old = None
         for v in self.get_candles(period, to_date, history_len + 1):
-            if old != None:
-                tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
-                tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
-                res.append([tmpbid, tmptick])
-            old = v
+            if normalized:
+                if old != None:
+                    tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
+                    tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
+                    res.append([tmpbid, tmptick])
+                old = v
+            else:
+                res.append([v['bidopen'], v['tickqty']])
         return res
 
-    def get_normalized_periods(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10):
+    def get_data_tensor(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, normalized=True):
         res = []
         for period in periods:
-            res.append(self.get_normalized_period(period, to_date, history_len))
-
+            res.append(self.get_data_period(period, to_date, history_len, normalized=normalized))
         return res
 
-    def get_normalized_period_fcxm(self, period, history_len):
+    def get_data_period_fcxm(self, period, history_len, normalized=True):
         res = []
         old = None
         self.logger.info(period)
         for v in self.fxcon.get_candles(self.instrument, period=period, number=history_len+1).to_dict('records'):
-            if old != None:
-                tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
-                tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
-                res.append([tmpbid, tmptick])
-            old = v
+            if normalized:
+                if old != None:
+                    tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
+                    tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
+                    res.append([tmpbid, tmptick])
+                old = v
+            else:
+                res.append([v['bidopen'], v['tickqty']])
         return res
 
-    def get_normalized_periods_fcxm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10):
+    def get_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, normalized=True):
         res = []
         import fxcmpy
         self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
 
         for period in periods:
-            res.append(self.get_normalized_period_fcxm(period, history_len))
+            res.append(self.get_data_period_fcxm(period, history_len, normalized=normalized))
 
         self.fxcon.close()
         return res
@@ -326,7 +331,7 @@ class KragleDB:
                    limit_future=30):
         res = {
             'date': to_date,
-            'x': self.get_normalized_periods(periods, to_date, history_len),
+            'x': self.get_data_tensor(periods, to_date, history_len, normalized=True),
             'y': self.get_action_from_future(date=to_date, pips=pips, limit_future=limit_future).value
         }
         return res
