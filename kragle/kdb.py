@@ -296,6 +296,32 @@ class KragleDB:
 
         return res
 
+    def get_normalized_period_fcxm(self, period, history_len):
+        res = []
+        old = None
+        self.logger.info(period)
+        for v in self.fxcon.get_candles(self.instrument, period=period, number=history_len+1).to_dict('records'):
+            if old != None:
+                tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
+                tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
+                res.append([tmpbid, tmptick])
+            old = v
+        return res
+
+    def get_normalized_periods_fcxm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10):
+        res = []
+        import fxcmpy
+        self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
+
+        for period in periods:
+            res.append(self.get_normalized_period_fcxm(period, history_len))
+
+        self.fxcon.close()
+        return res
+
+
+
+
     def get_sample(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, pips=15,
                    limit_future=30):
         res = {
@@ -304,6 +330,7 @@ class KragleDB:
             'y': self.get_action_from_future(date=to_date, pips=pips, limit_future=limit_future).value
         }
         return res
+
 
     def get_action_from_future(self, date=None, pips=15, limit_future=60):
         res = kutils.Action.HOLD
