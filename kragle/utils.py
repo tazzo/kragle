@@ -46,9 +46,9 @@ FIELDS = ['date', 'bidopen', 'bidclose', 'bidhigh', 'bidlow', 'askopen', 'askclo
 
 
 class Action(Enum):
-    BUY = 1
-    SELL = -1
-    HOLD = 0
+    BUY = 2
+    SELL = 0
+    HOLD = 1
 
 
 # TODO: maybe remove this function

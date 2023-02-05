@@ -9,7 +9,7 @@ import kragle.utils as kutils
 
 class FxcmTrader:
 
-    def __init__(self, config_file='fxcm.cfg', instrument='EUR/USD', strategy=None, sleep=10):
+    def __init__(self, config_file='fxcm.cfg', instrument='EUR/USD', strategy=None, sleep=200):
         self.strategy = strategy
         self.sleep = sleep
         self.logger = logging.getLogger('kragle')
@@ -68,6 +68,7 @@ class FxcmTrader:
                     else:
                         self.logger.warning('None strategy found.')
             time.sleep(self.sleep)
+        self.logger.info('Loop STOP')
 
     def check_time(self):
         self.logger.info('check_time')

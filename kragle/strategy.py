@@ -32,10 +32,10 @@ class AgentTester:
         self.strategy = strategy
         self.wallet = 0
         self.price = 0
-        self.stop_loss = 6 * PIP
-        self.take_profit = 10 * PIP
+        self.stop_loss = 12 * PIP
+        self.take_profit = 12 * PIP
         # test
-        self.periods = ['m1', 'm5', 'm15', 'H1']
+        self.periods = ['m1', 'm5', 'm30', 'H2', 'H8', 'D1']
         self.hist_len = 50
         self.action = Action.HOLD
         self.df = None
