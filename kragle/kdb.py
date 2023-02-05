@@ -168,12 +168,9 @@ class KragleDB:
         dsdb = self.open_dataset(ds_name)
         while True:
             try:
-                #print ('-- tmp_n {}'.format(tmp_n))
                 rnd_date = random_date(from_date, to_date)
-                #print('--rnd_date {}'.format(rnd_date))
                 sample = self.get_sample(periods, rnd_date, history_len, pips, limit_future)
                 rnd = random()
-                #print('--rnd {}'.format(rnd))
                 if rnd <= distribution[0]:
                     dsdb['train'].replace_one({'date': sample['date']}, sample, upsert=True)
                     tmp_n += 1
@@ -280,42 +277,25 @@ class KragleDB:
         values[0] = last_candle
         return values
 
-
-    class DataPeriod:
-
-        def __init__(self, parent):
-            self.parent = parent
-            self.rnd = -1
-
-        def get_data_period(self, period, to_date, history_len, normalized=True):
-            res = []
-            self.parent.logger.info(period)
-            old = None
-            first = True
-
-            for v in self.parent.get_candles(period, to_date, history_len + 1):
-                if self.rnd < 0:
-                    self.rnd = randrange(v['tickqty'])
-                tick = v['tickqty']
-                if first:
-                    tick -= self.rnd
-                    first = False
-                if normalized:
-                    if old is not None:
-                        tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
-                        tmptick = tick / kutils.normalizer[period]['tickqty']
-
-                        res.append([tmpbid, tmptick])
-                    old = v
-                else:
-                    res.append([v['date'], v['bidopen'], tick])
-            return res
+    def get_data_period(self, period, to_date, history_len, normalized=True):
+        res = []
+        self.logger.info(period)
+        old = None
+        for v in self.get_candles(period, to_date, history_len + 1):
+            if normalized:
+                if old != None:
+                    tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
+                    tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
+                    res.append([tmpbid, tmptick])
+                old = v
+            else:
+                res.append([v['date'], v['bidopen'], v['tickqty']])
+        return res
 
     def get_data_tensor(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], to_date=None, history_len=10, normalized=True):
         res = []
-        dp = self.DataPeriod(self)
         for period in periods:
-            res.append(dp.get_data_period(period, to_date, history_len, normalized=normalized))
+            res.append(self.get_data_period(period, to_date, history_len, normalized=normalized))
         return res
 
 
