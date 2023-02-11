@@ -224,7 +224,7 @@ class KragleDB:
             for v in self.ds[ds_name]['test'].find({}):
                 if v['y'] == nclass:
                     t_set.append(numpy.array(v['x']))
-                    t_labels.append(v['y'] + 1)
+                    t_labels.append(v['y'] )
             t_dataset = (numpy.array(t_set), numpy.array(t_labels))
             return t_dataset
         else:
@@ -318,23 +318,25 @@ class KragleDB:
                 res_date = v['date']
         return res, res_date
 
-    def get_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, normalized=True):
+    def get_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, normalized=True, fxcon=None, close=True):
         res = []
         res_date = None
-        import fxcmpy
-        self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
-
+        if fxcon is None:
+            import fxcmpy
+            self.fxcon = fxcmpy.fxcmpy(config_file='fxcm.cfg')
+        else:
+            self.fxcon = fxcon
         for period in periods:
             data, date = self.get_data_period_fcxm(period, history_len, normalized=normalized)
             res.append(data)
             if period == 'm1':
                 res_date = date
-
-        self.fxcon.close()
+        if close:
+            self.fxcon.close()
         return res, res_date
 
     def fetch_data_tensor_fxcm(self, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10):
-        v, d = self.get_data_tensor_fxcm(periods=periods, history_len=history_len, normalized=False)
+        v, d = self.get_data_tensor_fxcm(periods=periods, history_len=history_len, normalized=True)
         record = {'date': d, 'tensor': v}
         self.db.replace_one({'date': record['date']}, record, upsert=True)
 

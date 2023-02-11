@@ -91,11 +91,11 @@ class Percentage:
         self.buy = 0
 
     def add(self, value):
-        if value['y'] == -1:
-            self.sell += 1
         if value['y'] == 0:
-            self.hold += 1
+            self.sell += 1
         if value['y'] == 1:
+            self.hold += 1
+        if value['y'] == 2:
             self.buy += 1
         self.total += 1
 
