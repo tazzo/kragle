@@ -15,10 +15,10 @@ while True:
     db = kdb.KragleDB(db_name='TensorSave', instrument='EUR/USD', ds_name='Datasets')
 
     print('get_data_tensor_fxcm...')
-    t = db.get_data_tensor_fxcm(periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], history_len=10, fxcon=fxcon, close=False)
+    t = db.get_data_tensor_fxcm(periods=['m1', 'm5', 'm30', 'H2', 'H8'], history_len=12, fxcon=fxcon, close=False)
     #pp.pprint('Tensor: {}'.format(t))
 
-    model = keras.models.load_model('models/pips15hist10fut800')
+    model = keras.models.load_model('models/pips15hist12fut800')
     res = model.predict(numpy.expand_dims(t[0], axis=0))
 
     print('Predict')
@@ -26,6 +26,8 @@ while True:
 
     tmp = 0
     action = 1  # HOLD
+    print('len(res[0]) {}'.format(len(res[0])))
+
     for n in range(len(res[0])):
         print('res[0][n] {}  tmp {}   n {}'.format(res[0][n],tmp, n))
         if res[0][n] > tmp:
