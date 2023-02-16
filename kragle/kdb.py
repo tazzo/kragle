@@ -160,9 +160,8 @@ class KragleDB:
         self.check_date_index(period)
         self.db[period].replace_one({'date': record['date']}, record, upsert=True)
 
-    def create_dataset(self, n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'],
-                       history_len=10, pips=15, limit_future=180, distribution=[0.7, 0.2, 0.1]):
-
+    def create_dataset(self, n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8'],
+                       history_len=10, pips=15, limit_future=180, dtype='train'):
         ds_name = 'pips{}hist{}fut{}'.format(pips, history_len, limit_future)
         tmp_n = 0
         dsdb = self.open_dataset(ds_name)
@@ -170,19 +169,15 @@ class KragleDB:
             try:
                 rnd_date = random_date(from_date, to_date)
                 sample = self.get_sample(periods, rnd_date, history_len, pips, limit_future)
-                rnd = random()
-                if rnd <= distribution[0]:
-                    dsdb['train'].replace_one({'date': sample['date']}, sample, upsert=True)
-                    tmp_n += 1
-                elif rnd <= distribution[0] + distribution[1]:
-                    dsdb['valid'].replace_one({'date': sample['date']}, sample, upsert=True)
-                else:
-                    dsdb['test'].replace_one({'date': sample['date']}, sample, upsert=True)
+
+                dsdb[dtype].replace_one({'date': sample['date']}, sample, upsert=True)
+                tmp_n += 1
                 if (tmp_n % 50) == 0:
                     print('Dataset len: {}/{}'.format(tmp_n, n))
                 if tmp_n >= n:
                     break
             except Exception as e:
+                print('exept: {}'.format(e))
                 pass
         self.check_dataset(ds_name)
 
@@ -284,6 +279,8 @@ class KragleDB:
         for v in self.get_candles(period, to_date, history_len + 1):
             if normalized:
                 if old != None:
+                    if period == 'm1' and abs(old['bidopen']-old['askopen']) > kutils.PIP:
+                        raise Exception("Spread greater than 1 PIP")
                     tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
                     tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
                     res.append([tmpbid, tmptick])
