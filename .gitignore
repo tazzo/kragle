@@ -9,3 +9,4 @@ node_modules
 Pipfile.lock
 /package-lock.json
 /log/kragle.log
+/models

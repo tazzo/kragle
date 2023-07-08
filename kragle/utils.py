@@ -3,9 +3,12 @@ import math
 import random
 from enum import Enum
 
+from _plotly_utils.colors import n_colors
 from dash import dash_table
 import pandas as pd
 import logging
+import numpy as np
+import tensorflow as tf
 
 logger = logging.getLogger('kragle')
 instruments = ['USD/SEK', 'EUR/USD',
@@ -195,3 +198,56 @@ def dot_names_to_dict(name_list):
         except:
             pass
     return res
+
+n_classes = 3
+class AccuracyCallback(tf.keras.callbacks.Callback):
+
+    def __init__(self, test_data):
+        self.test_data = test_data
+
+
+    def on_epoch_end(self, epoch, logs=None):
+        x_data, y_data = self.test_data
+
+        correct = 0
+        incorrect = 0
+
+        x_result = self.model.predict(x_data, verbose=0)
+        x_numpy = []
+
+        class_correct = [0] * n_classes
+        class_incorrect = [0] * n_classes
+
+        for i in range(len(x_data)):
+            x = x_data[i]
+            y = y_data[i]
+
+            res = x_result[i]
+
+
+            pred_label = np.argmax(res)
+
+            if(pred_label == y):
+                x_numpy.append(["cor:", str(y), str(res), str(pred_label)])
+                class_correct[y] += 1
+                correct += 1
+            else:
+                x_numpy.append(["inc:", str(y), str(res), str(pred_label)])
+                class_incorrect[y] += 1
+                incorrect += 1
+
+        print("")
+        print("\tCorrect: %d" %(correct))
+        print("\tIncorrect: %d" %(incorrect))
+
+        for i in range(n_classes):
+            tot = float(class_correct[i] + class_incorrect[i])
+            class_acc = -1
+            if (tot > 0):
+                class_acc = float(class_correct[i]) / tot
+
+            print("\t%s: %.3f" %(i, class_acc))
+
+        acc = float(correct) / float(correct + incorrect)
+
+        print("\tCurrent Network Accuracy: %.3f" %(acc))

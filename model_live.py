@@ -1,13 +1,11 @@
 import kragle.kdb as kdb
-import time
-import kragle.kdb as kdb
 import pprint as pp
 import numpy
 from tensorflow import keras
 import fxcmpy
 import time
 
-sleep_time = 600
+sleep_time = 1200
 while True:
     try:
         print('connecting...')
@@ -54,9 +52,12 @@ while True:
                                      is_in_pips=True,
                                      stop=-15)
 
-        print('closing....')
-        fxcon.close()
-        print('spleeping....')
+
+
     except Exception as e:
         print(e)
+    finally:
+        print('closing....')
+        fxcon.close()
+    print('spleeping....')
     time.sleep(sleep_time)

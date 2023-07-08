@@ -17,9 +17,10 @@ dash-bootstrap-components = "*"
 jupyter = "*"
 pandas = '*'
 pytz ='*'
-tensorflow ='*'
+tensorflow = ">2.0"
 matplotlib ='*'
 pytest = "*"
 
+
 [requires]
-python_version = "3.9"
+python_version = "3.7"

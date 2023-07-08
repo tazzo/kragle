@@ -1,6 +1,7 @@
 import datetime as dt
 import logging
 from random import randrange, random
+from itertools import islice
 
 import pandas as pd
 from pymongo import MongoClient
@@ -160,33 +161,34 @@ class KragleDB:
         self.check_date_index(period)
         self.db[period].replace_one({'date': record['date']}, record, upsert=True)
 
-    def create_dataset(self, n, from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8'],
-                       history_len=10, pips=15, limit_future=180, dtype='train'):
+    def create_dataset(self,  from_date, to_date, periods=['m1', 'm5', 'm30', 'H2', 'H8'],
+                       history_len=10,
+                       pips=15,
+                       limit_future=180,
+                       dtype='train',
+                       skip=11):
         ds_name = 'pips{}hist{}fut{}'.format(pips, history_len, limit_future)
         tmp_n = 0
         dsdb = self.open_dataset(ds_name)
+        date_list = self.get_date_list('m1', from_date, to_date, skip=skip)
         while True:
             try:
-                rnd_date = random_date(from_date, to_date)
-                sample = self.get_sample(periods, rnd_date, history_len, pips, limit_future)
+                current_date = next(date_list, None)
+                if current_date is None:
+                    break
+                current_date = current_date['date']
+                sample = self.get_sample(periods, current_date, history_len, pips, limit_future)
 
                 dsdb[dtype].replace_one({'date': sample['date']}, sample, upsert=True)
                 tmp_n += 1
-                if (tmp_n % 50) == 0:
-                    print('Dataset len: {}/{}'.format(tmp_n, n))
-                if tmp_n >= n:
-                    break
-            except Exception as e:
-                print('exept: {}'.format(e))
-                pass
-        self.check_dataset(ds_name)
+                if (tmp_n % 500) == 0:
+                    print('Dataset len: {}  date: {}'.format(tmp_n, current_date))
 
-    def check_dataset(self, ds_name):
-        for v in self.ds[ds_name]['valid'].find({}):
-            self.ds[ds_name]['train'].delete_one({'date': v['date']})
-        for v in self.ds[ds_name]['test'].find({}):
-            self.ds[ds_name]['train'].delete_one({'date': v['date']})
-            self.ds[ds_name]['valid'].delete_one({'date': v['date']})
+
+            except Exception as e:
+                #print('exept: {}'.format(e))
+                pass
+
 
     def open_dataset(self, ds_name):
         self.ds[ds_name]['train'].create_index([('date', -1)], unique=True)
@@ -213,10 +215,10 @@ class KragleDB:
         test_dataset = (numpy.array(test_set), numpy.array(test_labels))
         return train_dataset, valid_dataset, test_dataset
 
-    def get_dataset_bytype(self, ds_name, nclass=None):
+    def get_dataset_bytype(self, ds_name, nclass=None, type='train' ):
         t_set, t_labels = [], []
         if nclass is not None:
-            for v in self.ds[ds_name]['test'].find({}):
+            for v in self.ds[ds_name][type].find({}):
                 if v['y'] == nclass:
                     t_set.append(numpy.array(v['x']))
                     t_labels.append(v['y'] )
@@ -232,14 +234,6 @@ class KragleDB:
             p.add(v)
         return p.get_percentage()
 
-
-    def get_base_date_list(self, n, periods, from_date, to_date):
-        period_0 = self.db[periods[0]]
-        date_filter = self.query_date_filter(from_date, to_date)
-        base_date_list = list(period_0.find(date_filter, {'date': 1, '_id': 0}))
-        if len(base_date_list) < n:
-            raise ValueError('Not enough data to fulfill the request in period ' + periods[0])
-        return base_date_list
 
     def get_history_tickqty(self, period, history_len, date):
         return self.get_history_field(period, 'tickqty', history_len, date)
@@ -276,11 +270,13 @@ class KragleDB:
         res = []
         self.logger.info(period)
         old = None
+        spread=False
         for v in self.get_candles(period, to_date, history_len + 1):
             if normalized:
                 if old != None:
-                    if period == 'm1' and abs(old['bidopen']-old['askopen']) > kutils.PIP:
+                    if not spread and (period == 'm1' and abs(old['bidopen']-old['askopen']) > kutils.PIP):
                         raise Exception("Spread greater than 1 PIP")
+                    spread = True
                     tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
                     tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
                     res.append([tmpbid, tmptick])
@@ -302,9 +298,14 @@ class KragleDB:
         res_date = None
         old = None
         self.logger.info(period)
+        spread = False
         for v in self.fxcon.get_candles(self.instrument, period=period, number=history_len+1, with_index=False).to_dict('records')[::-1]:
             if normalized:
                 if old != None:
+                    if not spread and (period == 'm1' and abs(old['bidclose']-old['askclose']) > kutils.PIP * 1 ):
+                        print('bidclose: {}  askclose: {}  spread: {}'.format(old['bidclose'], old['askclose'],old['bidclose']-old['askclose']))
+                        raise Exception("Spread greater than 1 PIP")
+                    spread = True
                     tmpbid = (old['bidopen'] - v['bidopen']) / kutils.normalizer[period]['bidopen']
                     tmptick = v['tickqty'] / kutils.normalizer[period]['tickqty']
                     res.append([tmpbid, tmptick])
@@ -396,13 +397,18 @@ class KragleDB:
 
         return res;
 
-    def get_date_list(self, period, from_date, to_date):
-        date_filter = self.query_date_filter(from_date, to_date)
-        return list(self.db[period].aggregate([
-            {'$match': date_filter},
+
+
+    def get_date_list(self, period, from_date, to_date, skip=1):
+        return islice( self.db[period].aggregate([
+            {'$match': {'date': {'$gte': from_date, '$lte': to_date}}},
             {'$sort': {'date': 1}},
             {'$project': {'date': 1, '_id': 0}},
-        ]))
+        ]),
+        None,
+        None,
+        skip)
+
 
     def duplicate_db(self, dbname, periods=['m1', 'm5', 'm30', 'H2', 'H8', 'D1'], fields=['date', 'bidopen', 'tickqty'],
                      from_date=None, to_date=None):  # date field must be present
